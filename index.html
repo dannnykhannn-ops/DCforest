@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Activity Tracker — Publicity &amp; Extension Division, Lahore</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Daily staffing and activity tracker, Publicity and Extension Division, Lahore.">
+<meta name="theme-color" content="#071a0d" id="themeColor">
+<!-- Installable web app -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png?v=3">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=3">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Activity Tracker">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+  /* Apply saved theme before paint. Default = green (dark). */
+  try{ if(localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-theme','light'); }catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+/* =========================================================
+   THEMES — green (default) and light
+   ========================================================= */
+:root{
+  --bg:#071a0d; --bg2:#0b2412; --surface:#0f2a16; --surface2:#15361d; --text:#eef3e4; --muted:#a6b99a; --line:#23462b;
+  --canopy:#0b2a12; --gold:#e0bb4b; --gold-light:#fcde84;
+  --head-a:#06200d; --head-b:#0f3d1b;
+  /* status */
+  --active:#5fd38f;    --active-bg:#123d24;
+  --field:#7db9f0;     --field-bg:#16304a;
+  --leave:#f0c668;     --leave-bg:#3a3015;
+  --absent:#f58c8c;    --absent-bg:#411d1d;
+  --suspended:#b98cf5; --suspended-bg:#2c1d48;
+  --vacant:#9aa4b2;    --vacant-bg:#273029;
+  /* groups (filter tiles + section accents) */
+  --g-all:#e0bb4b;
+  --g-acf:#f2c14e;     --g-acf-bg:#3a3012;  --g-acf-line:#7a6220; --g-acf-ink:#2a1f00;
+  --g-nur:#6fcf6a;     --g-nur-bg:#173a1b;  --g-nur-line:#2f7a33; --g-nur-ink:#072a0a;
+  --g-spe:#b98cf5;     --g-spe-bg:#2a1f45;  --g-spe-line:#5d44a0; --g-spe-ink:#1a0d33;
+  --g-off:#4fd1e0;     --g-off-bg:#0f3540;  --g-off-line:#21707c; --g-off-ink:#04252b;
+  --parked:#f0a35e; --parked-bg:#3d2814; --g-par:#f0a35e; --g-par-bg:#33240f; --g-par-line:#7a5528; --g-par-ink:#2a1500;
+  --d-off:#0e8fa3; --online:#5fd38f; --online-bg:#123d24; --offline:#ff8a7a; --offline-bg:#4a1d18;
+  /* designation avatars */
+  --d-acf:#14a39a; --d-fpo:#6366f1; --d-insp:#c2701c; --d-rang:#3f7d55;
+  --plate-bg:#f4efd6;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.28);
+  --shadow-hover:0 2px 4px rgba(0,0,0,.4),0 16px 36px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f6f0e1; --bg2:#efe7d2; --surface:#fffdf8; --surface2:#f4eedf; --text:#16240f; --muted:#5f6b55; --line:#e4dcc5;
+  --active:#1f8a4c;    --active-bg:#dcf3e4;
+  --field:#1d6fb8;     --field-bg:#dcebfa;
+  --leave:#b7791f;     --leave-bg:#fcefc9;
+  --absent:#c53030;    --absent-bg:#fde0e0;
+  --suspended:#7b3fc8; --suspended-bg:#efe4fc;
+  --vacant:#6b7280;    --vacant-bg:#ebe8df;
+  --g-acf:#e7b22c;     --g-acf-bg:#fdf1d3;  --g-acf-line:#f0d48a; --g-acf-ink:#3a2a00;
+  --g-nur:#3f9b4a;     --g-nur-bg:#e7f2dc;  --g-nur-line:#bcdaa8; --g-nur-ink:#ffffff;
+  --g-spe:#6a3fc0;     --g-spe-bg:#efe6fc;  --g-spe-line:#cdb6f2; --g-spe-ink:#ffffff;
+  --g-off:#0e7490;     --g-off-bg:#dcf3f7;  --g-off-line:#a5dbe5; --g-off-ink:#ffffff;
+  --parked:#c2620f; --parked-bg:#fde8d4; --g-par:#c2620f; --g-par-bg:#fdeedd; --g-par-line:#f1c79c; --g-par-ink:#ffffff;
+  --d-off:#0e7490; --online:#1f8a4c; --online-bg:#dcf3e4; --offline:#c53030; --offline-bg:#fde0e0;
+  --d-acf:#0f766e; --d-fpo:#4f46e5; --d-insp:#a4520e; --d-rang:#2f6b3f;
+  --plate-bg:#fffdf3;
+  --shadow:0 1px 2px rgba(60,48,20,.06),0 8px 22px rgba(60,48,20,.08);
+  --shadow-hover:0 2px 4px rgba(60,48,20,.08),0 14px 32px rgba(60,48,20,.14);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px;line-height:1.45;transition:background-color .3s,color .3s}
+button,input{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.serif{font-family:"Playfair Display",Georgia,serif}
+
+/* ---------- Splash (video intro) ---------- */
+#splash{position:fixed;inset:0;z-index:100;overflow:hidden;background:#03140a;cursor:pointer;color:#fff;
+  transition:opacity .8s ease,visibility .8s,transform .9s cubic-bezier(.2,.8,.2,1);animation:splashFailsafe 0s linear 10s forwards}
+#splash.out{opacity:0;visibility:hidden;transform:scale(1.06)}
+#splash.gone{display:none}
+@keyframes splashFailsafe{to{opacity:0;visibility:hidden}}
+.sp-bg{position:absolute;inset:-60px;background:url(assets/splash/splash-poster.jpg) center/cover;filter:blur(34px) brightness(.75) saturate(1.3)}
+.sp-vid{position:absolute;left:50%;top:0;height:100%;width:auto;max-width:none;transform:translateX(-50%);object-fit:cover;opacity:0;transition:opacity 1s ease;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.sp-vid.on{opacity:1}
+@media (max-aspect-ratio:3/4){ .sp-vid{width:100%;height:100%;left:0;transform:none;-webkit-mask-image:none;mask-image:none} }
+.sp-shade{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 30%,rgba(2,12,6,.55) 100%),linear-gradient(180deg,rgba(2,12,6,.35) 0%,transparent 30%,transparent 50%,rgba(2,14,7,.92) 100%)}
+.sp-text{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));padding:0 24px;text-align:center}
+.sp-kick{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.32em;text-transform:uppercase;color:#fcde84;
+  opacity:0;transform:translateY(10px);animation:spUp .8s cubic-bezier(.2,.8,.2,1) .5s forwards}
+.sp-title{margin:10px 0 0;font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.05;
+  text-shadow:0 4px 30px rgba(0,0,0,.6);opacity:0;transform:translateY(16px);animation:spUp 1s cubic-bezier(.2,.8,.2,1) .9s forwards}
+.sp-title span{background:linear-gradient(90deg,#fff4d1,#fcde84 40%,#e0bb4b 60%,#fff4d1);-webkit-background-clip:text;background-clip:text;color:transparent;
+  background-size:200% 100%;animation:shine 3s linear 1.6s infinite}
+.sp-rule{width:0;height:2px;margin:16px auto 12px;background:linear-gradient(90deg,transparent,#e0bb4b,transparent);animation:spRule 1.2s cubic-bezier(.2,.8,.2,1) 1.5s forwards}
+.sp-sub{font-size:clamp(.92rem,2.4vw,1.1rem);font-weight:600;color:#e2ecd6;opacity:0;animation:spUp .9s ease 1.9s forwards}
+.sp-tag{margin-top:6px;font-family:"Playfair Display",Georgia,serif;font-style:italic;color:#fcde84;font-size:clamp(.95rem,2.4vw,1.15rem);opacity:0;animation:spUp .9s ease 2.5s forwards}
+@keyframes spUp{to{opacity:1;transform:none}}
+@keyframes spRule{to{width:min(320px,70vw)}}
+@keyframes shine{to{background-position:-200% 0}}
+.sp-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.12)}
+.sp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a23a,#fcde84);box-shadow:0 0 12px #fcde84}
+.sp-skip{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;cursor:pointer;
+  font:700 .82rem Figtree,system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.35);border:1px solid rgba(252,222,132,.5);backdrop-filter:blur(8px);
+  opacity:0;animation:spUp .6s ease 1.2s forwards;transition:background .2s}
+.sp-skip:hover{background:rgba(252,222,132,.25)}
+@media (max-width:480px){ .sp-kick{letter-spacing:.14em;font-size:.64rem} }
+@media (prefers-reduced-motion:reduce){ .st,.st:hover,.st:focus-visible,.st:active{transform:none} .st::after{transform:none;transition:opacity .01s} .ring svg,.st .sub svg{transform:none!important} .tr-ic img,.k-moving .ring span{animation:none} }
+@media (prefers-reduced-motion:reduce){ .sp-kick,.sp-title,.sp-sub,.sp-tag,.sp-skip{animation:none!important;opacity:1;transform:none}.sp-rule{animation:none;width:min(320px,70vw)} }
+
+/* ---------- Header ---------- */
+.hero{position:relative;overflow:hidden;background:#06210f;display:flex;justify-content:center}
+.hero-bg{position:absolute;inset:-30px;background:url(assets/hero-banner-sm.webp) center/cover;filter:blur(22px) brightness(.6)}
+.hero-img{position:relative;display:block;width:100%;max-width:1000px;height:auto}
+.bar-top{background:linear-gradient(90deg,var(--head-a),var(--head-b) 55%,var(--head-a));border-bottom:3px solid var(--gold);color:var(--gold-light)}
+.bar-in{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.bar-in h1{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:1.25rem;margin:0;color:var(--gold-light);line-height:1.2}
+.bar-in .org{color:#b9cfa9;font-size:.85rem}
+.datebox{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.date{font-weight:700;color:#fff4d1}
+.fresh{display:inline-block;padding:3px 11px;border-radius:99px;font-size:.78rem;font-weight:700;background:#dcf3e4;color:#14633a}
+.fresh.stale{background:#fcefc9;color:#8a5a0f}
+.hbtn{display:inline-flex;align-items:center;gap:7px;background:rgba(252,222,132,.1);border:1px solid rgba(252,222,132,.45);color:var(--gold-light);
+  border-radius:99px;padding:6px 13px 6px 10px;font-size:.82rem;font-weight:700;cursor:pointer;
+  transition:background .2s,transform .15s,box-shadow .2s}
+.hbtn:hover{background:rgba(252,222,132,.22);box-shadow:0 0 0 3px rgba(252,222,132,.12)}
+.hbtn:active{transform:scale(.95)}
+.hbtn svg{width:16px;height:16px;flex:none}
+.hbtn.install{background:var(--gold);color:#1a1400;border-color:var(--gold)}
+.hbtn.install:hover{background:var(--gold-light)}
+.hbtn[hidden]{display:none}
+.theme-ico .sun{display:none}
+:root[data-theme="light"] .theme-ico .sun{display:block}
+:root[data-theme="light"] .theme-ico .moon{display:none}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px 48px}
+
+/* ---------- Summary card ---------- */
+.glance{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;
+  box-shadow:var(--shadow);display:grid;grid-template-columns:300px 1fr}
+.officer{position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;min-height:260px;
+  background:radial-gradient(ellipse at 70% 15%,#3d7a3a 0%,#1d5a2c 30%,#0f3a1c 65%,#08240f 100%);
+  border-right:4px solid var(--gold)}
+.officer::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.07) 55%,transparent 70%);pointer-events:none}
+.officer img{display:block;width:300px;max-width:none;height:auto;position:relative;z-index:1}
+.g-main{padding:24px 26px 22px;display:grid;gap:16px;align-content:center}
+.glance{grid-template-columns:340px 1fr 250px}
+.officer.dcf{min-height:340px}
+.officer.dcf img,.officer.admin img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:0}
+.officer.dcf img{object-position:50% 18%}
+.officer.dcf::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 40%,rgba(4,20,9,.65) 100%)}
+.officer.dcf{box-shadow:inset 0 0 0 3px rgba(224,187,75,.55)}
+.np-lead{background:linear-gradient(135deg,rgba(6,32,13,.95),rgba(20,70,32,.92));border:2px solid var(--gold);
+  box-shadow:0 10px 28px rgba(0,0,0,.45),0 0 0 4px rgba(224,187,75,.18),inset 0 1px 0 rgba(252,222,132,.35)}
+.np-rank{font-size:.66rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0bb4b;margin-bottom:3px}
+.np-lead .np-name{font-size:1.6rem}
+.np-lead .np-title{font-size:.86rem;color:#fff4d1}
+.officer.admin .np-name{font-size:1.08rem}
+.officer.admin{order:3;border-right:none;border-left:4px solid var(--gold);align-items:stretch}
+.officer.admin img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;position:absolute;inset:0;z-index:0}
+.officer.admin::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 45%,rgba(4,20,9,.55) 100%)}
+@media (max-width:1060px) and (min-width:761px){ .glance{grid-template-columns:270px 1fr 200px} .np-lead .np-name{font-size:1.3rem} .officer.admin .np-name{font-size:.95rem} }
+.big{font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:3.2rem;line-height:1;letter-spacing:-.02em;color:var(--text)}
+:root:not([data-theme="light"]) .big{color:var(--gold-light)}
+.big small{font-size:1.5rem;font-weight:700;color:var(--muted);letter-spacing:0}
+.big-l{color:var(--muted);font-size:1rem;margin-top:6px}
+.bar{display:flex;height:18px;border-radius:99px;overflow:hidden;background:var(--vacant-bg);gap:3px}
+.bar span{display:block;min-width:8px;flex-basis:0;transition:flex-grow .5s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.bar span.s-active{background:linear-gradient(90deg,#2fae55,#14943f)}
+.bar.dim span{opacity:.3}.bar.dim span.on{opacity:1}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:9px;border:1.5px solid var(--line);background:var(--surface2);
+  border-radius:99px;padding:7px 16px 7px 12px;font-size:.95rem;font-weight:700;cursor:pointer;
+  transition:transform .15s,box-shadow .2s,background .2s,border-color .2s}
+.chip i{width:12px;height:12px;border-radius:50%;background:var(--c);display:block;transition:transform .2s;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.chip:hover{border-color:var(--c);transform:translateY(-1px);box-shadow:0 4px 12px color-mix(in srgb,var(--c) 25%,transparent)}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--cbg);border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.chip[aria-pressed="true"] i{transform:scale(1.25)}
+.meta{color:var(--muted);font-size:.9rem;display:flex;gap:22px;flex-wrap:wrap}
+.meta b{color:var(--text)}
+
+.nameplate{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;padding:10px 14px 11px;border-radius:14px;text-align:center;
+  background:linear-gradient(135deg,rgba(6,32,13,.92),rgba(15,61,27,.88));border:1.5px solid var(--gold);
+  box-shadow:0 8px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(252,222,132,.25);backdrop-filter:blur(6px)}
+.np-name{font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:1.3rem;line-height:1.1;color:var(--gold-light);letter-spacing:.01em}
+.np-title{margin-top:4px;color:#e2ecd6;font-size:.78rem;font-weight:600;line-height:1.35}
+
+
+/* =================== LIVE FLEET =================== */
+.live{position:relative;margin-top:22px;border-radius:24px;overflow:hidden;isolation:isolate;color:#eef3e4;
+  background:radial-gradient(90% 120% at 100% 0%,#1f6b3a 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#0d4a3f 0%,transparent 60%),linear-gradient(160deg,#08240f,#041309);
+  border:1px solid rgba(252,222,132,.35);box-shadow:0 20px 50px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.live::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.35;pointer-events:none;
+  background-image:linear-gradient(rgba(252,222,132,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(252,222,132,.07) 1px,transparent 1px);background-size:34px 34px;
+  mask-image:radial-gradient(ellipse at 70% 0%,#000 0%,transparent 75%)}
+.live::after{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-200px;z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,rgba(252,222,132,.22),transparent 65%);animation:drift 9s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(-60px,40px)}}
+.lv-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 18px;padding:20px 22px 6px}
+.lv-title{display:flex;align-items:center;gap:12px}
+.lv-title h2{margin:0;font-family:"Playfair Display",Georgia,serif;font-size:1.55rem;color:var(--gold-light);line-height:1.1}
+.lv-title p{margin:3px 0 0;color:#b9cfa9;font-size:.84rem}
+.livepill{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;background:rgba(255,80,80,.14);border:1px solid rgba(255,110,110,.5);
+  color:#ffb4b4;font-weight:800;font-size:.72rem;letter-spacing:.14em}
+.livepill i{width:8px;height:8px;border-radius:50%;background:#ff5f5f;box-shadow:0 0 0 0 rgba(255,95,95,.7);animation:ping 1.6s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 9px rgba(255,95,95,0)}100%{box-shadow:0 0 0 0 rgba(255,95,95,0)}}
+.lv-asof{display:inline-flex;align-items:center;gap:8px;color:#d9e6cc;font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.lv-asof b{color:#fff4d1;font-weight:800}
+.lv-asof svg{width:15px;height:15px;color:var(--gold-light)}
+.lv-asof.stale{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.55)}
+.lv-asof .fresh{margin-left:2px;font-size:.7rem;padding:2px 8px}
+.livepill.stale{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.55)}
+.livepill.stale i{background:#fbbf24;animation:none}
+.st b.na{opacity:.6}
+
+.lv-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;padding:16px 22px 14px}
+/* status cards: tinted glass in the accent colour, big icon in a progress ring, LED glow on hover/focus */
+.st{--k:#f3d27a;position:relative;isolation:isolate;border-radius:20px;padding:16px 16px 14px;cursor:pointer;text-align:left;color:#fff;
+  background:
+    radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--k) 34%,transparent) 0%,transparent 60%),
+    linear-gradient(160deg,color-mix(in srgb,var(--k) 30%,#0b2412) 0%,color-mix(in srgb,var(--k) 12%,#071a0d) 100%);
+  border:1.5px solid color-mix(in srgb,var(--k) 55%,transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 18px rgba(0,0,0,.25);
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
+/* narrow LED strip glow under the card */
+.st::after{content:"";position:absolute;left:16%;right:16%;bottom:-9px;height:3px;border-radius:99px;z-index:-1;
+  background:var(--k);box-shadow:0 0 10px 1px var(--k),0 0 22px 2px color-mix(in srgb,var(--k) 55%,transparent);
+  opacity:0;transform:scaleX(.6);transition:opacity .3s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.st:hover,.st:focus-visible{transform:translateY(-3px);border-color:color-mix(in srgb,var(--k) 85%,#fff);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px color-mix(in srgb,var(--k) 45%,transparent),0 10px 26px color-mix(in srgb,var(--k) 22%,transparent)}
+.st:hover::after,.st:focus-visible::after,.st[aria-pressed="true"]::after{opacity:1;transform:scaleX(1)}
+.st:focus-visible{outline:none}
+.st:active{transform:translateY(-1px) scale(.98)}
+.st[aria-pressed="true"]{border-color:var(--k);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 2px color-mix(in srgb,var(--k) 55%,transparent)}
+.st-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.ring{--p:0;width:62px;height:62px;border-radius:50%;display:grid;place-items:center;flex:none;
+  background:conic-gradient(var(--k) calc(var(--p)*1%),color-mix(in srgb,var(--k) 18%,rgba(255,255,255,.08)) 0);
+  transition:--p 1s, filter .25s, box-shadow .25s;box-shadow:0 0 0 1px color-mix(in srgb,var(--k) 30%,transparent)}
+.ring span{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:var(--k);
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--k) 22%,#0d2a15),#06150b)}
+.ring svg{width:28px;height:28px;transition:transform .3s cubic-bezier(.3,1.5,.5,1)}
+.st:hover .ring,.st:focus-visible .ring,.st[aria-pressed="true"] .ring{filter:brightness(1.25) saturate(1.15);box-shadow:0 0 14px color-mix(in srgb,var(--k) 60%,transparent)}
+.st:hover .ring svg,.st:focus-visible .ring svg{transform:scale(1.08)}
+.st b{font-family:"Playfair Display",Georgia,serif;font-size:2.4rem;font-weight:800;line-height:1;color:#fff;margin-top:4px;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+.st .lb{margin-top:12px;font-weight:800;font-size:1rem;color:#fff}
+.st .sub{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:.8rem;color:color-mix(in srgb,var(--k) 25%,#d5e2cb);font-weight:600;margin-top:2px}
+.st .sub svg{width:16px;height:16px;flex:none;color:#fff;opacity:.75;transition:transform .25s,opacity .25s}
+.st:hover .sub svg,.st:focus-visible .sub svg{transform:translateX(3px);opacity:1}
+/* status colours */
+.k-total{--k:#f3d27a}   /* champagne gold */
+.k-moving{--k:#10d98a}  /* emerald */
+.k-idle{--k:#ff7a2f}    /* copper orange */
+.k-weak{--k:#ff3d8b}    /* magenta red */
+.k-off{--k:#9fb1c7}     /* cool slate */
+.k-nogps{--k:#2f9bff}   /* electric blue */
+.k-off{background:linear-gradient(160deg,#33414f 0%,#1a2530 100%)}
+.k-moving .ring span{animation:breathe 2.2s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 0 5px rgba(16,217,138,.2)}}
+
+.lv-bottom{margin-top:12px;padding:14px 22px 20px;background:rgba(0,0,0,.22);border-top:1px solid rgba(252,222,132,.18)}
+.lv-tabs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.lv-tabs .lab{font-weight:800;font-size:.95rem;color:var(--gold-light);margin-right:6px}
+.seg{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;cursor:pointer;font-weight:700;font-size:.82rem;
+  color:#dce8d0;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);transition:all .2s}
+.seg i{width:8px;height:8px;border-radius:50%;background:var(--k,#fcde84)}
+.seg b{color:#fff}
+.seg:hover{border-color:var(--k,#fcde84);transform:translateY(-1px)}
+.seg[aria-pressed="true"]{background:var(--k,#fcde84);border-color:var(--k,#fcde84);color:#0a1f0e}
+.seg[aria-pressed="true"] b{color:#0a1f0e}
+.seg[aria-pressed="true"] i{background:#0a1f0e}
+.lv-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px;max-height:330px;overflow:auto;padding:2px 4px 4px 2px;
+  scrollbar-width:thin;scrollbar-color:rgba(252,222,132,.4) transparent}
+.veh{--k:#4ade80;min-width:0;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;cursor:pointer;text-align:left;color:#eef3e4;
+  background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);
+  border-left:4px solid var(--k);transition:transform .2s,background .2s,box-shadow .2s;animation:rise .35s both}
+.veh:hover{transform:translateX(3px);background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.veh.stop{--k:#fbbf24}.veh.idle{--k:#ff7a2f}.veh.none{--k:#7b8794;opacity:.8}
+.vic{position:relative;flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#0a1f0e;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--k) 75%,#fff),var(--k))}
+.vic svg{width:22px;height:22px}
+.veh.moving .vic::after{content:"";position:absolute;inset:-4px;border-radius:15px;border:2px solid var(--k);animation:ring 1.8s infinite}
+@keyframes ring{from{opacity:.9;transform:scale(.9)}to{opacity:0;transform:scale(1.25)}}
+.vtx{flex:1;min-width:0}
+.vtx .pl{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:800;font-size:.92rem;letter-spacing:.05em}
+.vtx .who2{font-size:.78rem;color:#b9cfa9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.vpill{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;color:#0a1f0e;background:var(--k)}
+.sig{display:inline-flex;align-items:flex-end;gap:2px;height:13px}
+.sig span{width:3px;border-radius:1px;background:rgba(255,255,255,.2)}
+.sig span:nth-child(1){height:4px}.sig span:nth-child(2){height:7px}.sig span:nth-child(3){height:10px}.sig span:nth-child(4){height:13px}
+.sig.strong span{background:#4ade80}
+.sig.low span:nth-child(-n+2){background:#a3e635}
+.sig.weak span:nth-child(1){background:#fb7185}
+.sig.weak::after{content:"?";font-size:.7rem;font-weight:900;color:#fbbf24;margin-left:2px;line-height:1}
+.lv-note{margin:10px 2px 0;font-size:.76rem;color:#93a888}
+.card.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,60%{box-shadow:inset 0 0 0 3px var(--gold),0 0 30px color-mix(in srgb,var(--gold) 45%,transparent)}}
+.livechip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:.74rem;font-weight:800;color:#0a1f0e;background:#4ade80}
+.livechip.stop{background:#fbbf24}
+.livechip.idle{background:#ff7a2f}
+.livechip i{width:6px;height:6px;border-radius:50%;background:#0a1f0e}
+.livechip.moving i{animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+
+@media (max-width:1060px){ .lv-stats{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:760px){
+  .live{margin-top:18px;border-radius:20px}
+  .lv-head{padding:16px 16px 4px}.lv-title h2{font-size:1.3rem}
+  .lv-stats{gap:8px;padding:12px 16px 4px}
+  .lv-stats{gap:10px 8px}
+  .st{padding:11px 10px 10px;border-radius:16px}.st b{font-size:1.75rem}.ring{width:44px;height:44px}.ring span{width:36px;height:36px}.ring svg{width:20px;height:20px}
+  .st .lb{font-size:.84rem;margin-top:8px}.st .sub{font-size:.7rem}.st .sub svg{width:13px;height:13px}
+  .lv-bottom{padding:12px 14px 16px}
+  .lv-list{grid-template-columns:minmax(0,1fr);max-height:360px}
+}
+:root[data-theme="light"] .live{box-shadow:0 18px 40px rgba(20,60,30,.25)}
+
+
+/* ---- Global tree loss meter ---- */
+.tree{margin:12px 22px 4px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:14px 18px;border-radius:18px;
+  background:linear-gradient(120deg,rgba(74,222,128,.12),rgba(251,113,133,.08));border:1.5px solid rgba(74,222,128,.3);position:relative;overflow:hidden}
+.tr-ic{--cyc:4.8s;position:relative;width:150px;height:136px;margin:-10px 0 -12px;flex:none}
+.tr-ic::before{content:"";position:absolute;left:4%;right:30%;bottom:3px;height:14px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 70%)}
+.tr-ic::after{content:"";position:absolute;left:-10%;right:-10%;top:-10%;bottom:10%;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(74,222,128,.22),transparent 65%)}
+/* three stacked frames on one canvas: standing → being cut → fallen, then a new tree grows back */
+.tf{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  opacity:0;animation-duration:var(--cyc);animation-iteration-count:infinite;animation-timing-function:linear}
+.t1{opacity:1;transform-origin:36% 100%;animation-name:tfStand}
+.t2{transform-origin:33% 82%;animation-name:tfCut}
+.t3{animation-name:tfFall}
+@keyframes tfStand{
+  0%{opacity:1;transform:scale(1)}
+  22%{transform:rotate(-.8deg)} 30%{transform:rotate(.6deg)}
+  32%{transform:translateX(-1.5px) rotate(-1deg)} 34%{transform:translateX(1.5px) rotate(1deg)} 36%{transform:translateX(-1.5px) rotate(-1deg)} 38%{opacity:1;transform:none}
+  40%{opacity:0} 86%{opacity:0;transform:scale(.5)} 96%{opacity:1;transform:scale(1.03)} 100%{opacity:1;transform:scale(1)}}
+@keyframes tfCut{
+  0%,37%{opacity:0;transform:none} 39%{opacity:1;transform:none}
+  50%{opacity:1;transform:rotate(7deg)} 53%,100%{opacity:0;transform:rotate(12deg)}}
+@keyframes tfFall{
+  0%,50%{opacity:0;transform:translateY(-8px)} 53%{opacity:1;transform:translateY(-4px)} 55%{transform:translateY(1px)} 57%{transform:none}
+  84%{opacity:1} 93%,100%{opacity:0}}
+.tf-dust{position:absolute;left:30%;bottom:6px;width:46%;height:26px;border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(214,186,140,.75),rgba(214,186,140,0) 70%);filter:blur(2px);
+  animation:tfDust var(--cyc) linear infinite}
+.tf-dust.d2{left:48%;width:52%;animation-delay:.08s}
+@keyframes tfDust{0%,52%{opacity:0;transform:scale(.3)} 56%{opacity:.95;transform:scale(1)} 70%{opacity:0;transform:scale(1.7) translateY(-10px)} 100%{opacity:0}}
+.tf-minus{position:absolute;right:2px;top:18%;font:800 1.05rem Figtree,system-ui,sans-serif;color:#ff8a8a;text-shadow:0 2px 8px rgba(0,0,0,.6);opacity:0;
+  animation:tfMinus var(--cyc) ease-out infinite}
+@keyframes tfMinus{0%,53%{opacity:0;transform:translateY(8px)} 57%{opacity:1;transform:none} 76%{opacity:0;transform:translateY(-14px)} 100%{opacity:0}}
+/* the counter flashes red at the moment the tree hits the ground */
+.tr-big{animation:trHit var(--cyc,4.8s) linear infinite}
+@keyframes trHit{0%,53%{color:#fff} 56%{color:#ff9b9b;text-shadow:0 0 18px rgba(255,90,90,.45)} 66%,100%{color:#fff;text-shadow:none}}
+.tree.paused .tf,.tree.paused .tf-dust,.tree.paused .tf-minus,.tree.paused .tr-big{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){
+  .tf,.tf-dust,.tf-minus,.tr-big{animation:none!important}
+  .t1,.t3,.tf-dust,.tf-minus{opacity:0!important}.t2{opacity:1!important;transform:rotate(5deg)}
+}
+.tree{isolation:isolate}
+.tr-k{font-size:.74rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#bbf7d0;display:flex;align-items:center;gap:8px}
+.tr-est{letter-spacing:.04em;text-transform:none;font-weight:700;color:#0a1f0e;background:#fcde84;padding:1px 8px;border-radius:99px;font-size:.7rem}
+.tr-big{font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:2.4rem;line-height:1.05;color:#fff;font-variant-numeric:tabular-nums;margin-top:2px}
+.tr-approx{font-size:1.2rem;color:#a6b99a;margin-right:6px;vertical-align:middle}
+.tr-lb{color:#cfe0bf;font-size:.86rem}
+.tr-seg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tr-seg button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#dce8d0;border-radius:99px;padding:4px 11px;font-size:.78rem;font-weight:800;cursor:pointer;transition:all .2s}
+.tr-seg button:hover{border-color:#4ade80}
+.tr-seg button[aria-pressed="true"]{background:#4ade80;border-color:#4ade80;color:#0a1f0e}
+.tr-bar{margin-top:10px;height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.tr-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#4ade80,#fb7185);border-radius:99px}
+.tr-pulse{animation:trp .35s ease}
+@keyframes trp{40%{color:#fca5a5}}
+@media (max-width:760px){
+  .tree{margin:10px 16px 2px;grid-template-columns:auto 1fr;gap:10px 12px;padding:12px 14px}
+  .tr-ic{width:104px;height:94px;margin:-6px 0 -8px}.tf-minus{font-size:.9rem}.tr-big{font-size:1.9rem}
+  .tr-side{grid-column:1/-1}.tr-seg{justify-content:flex-start}
+}
+
+/* refresh + restart buttons */
+.hbtn.refresh,.hbtn.restart{font-size:.74rem;padding:5px 11px 5px 9px}
+.hbtn.restart{background:transparent;border-color:rgba(252,222,132,.3);color:#d9cfa6}
+.hbtn.restart:hover{border-color:rgba(252,222,132,.6);color:var(--gold-light)}
+.hbtn.refresh svg,.hbtn.restart svg{width:14px;height:14px}
+.lv-restart{display:inline-flex;align-items:center;gap:6px;padding:5px 11px 5px 9px;border-radius:99px;cursor:pointer;font-weight:700;font-size:.72rem;
+  color:#e8dcae;background:rgba(255,255,255,.05);border:1px solid rgba(252,222,132,.35);transition:border-color .2s,color .2s,transform .15s}
+.lv-restart svg{width:13px;height:13px}
+.lv-restart:hover{border-color:#fcde84;color:#fff4d1}
+.lv-restart:active{transform:scale(.95)}
+[data-restart].busy{pointer-events:none;opacity:.8}
+.lv-right{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lv-refresh{display:inline-flex;align-items:center;gap:7px;padding:6px 13px 6px 10px;border-radius:99px;cursor:pointer;font-weight:800;font-size:.76rem;
+  color:#0a1f0e;border:none;background:linear-gradient(135deg,#fde68a,#e0bb4b);box-shadow:0 6px 18px rgba(224,187,75,.35),inset 0 1px 0 rgba(255,255,255,.6);
+  transition:transform .15s,box-shadow .2s}
+.lv-refresh:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(224,187,75,.5),inset 0 1px 0 rgba(255,255,255,.6)}
+.lv-refresh:active{transform:scale(.95)}
+.lv-refresh svg{width:14px;height:14px;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.lv-refresh:hover svg,.hbtn.refresh:hover svg{transform:rotate(180deg)}
+[data-refresh].busy{pointer-events:none;opacity:.85}
+[data-refresh].busy svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- Install bar (phones & desktop) ---- */
+.installbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;gap:8px;
+  max-width:460px;margin:0 auto;padding:8px 8px 8px 8px;border-radius:20px;
+  background:linear-gradient(135deg,rgba(8,40,18,.96),rgba(15,61,27,.96));border:1.5px solid var(--gold);
+  box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 0 4px rgba(224,187,75,.15);backdrop-filter:blur(10px);
+  transform:translateY(140%);transition:transform .5s cubic-bezier(.2,.9,.2,1.1)}
+.installbar.show{transform:none}
+.installbar[hidden]{display:none}
+.ib-main{flex:1;min-width:0;display:flex;align-items:center;gap:11px;background:none;border:none;color:#fff;cursor:pointer;text-align:left;padding:0}
+.ib-main img{border-radius:11px;flex:none;box-shadow:0 0 0 2px var(--gold)}
+.ib-tx{flex:1;min-width:0;line-height:1.2}
+.ib-tx b{display:block;font-size:.95rem;color:var(--gold-light)}
+.ib-tx small{display:block;font-size:.76rem;color:#cfe0bf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib-go{flex:none;padding:9px 16px;border-radius:99px;font-weight:800;font-size:.88rem;color:#1a1400;background:linear-gradient(135deg,#fde68a,#e0bb4b);
+  box-shadow:0 4px 14px rgba(224,187,75,.45);animation:ibPulse 2.4s ease-in-out infinite}
+@keyframes ibPulse{50%{box-shadow:0 4px 22px rgba(224,187,75,.8)}}
+.ib-x{flex:none;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#cfe0bf;font-size:1.3rem;line-height:1;cursor:pointer}
+.sheet{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.sheet[hidden]{display:none}
+.sheet-card{width:100%;max-width:460px;margin:12px;padding:22px 22px calc(18px + env(safe-area-inset-bottom));border-radius:22px;text-align:center;color:#eef3e4;
+  background:linear-gradient(160deg,#0f3a1c,#06200d);border:1.5px solid var(--gold);animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+.sheet-ic{border-radius:16px;box-shadow:0 0 0 2px var(--gold)}
+.sheet-card h3{margin:12px 0 10px;font-family:"Playfair Display",Georgia,serif;color:var(--gold-light);font-size:1.3rem}
+.sheet-card ol{margin:0 0 16px;padding:0;list-style:none;counter-reset:st;text-align:left;display:grid;gap:10px}
+.sheet-card li{counter-increment:st;display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:.95rem}
+.sheet-card li::before{content:counter(st);flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--gold);color:#1a1400}
+.sheet-card li svg{width:20px;height:20px;vertical-align:-4px;color:#7db9f0}
+.sheet-ok{width:100%;padding:12px;border-radius:14px;border:none;font-weight:800;font-size:1rem;cursor:pointer;color:#1a1400;background:linear-gradient(135deg,#fde68a,#e0bb4b)}
+body.has-ib footer{padding-bottom:84px}
+body.has-ib .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+
+
+/* ---- Header search across all motorbikes ---- */
+.gs-row{max-width:1200px;margin:0 auto;padding:0 16px 12px}
+.gsearch{position:relative}
+.gsearch>svg{position:absolute;left:15px;top:50%;width:19px;height:19px;transform:translateY(-50%);color:var(--gold-light);pointer-events:none}
+#gq{width:100%;padding:11px 52px 11px 46px;border-radius:14px;font-size:.95rem;color:#fff;background:rgba(0,0,0,.28);border:1.5px solid rgba(252,222,132,.4);
+  transition:border-color .2s,box-shadow .2s,background .2s}
+#gq::placeholder{color:#b9cfa9}
+#gq:focus{outline:none;border-color:var(--gold);background:rgba(0,0,0,.4);box-shadow:0 0 0 4px rgba(224,187,75,.2)}
+#gq::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:18px;height:18px;cursor:pointer;background:center/14px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fcde84' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E")}
+.gsearch kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:700 .72rem ui-monospace,monospace;color:#cfe0bf;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:1px 7px}
+#gq:focus~kbd,#gq:not(:placeholder-shown)~kbd{display:none}
+.gres{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:70;max-height:min(70vh,520px);overflow:auto;border-radius:18px;padding:8px;
+  background:linear-gradient(160deg,#0f3a1c,#06200d);border:1.5px solid var(--gold);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.gres[hidden]{display:none}
+.gr-h{display:flex;justify-content:space-between;padding:6px 10px 8px;color:#b9cfa9;font-size:.78rem;font-weight:700}
+.gr{width:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1px solid transparent;
+  background:none;color:#eef3e4;text-align:left;cursor:pointer}
+.gr:hover,.gr.act{background:rgba(252,222,132,.1);border-color:rgba(252,222,132,.35)}
+.gr .pl{font:800 .92rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.05em;padding:3px 10px;border-radius:7px;background:#f4efd6;color:#1b1b1b;border:2px solid #1b1b1b}
+.gr .nm2{font-weight:800;font-size:.95rem}
+.gr .mt{font-size:.78rem;color:#b9cfa9;margin-top:2px;line-height:1.35}
+.gr .tg{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.gr .tg span{font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;color:#0a1f0e;background:var(--k,#a3aab5);white-space:nowrap}
+.gr mark{background:rgba(252,222,132,.4);color:inherit;border-radius:3px}
+.gr-empty{padding:18px;text-align:center;color:#b9cfa9}
+@media (max-width:760px){ .gs-row{padding:0 12px 10px} #gq{font-size:.9rem} .gr{grid-template-columns:auto 1fr;gap:10px} .gr{grid-template-columns:1fr auto;padding:9px 10px;gap:4px 10px} .gr .pl{grid-row:1;justify-self:start;font-size:.85rem} .gr .tg{grid-row:1;grid-column:2;flex-direction:row} .gr>span:nth-child(2){grid-column:1/-1} }
+
+
+/* ---- Majid Shamrez: tall portrait card spanning the header, from the title down to the gold line ---- */
+.hdr{max-width:1200px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:0 18px;align-items:stretch}
+.hdr .bar-in,.hdr .gs-row{max-width:none;padding-left:0;padding-right:0}
+.chief-card{order:2;position:relative;margin:10px 0 0;width:250px;align-self:stretch;min-height:150px;border-radius:16px 16px 0 0;overflow:hidden;
+  border:2px solid var(--gold);border-bottom:none;box-shadow:0 -4px 22px rgba(0,0,0,.35),0 0 0 4px rgba(224,187,75,.12);background:#0b2a12}
+.chief-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 14%}
+.chief-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(4,20,9,.92) 100%)}
+.chief-card figcaption{position:absolute;left:0;right:0;bottom:8px;z-index:1;text-align:center;padding:0 8px}
+.chief-card b{display:block;font:800 1.2rem/1.1 "Playfair Display",Georgia,serif;color:var(--gold-light);text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.chief-card span{display:block;margin-top:2px;font-size:.76rem;font-weight:700;color:#fff4d1}
+@media (max-width:760px){
+  .hdr{grid-template-columns:minmax(0,1fr)}
+  .hdr-main{display:contents}
+  .hdr .bar-in{order:0}.hdr .gs-row{order:2;padding:0 0 12px;width:100%}
+  .chief-card{order:1;width:auto;margin:0 0 12px;height:min(60vw,240px);border-radius:16px;border-bottom:2px solid var(--gold)}
+  .chief-card img{object-position:50% 16%}
+  .chief-card b{font-size:1.35rem}.chief-card span{font-size:.85rem}
+}
+
+/* summary card: portrait on the left, numbers on the right */
+.glance.lead{margin-top:24px;display:grid;grid-template-columns:300px minmax(0,1fr)!important;overflow:hidden}
+.glance.lead .g-main{padding:24px 28px!important}
+.lead-pic{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:340px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 28%,#2f7a3f 0%,#175a2a 38%,#0b3a18 70%,#06240f 100%);border-right:4px solid var(--gold)}
+.lead-pic::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.06) 55%,transparent 70%);pointer-events:none}
+.lead-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 12%}
+.lead-pic::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 50%,rgba(4,20,9,.7) 100%)}
+.lead-plate{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;text-align:center;padding:9px 12px 10px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(6,32,13,.94),rgba(20,70,32,.9));border:2px solid var(--gold);box-shadow:0 10px 26px rgba(0,0,0,.45),0 0 0 4px rgba(224,187,75,.15)}
+.lead-plate b{display:block;font:800 1.35rem/1.1 "Playfair Display",Georgia,serif;color:var(--gold-light)}
+.lead-plate span{display:block;margin-top:3px;font-size:.8rem;font-weight:600;color:#fff4d1}
+@media (max-width:760px){
+  .glance.lead{grid-template-columns:1fr!important;margin-top:18px}
+  .lead-pic{min-height:0;height:min(80vw,340px);border-right:none;border-bottom:4px solid var(--gold)}
+  .lead-pic{height:min(100vw,420px)}
+  .glance.lead .g-main{padding:20px 18px!important}
+}
+
+/* ---- Focal person, bottom of the page ---- */
+.focal{display:flex;align-items:center;gap:18px;margin:6px 0 16px;padding:14px 22px 14px 14px;border-radius:20px;max-width:560px;
+  background:linear-gradient(135deg,rgba(15,61,27,.9),rgba(6,32,13,.95));border:1.5px solid rgba(224,187,75,.5);box-shadow:var(--shadow);color:#eef3e4}
+.focal img{flex:none;width:84px;height:84px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:3px solid var(--gold);box-shadow:0 0 0 4px rgba(224,187,75,.18)}
+.fo-k{font-size:.7rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.fo-name{font:800 1.25rem/1.15 "Playfair Display",Georgia,serif;color:var(--gold-light);margin-top:3px}
+.fo-sub{font-size:.82rem;color:#cfe0bf;margin-top:2px}
+@media (max-width:760px){ .focal{max-width:none} .focal img{width:68px;height:68px} .fo-name{font-size:1.08rem} }
+
+
+/* ===== Summary hero: framed portrait + figures over a forest backdrop ===== */
+.glance.hero2{position:relative;isolation:isolate;grid-template-columns:330px minmax(0,1fr)!important;align-items:center;gap:0 30px;padding:14px;
+  border:1.5px solid rgba(224,187,75,.35);border-radius:26px;background:#071a0d;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.h2-bg{position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;
+  background:linear-gradient(90deg,#071a0d 0%,rgba(7,26,13,.96) 30%,rgba(7,26,13,.72) 52%,rgba(7,26,13,.25) 80%,rgba(7,26,13,.15) 100%),
+             url(assets/forest-bg.webp) right center/cover no-repeat}
+.h2-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 80% 20%,rgba(252,222,132,.12),transparent 70%),linear-gradient(0deg,rgba(7,26,13,.55),transparent 40%)}
+.hero2 .lead-pic{min-height:0;height:380px;border-right:none;border-radius:20px;border:2.5px solid var(--gold);
+  box-shadow:0 0 0 5px rgba(224,187,75,.12),0 18px 40px rgba(0,0,0,.5)}
+.hero2 .lead-pic img{object-position:50% 10%}
+.hero2 .lead-plate{left:14px;right:14px;bottom:14px;padding:11px 12px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(6,24,11,.94),rgba(14,48,24,.92))}
+.hero2 .lead-plate b{font-size:1.5rem}
+.hero2 .g-main{padding:10px 18px 10px 0!important;gap:22px}
+.hero2 .big{font-size:clamp(3.2rem,6vw,5rem);color:var(--gold-light)!important;text-shadow:0 4px 24px rgba(0,0,0,.45)}
+.hero2 .big small{font-size:.62em;color:var(--gold-light);font-weight:800}
+.hero2 .big-l{font-size:clamp(1.1rem,2vw,1.5rem);color:#eaf2e0;margin-top:6px;letter-spacing:.01em}
+.hero2 .bar{height:20px;gap:4px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.hero2 .bar span.s-active{background:linear-gradient(90deg,#16a34a,#4ade80);box-shadow:0 0 14px rgba(74,222,128,.45)}
+.hero2 .chips{gap:14px;margin-top:22px}
+.hero2 .chip{gap:12px;padding:9px 22px 9px 9px;border-radius:16px;font-size:1.12rem;font-weight:800;color:#fff;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,rgba(7,26,13,.75)),rgba(7,26,13,.7));border:1.5px solid color-mix(in srgb,var(--c) 55%,transparent);
+  backdrop-filter:blur(6px)}
+.hero2 .chip i{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;color:#fff;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 85%,#fff),var(--c) 65%);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 25%,transparent),0 4px 14px color-mix(in srgb,var(--c) 40%,transparent)}
+.hero2 .chip i svg{width:22px;height:22px}
+.hero2 .chip b{margin-left:6px}
+.hero2 .chip:hover,.hero2 .chip[aria-pressed="true"]{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 10px 26px color-mix(in srgb,var(--c) 35%,transparent)}
+.hero2 .chip.s-active{border-color:color-mix(in srgb,var(--active) 80%,transparent);box-shadow:0 8px 22px rgba(74,222,128,.22)}
+.hero2 .meta{align-items:center;gap:16px;font-size:1.08rem;color:#eaf2e0}
+.hero2 .meta b{font-size:1.15em;color:#fff}
+.hero2 .meta .sep{width:1px;height:24px;background:rgba(255,255,255,.3)}
+.hero2 .meta .tbtn{font-size:.98rem;padding:6px 15px;border-color:rgba(255,107,107,.75);background:rgba(120,20,20,.55);color:#ff9b9b}
+@media (max-width:1060px) and (min-width:761px){ .glance.hero2{grid-template-columns:260px minmax(0,1fr)!important;gap:0 22px} .hero2 .lead-pic{height:330px} .hero2 .chip{font-size:1rem;padding-right:16px} .hero2 .chip i{width:36px;height:36px} }
+@media (max-width:760px){
+  .glance.hero2{grid-template-columns:1fr!important;padding:10px;gap:14px 0}
+  .h2-bg{background:linear-gradient(180deg,rgba(7,26,13,.35) 0%,rgba(7,26,13,.92) 55%,#071a0d 100%),url(assets/forest-bg.webp) center top/cover no-repeat}
+  .hero2 .lead-pic{height:min(98vw,400px)}
+  .hero2 .g-main{padding:6px 8px 10px!important;gap:16px}
+  .hero2 .chips{gap:8px;margin-top:16px}
+  .hero2 .chip{font-size:.92rem;padding:6px 14px 6px 6px;gap:8px;border-radius:14px}.hero2 .chip i{width:32px;height:32px}.hero2 .chip i svg{width:17px;height:17px}
+  .hero2 .meta{font-size:.92rem;gap:10px}.hero2 .meta .sep{height:18px}
+}
+:root[data-theme="light"] .hero2 .big-l,:root[data-theme="light"] .hero2 .meta{color:#eaf2e0}
+
+.h1-leaf{width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:6px}
+.date{display:inline-flex;align-items:center;gap:8px}
+.date .cal{width:20px;height:20px;color:var(--gold)}
+.glance.hero2{margin:26px 0 4px}
+
+/* ---------- Filter tiles ---------- */
+.fhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:28px 2px 12px}
+.fhead h2{margin:0;font-size:1.05rem;font-weight:800}
+.clear{background:none;border:none;color:var(--muted);font-weight:700;font-size:.85rem;cursor:pointer;padding:4px 8px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:5px}
+.clear:hover{color:var(--text);background:var(--surface2)}
+.clear[hidden]{display:none}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tile{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:12px;min-height:78px;padding:12px 14px;text-align:left;cursor:pointer;
+  border-radius:18px;border:2px solid var(--tl);color:var(--text);
+  background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--tc) 22%,transparent) 0%,transparent 55%),var(--tb);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 6px rgba(0,0,0,.12);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .2s}
+/* light sweep on hover */
+.tile::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 48%,transparent 66%);transform:translateX(-120%);transition:transform .7s ease}
+.tile:hover::before{transform:translateX(120%)}
+.tile .ic{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--tink);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--tc) 80%,#fff),var(--tc) 60%,color-mix(in srgb,var(--tc) 75%,#000));
+  box-shadow:0 4px 12px color-mix(in srgb,var(--tc) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.45);
+  transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.tile svg{width:24px;height:24px}
+.tile .tl{flex:1;min-width:0;font-weight:800;font-size:.98rem;line-height:1.15}
+.tile .tl small{display:block;font-weight:600;font-size:.74rem;color:var(--muted);margin-top:3px;letter-spacing:.02em}
+.tile .n{flex:none;min-width:34px;height:28px;padding:0 9px;border-radius:99px;display:grid;place-items:center;font-weight:800;font-size:.92rem;
+  color:var(--tc);background:color-mix(in srgb,var(--tc) 16%,transparent);border:1.5px solid color-mix(in srgb,var(--tc) 45%,transparent);transition:all .2s}
+.tile:hover{transform:translateY(-4px);border-color:var(--tc);box-shadow:0 14px 30px color-mix(in srgb,var(--tc) 30%,transparent)}
+.tile:hover .ic{transform:scale(1.1) rotate(-8deg)}
+.tile:active{transform:translateY(-1px) scale(.97)}
+.tile[aria-pressed="true"]{border-color:var(--tc);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 35%,transparent),0 14px 30px color-mix(in srgb,var(--tc) 30%,transparent)}
+.tile[aria-pressed="true"] .n{background:var(--tc);color:var(--tink);border-color:var(--tc);transform:scale(1.08)}
+.tile[aria-pressed="true"] .ic{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+.tile[aria-pressed="true"]::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:4px;border-radius:4px 4px 0 0;background:var(--tc)}
+.t-all{--tc:var(--gold);--tb:var(--surface);--tl:var(--line);--tink:#1a1400}
+.t-all[aria-pressed="true"]{--tb:linear-gradient(135deg,#0b3416,#06200d);color:#fff}
+.t-all[aria-pressed="true"] .tl small{color:#cfe0bf}
+.t-office{--tc:var(--g-off);--tb:var(--g-off-bg);--tl:var(--g-off-line);--tink:var(--g-off-ink)}
+.t-acf{--tc:var(--g-acf);--tb:var(--g-acf-bg);--tl:var(--g-acf-line);--tink:var(--g-acf-ink)}
+.t-nursery{--tc:var(--g-nur);--tb:var(--g-nur-bg);--tl:var(--g-nur-line);--tink:var(--g-nur-ink)}
+.t-special{--tc:var(--g-spe);--tb:var(--g-spe-bg);--tl:var(--g-spe-line);--tink:var(--g-spe-ink)}
+/* Office tile gets a gold-rimmed featured look */
+.t-office{border-image:none}
+.t-office .ic{box-shadow:0 0 0 2px var(--gold),0 4px 14px color-mix(in srgb,var(--tc) 50%,transparent),inset 0 1px 0 rgba(255,255,255,.45)}
+
+/* tracker + contact */
+.vline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.vmeta{color:var(--muted);font-size:.82rem;font-weight:600}
+.trk{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:.74rem;font-weight:800;letter-spacing:.02em;
+  color:var(--online);background:var(--online-bg)}
+.trk svg{width:12px;height:12px}
+.trk.off{color:var(--offline);background:var(--offline-bg)}
+.tel{display:inline-flex;align-items:center;gap:7px;padding:4px 12px 4px 8px;border-radius:99px;text-decoration:none;font-weight:700;font-size:.9rem;
+  color:var(--text);background:var(--surface2);border:1.5px solid var(--line);transition:border-color .2s,transform .15s,background .2s}
+.tel svg{width:16px;height:16px;color:var(--active)}
+.tel:hover{border-color:var(--active);background:var(--active-bg)}
+.tel:active{transform:scale(.96)}
+.meta .tbtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid color-mix(in srgb,var(--offline) 45%,transparent);background:var(--offline-bg);
+  color:var(--offline);border-radius:99px;padding:3px 11px;font-weight:800;font-size:.82rem;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.meta .tbtn:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--offline) 20%,transparent)}
+.meta .tbtn[aria-pressed="true"]{background:var(--offline);color:#fff}
+.meta .tbtn:active{transform:scale(.95)}
+
+/* ---------- Search ---------- */
+.searchbox{position:relative;margin:18px 0 22px}
+.searchbox svg{position:absolute;left:16px;top:50%;width:20px;height:20px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:13px 44px 13px 48px;font-size:1rem;
+  transition:border-color .2s,box-shadow .2s}
+.search::placeholder{color:var(--muted)}
+.search:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 22%,transparent)}
+.search::-webkit-search-cancel-button{display:none}
+.qx{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:var(--surface2);
+  color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:1.1rem;line-height:1}
+.qx:hover{color:var(--text)}
+.qx[hidden]{display:none}
+
+/* ---------- Sections ---------- */
+.panel{margin-bottom:24px;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);
+  animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:center;gap:16px;padding:16px 22px;background:linear-gradient(90deg,#06200d,#0f3d1b);
+  border-left:8px solid var(--sc);border-bottom:3px solid var(--gold)}
+.ph h3{margin:0;flex:1;font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:1.3rem;line-height:1.2;color:var(--gold-light)}
+.ph .cnt{flex:none;padding-left:16px;border-left:2px solid rgba(252,222,132,.4);color:#e6eedc;font-weight:600;text-align:center;line-height:1.25}
+.ph .cnt b{display:block;font-size:1.05rem;color:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.cards .card{box-shadow:inset -1px -1px 0 var(--line)}
+.card{position:relative;background:var(--surface);padding:18px 20px 16px 26px;transition:background .2s}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--c)}
+.card:hover{background:var(--surface2)}
+.card.vacant{background:repeating-linear-gradient(135deg,var(--surface) 0 10px,color-mix(in srgb,var(--vacant) 8%,var(--surface)) 10px 20px)}
+.who{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.av{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.05rem;color:#fff;background:var(--dc,var(--d-rang));
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--dc,var(--d-rang)) 25%,transparent)}
+.av.none{background:transparent;border:2px dashed var(--vacant);color:var(--vacant);box-shadow:none}
+.nm{font-weight:800;font-size:1.12rem;line-height:1.2}
+.nm.dash{color:var(--muted)}
+.dchip{display:inline-block;margin-top:5px;padding:2px 11px;border-radius:7px;font-size:.82rem;font-weight:700;color:var(--dc);
+  background:color-mix(in srgb,var(--dc) 15%,transparent);border:1px solid color-mix(in srgb,var(--dc) 40%,transparent)}
+:root:not([data-theme="light"]) .dchip{color:color-mix(in srgb,var(--dc) 55%,#fff)}
+dl{margin:0;display:grid;grid-template-columns:118px 1fr;gap:9px 12px;align-items:start}
+dt{padding-top:3px}
+dt{color:var(--muted);font-weight:700;font-size:.88rem}
+dd{margin:0;font-size:.95rem;min-width:0;overflow-wrap:anywhere}
+.plate{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;font-size:.9rem;letter-spacing:.08em;
+  padding:3px 12px;border-radius:7px;background:var(--plate-bg);color:#1b1b1b;border:2px solid #1b1b1b;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:4px 13px 4px 10px;border-radius:99px;font-size:.88rem;font-weight:700;white-space:nowrap;
+  color:var(--c);background:var(--cbg)}
+.badge::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.dash{color:var(--muted)}
+mark{background:color-mix(in srgb,var(--gold) 45%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+footer{margin-top:10px;color:var(--muted);font-size:.82rem}
+
+/* status color hooks */
+.s-active{--c:var(--active);--cbg:var(--active-bg)}
+.s-field{--c:var(--field);--cbg:var(--field-bg)}
+.s-leave{--c:var(--leave);--cbg:var(--leave-bg)}
+.s-absent{--c:var(--absent);--cbg:var(--absent-bg)}
+.s-suspended{--c:var(--suspended);--cbg:var(--suspended-bg)}
+.s-vacant{--c:var(--vacant);--cbg:var(--vacant-bg)}
+.s-parked{--c:var(--parked);--cbg:var(--parked-bg)}
+.s-inuse{--c:var(--field);--cbg:var(--field-bg)}
+.av.veh-av{background:var(--c);color:#fff;border:none}
+.av.veh-av svg{width:24px;height:24px}
+.t-parked{--tc:var(--g-par);--tb:var(--g-par-bg);--tl:var(--g-par-line);--tink:var(--g-par-ink)}
+.sec-parked{--sc:var(--g-par)}
+.d-acf{--dc:var(--d-acf)}.d-fpo{--dc:var(--d-fpo)}.d-insp{--dc:var(--d-insp)}.d-rang{--dc:var(--d-rang)}
+.sec-office{--sc:var(--g-off)}.d-off{--dc:var(--d-off)}.sec-acf{--sc:var(--g-acf)}.sec-nursery{--sc:var(--g-nur)}.sec-special{--sc:var(--g-spe)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:#0b2a12;color:var(--gold-light);border:1px solid var(--gold);padding:9px 16px;border-radius:99px;font-weight:700;font-size:.88rem;
+  transition:opacity .25s,transform .25s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Mobile ---------- */
+@media (max-width:760px){
+  .bar-in{padding:10px 16px}
+  .glance{grid-template-columns:1fr;margin-top:18px}
+  .glance{grid-template-columns:1.3fr 1fr}
+  .officer.dcf{min-height:0}
+  .np-lead .np-name{font-size:1.1rem}.np-lead .np-title{font-size:.7rem}.np-rank{font-size:.52rem;letter-spacing:.1em}
+  .officer.admin .np-name{font-size:.85rem}
+  .g-main{grid-column:1/-1;order:3}
+  .officer{min-height:0;height:min(68vw,300px);border-right:none;border-bottom:4px solid var(--gold)}
+  .officer:not(.admin){border-right:2px solid var(--gold)}
+  .officer.admin{order:2;border-left:2px solid var(--gold)}
+  .officer img{width:min(56vw,250px);margin-bottom:-4%}
+  .officer.admin img,.officer.dcf img{width:100%;margin:0}
+  .nameplate{left:6px;right:6px;bottom:6px;padding:7px 6px 8px;border-radius:11px}
+  .np-name{font-size:.92rem}.np-title{font-size:.64rem;margin-top:2px}
+  .g-main{padding:20px 18px}
+  .big{font-size:3rem}
+  .chips{gap:6px}.chip{padding:6px 10px 6px 8px;font-size:.82rem;gap:6px}.chip i{width:10px;height:10px}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tile.t-all,.tile.t-parked{grid-column:1/-1}
+  .tile{min-height:66px;padding:10px 11px;gap:10px}
+  .tile .ic{width:38px;height:38px;border-radius:12px}
+  .tile svg{width:21px;height:21px}
+  .tile .tl{font-size:.9rem}
+  .cards{grid-template-columns:1fr}
+  .ph{padding:14px 16px;gap:12px}
+  .ph h3{font-size:1.12rem}
+  .ph .cnt{padding-left:12px;font-size:.85rem}
+  dl{grid-template-columns:110px 1fr}
+}
+@media (display-mode:standalone){ .hbtn.install{display:none} }
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}
+}
+@media print{
+  #splash,.tiles,.fhead,.searchbox,.hbtn{display:none!important}
+  .glance{margin-top:0;box-shadow:none}.panel{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- Splash: short video intro (about 6 seconds), shown once per visit. Tap anywhere or press Skip to close. -->
+<div id="splash" role="presentation" aria-hidden="true">
+  <div class="sp-bg"></div>
+  <video class="sp-vid" id="spVid" muted playsinline preload="auto" poster="assets/splash/splash-poster.jpg" disablepictureinpicture></video>
+  <div class="sp-shade"></div>
+  <button class="sp-skip" id="spSkip" type="button">Skip ›</button>
+  <div class="sp-text">
+    <div class="sp-kick">Forestry &amp; Wildlife Department · Punjab</div>
+    <h2 class="sp-title"><span>Daily Activity Tracker</span></h2>
+    <div class="sp-rule"></div>
+    <div class="sp-sub">Publicity and Extension Division, Lahore</div>
+    <div class="sp-tag">Greener Lahore, Healthier Tomorrow</div>
+  </div>
+  <div class="sp-bar"><i id="spBar"></i></div>
+</div>
+<script>
+  /* Show the intro once per browser session; skip it on reloads and Refresh. */
+  (function(){
+    var sp = document.getElementById('splash'), seen = false;
+    try{ seen = sessionStorage.getItem('introSeen') === '1'; sessionStorage.setItem('introSeen','1'); }catch(e){}
+    if(seen){ sp.className = 'gone'; window.__introSkipped = true; return; }
+    var v = document.getElementById('spVid');
+    var lite = (navigator.connection && navigator.connection.saveData) || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(lite){ window.__introLite = true; return; }
+    // iPhone/iPad (and Safari generally) get the H.264 MP4, which every Apple device plays in hardware.
+    // Other browsers get the smaller AV1 WebM only if they say they fully support it.
+    var ua = navigator.userAgent, apple = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) || (/Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Android/.test(ua));
+    var av1 = !apple && v.canPlayType('video/webm; codecs="av01.0.05M.08"') === 'probably';
+    v.muted = true; v.defaultMuted = true; v.playsInline = true;
+    v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    v.src = av1 ? 'assets/splash/splash.webm' : 'assets/splash/splash.mp4';
+    v.load();
+  })();
+</script>
+
+<header>
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <img class="hero-img" src="assets/hero-banner.webp" srcset="assets/hero-banner-sm.webp 900w, assets/hero-banner.webp 1220w" sizes="(max-width:1000px) 100vw, 1000px" width="1220" height="893" alt="Majid Shamrez, Deputy Conservator of Forest, Publicity and Extension, Division Lahore. Greener Lahore, Healthier Tomorrow.">
+  </div>
+  <div class="bar-top">
+   <div class="hdr">
+    <div class="hdr-main">
+    <div class="bar-in">
+      <div>
+        <h1><svg class="h1-leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3C11 3 5 8 5 15c0 1.3.3 2.4.8 3.4C8 12 12 9 16 7c-4 3-7 7-8.6 12.3L9 20c.7-1.3 1.4-2 2-2.6C17 17 21 12 20 3z" fill="url(#lg)"/><defs><linearGradient id="lg" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#7cb342"/><stop offset="1" stop-color="#e0e86a"/></linearGradient></defs></svg>Daily Activity Tracker</h1>
+        <div class="org" id="org"></div>
+      </div>
+      <div class="datebox">
+        <span class="date"><svg class="cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" stroke-width="2.6"/></svg><span id="date"></span></span>
+        <button class="hbtn refresh" type="button" data-refresh title="Reload for the latest numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Refresh</span></button>
+        <button class="hbtn restart" type="button" data-restart title="Restart the app and replay the intro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v7"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><span>Restart app</span></button>
+        <button class="hbtn" id="themebtn" type="button" aria-label="Switch theme">
+          <svg class="theme-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <g class="moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></g>
+            <g class="sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g>
+          </svg>
+          <span id="themeLabel">Light mode</span>
+        </button>
+        <button class="hbtn install" id="installbtn" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Install app
+        </button>
+      </div>
+    </div>
+    <div class="gs-row">
+      <div class="gsearch" id="gsearch">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="gq" type="search" autocomplete="off" placeholder="Search all motorbikes: number, name, post, status, phone…" aria-label="Search all motorbikes" aria-controls="gres" aria-expanded="false">
+        <kbd>/</kbd>
+        <div class="gres" id="gres" role="listbox" hidden></div>
+      </div>
+    </div>
+    </div>
+   </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="live" aria-label="Live fleet">
+    <div class="lv-head">
+      <div class="lv-title">
+        <div><h2>Live Fleet</h2><p>Tracker status of division vehicles</p></div>
+        <span class="livepill"><i></i>LIVE</span>
+      </div>
+      <span class="lv-right"><button class="lv-refresh" type="button" data-refresh title="Reload for the latest numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Refresh</span></button><button class="lv-restart" type="button" data-restart title="Restart the app and replay the intro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v7"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><span>Restart app</span></button><span class="lv-asof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="lvAsof"></span></span></span>
+    </div>
+    <div class="lv-stats" id="lvStats"></div>
+    <div class="tree" id="tree" style="--cyc:4.8s">
+      <div class="tr-ic" aria-hidden="true">
+        <img class="tf t1" src="assets/tree-1.webp" alt="" width="360" height="327" decoding="async">
+        <img class="tf t2" src="assets/tree-2.webp" alt="" width="360" height="327" decoding="async">
+        <img class="tf t3" src="assets/tree-3.webp" alt="" width="360" height="327" decoding="async">
+        <span class="tf-dust"></span><span class="tf-dust d2"></span>
+        <span class="tf-minus">−1</span>
+      </div>
+      <div class="tr-main">
+        <div class="tr-k">Global tree loss <span class="tr-est">estimate</span></div>
+        <div class="tr-big"><span class="tr-approx">≈</span><span id="trNum">0</span></div>
+        <div class="tr-lb" id="trLb">trees cut down since you opened this page</div>
+      </div>
+      <div class="tr-side">
+        <div class="tr-seg" id="trSeg" role="group" aria-label="Time window"></div>
+        <div class="tr-bar"><span id="trBar"></span></div>
+      </div>
+    </div>
+    <div class="lv-bottom">
+      <div class="lv-tabs" id="lvTabs"></div>
+      <div class="lv-list" id="lvList"></div>
+      <p class="lv-note" id="lvNote"></p>
+    </div>
+  </section>
+
+  <section class="glance lead hero2" aria-label="Summary">
+    <div class="h2-bg" aria-hidden="true"></div>
+    <div class="lead-pic">
+      <img src="assets/majid-dcf-2026.webp" alt="Majid Shamrez, Deputy Conservator of Forest" width="900" height="1045">
+      <div class="lead-plate"><b>Majid Shamrez</b><span>Deputy Conservator of Forest</span></div>
+    </div>
+    <div class="g-main">
+      <div>
+        <div class="big" id="bigNum"></div>
+        <div class="big-l">posts staffed today</div>
+      </div>
+      <div>
+        <div class="bar" id="bar" role="img" aria-label="Status breakdown"></div>
+        <div class="chips" id="chips" aria-label="Filter by status"></div>
+      </div>
+      <div class="meta" id="meta"></div>
+    </div>
+  </section>
+
+  <div class="fhead">
+    <h2>Filter posts</h2>
+    <button class="clear" id="clear" type="button" hidden>✕ Clear filters</button>
+  </div>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="searchbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input class="search" id="q" type="search" placeholder="Search name, vehicle, station or remarks" aria-label="Search" autocomplete="off">
+    <button class="qx" id="qx" type="button" aria-label="Clear search" hidden>×</button>
+  </div>
+
+  <div id="sections"></div>
+  <section class="focal" aria-label="Focal person">
+    <img src="assets/admin.webp" alt="Muhammad Zeeshan Saeed, Focal Person" width="640" height="846" loading="lazy">
+    <div class="fo-tx">
+      <div class="fo-k">Focal Person</div>
+      <div class="fo-name">Muhammad Zeeshan Saeed</div>
+      <div class="fo-sub">Publicity and Extension Division, Lahore</div>
+    </div>
+  </section>
+  <footer id="foot"></footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="installbar" id="installbar" hidden>
+  <button class="ib-main" id="ibMain" type="button">
+    <img src="assets/icons/icon-192.png?v=3" alt="" width="40" height="40">
+    <span class="ib-tx"><b>Install the app</b><small>Add Activity Tracker to your home screen</small></span>
+    <span class="ib-go">Install</span>
+  </button>
+  <button class="ib-x" id="ibX" type="button" aria-label="Hide install button">×</button>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <img src="assets/icons/icon-192.png?v=3" alt="" width="64" height="64" class="sheet-ic">
+    <h3 id="sheetTitle">Install Activity Tracker</h3>
+    <ol id="sheetSteps"></ol>
+    <button class="sheet-ok" id="sheetOk" type="button">Got it</button>
+  </div>
+</div>
+
+<!-- ============ DAILY DATA: replace only this block each day ============ -->
+<script id="data" type="application/json">
+{
+ "org": "Publicity and Extension Division, Lahore",
+ "date": "2026-11-16",
+ "sections": [
+  {
+   "id": "office",
+   "label": "Office Staff",
+   "title": "DAILY ACTIVITY REPORT OF OFFICE STAFF OF PUBLICITY AND EXTENSION DIVISION, LAHORE",
+   "areaLabel": "Posted at",
+   "rows": [
+    {
+     "sr": 1,
+     "unit": null,
+     "name": "Mr. Rashid",
+     "designation": "Machine Operator",
+     "vehicle": "GAA-4495",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0321-9417624",
+     "vehicleType": "Motorbike",
+     "model": 2022,
+     "tracker": "online"
+    },
+    {
+     "sr": 2,
+     "unit": null,
+     "name": "Mr. Zeeshan Saeed",
+     "designation": "Junior Clerk",
+     "vehicle": "GAA-5507",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0309-5520052",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 3,
+     "unit": null,
+     "name": "Mr. Lakht-e-Haider",
+     "designation": "Driver",
+     "vehicle": "GAA-5559",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0305-4381214",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 4,
+     "unit": null,
+     "name": "Mr. Shakeel",
+     "designation": "Naib Qasid",
+     "vehicle": "GAA-5506",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-7993083",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 5,
+     "unit": null,
+     "name": "Mr. Zeeshan Safdar",
+     "designation": "Senior Clerk",
+     "vehicle": "GBC-4036",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0308-4273519",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 6,
+     "unit": null,
+     "name": "Mr. Shahzad",
+     "designation": "Store Keeper",
+     "vehicle": "GBC-1743",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-6547132",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "offline"
+    },
+    {
+     "sr": 7,
+     "unit": null,
+     "name": "Mr. Jamshaid",
+     "designation": "Photographer",
+     "vehicle": "GBC-1547",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0301-4314891",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 8,
+     "unit": null,
+     "name": "Mr. Amjad",
+     "designation": "Projection Operator",
+     "vehicle": "GBC-5424",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0321-8889231",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 9,
+     "unit": null,
+     "name": "Mr. Bilal",
+     "designation": "Junior Clerk",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0321-4340988",
+     "vehicle": "GBC-3010",
+     "vehicleType": "EV Bike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 10,
+     "unit": null,
+     "name": "Mr. Imran Abbas",
+     "designation": "Driver",
+     "vehicle": "GBC-6316",
+     "area": null,
+     "status": "active",
+     "remarks": null,
+     "contact": "0306-0451272",
+     "vehicleType": "EV Bike",
+     "model": 2026,
+     "tracker": "online"
+    }
+   ]
+  },
+  {
+   "id": "acf",
+   "label": "ACFs / FPOs",
+   "title": "DAILY ACTIVITY REPORT OF ACFs / FPOs OF PUBLICITY AND EXTENSION DIVISION, LAHORE",
+   "areaLabel": "Station / Area",
+   "rows": [
+    {
+     "sr": 1,
+     "unit": "Extension Sub Division, Lahore",
+     "name": "Mr. Kashif Saeed",
+     "designation": "ACF, Ext. Sub Div. Lahore",
+     "vehicle": "GBC-9522",
+     "area": "Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-7449987",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 2,
+     "unit": "Extension Sub Division Nankana Sahib",
+     "name": "Mr. Muhammad Ishaq",
+     "designation": "ACF, Ext. Sub Div. Nankana Sahib",
+     "vehicle": "GAA-5527",
+     "area": "Nankana Sahib",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-8070629",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 3,
+     "unit": "Extension Sub Division, Gujrat/ Mandi Bahauddin",
+     "name": "Mr. Muhammad Ashraf Tabani",
+     "designation": "ACF, Ext. Sub Div. Gujrat/Mandi Bahauddin",
+     "vehicle": "GAA-5548",
+     "area": "Gujrat/Mandi Bahauddin",
+     "status": "active",
+     "remarks": null,
+     "contact": "0305-8255397",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 4,
+     "unit": "Extension Sub Division, Gujranwala/ Hafizabad",
+     "name": "Mr. Shabbir Kashif Bukhari",
+     "designation": "ACF, Ext. Sub Div. Gujranwala/ Hafizabad",
+     "vehicle": "GBC-9515",
+     "area": "Gujranwala/ Hafizabad",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-4363637",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "offline"
+    },
+    {
+     "sr": 5,
+     "unit": "Extension Sub Division, Faisalabad",
+     "name": null,
+     "designation": null,
+     "vehicle": null,
+     "area": null,
+     "status": "vacant",
+     "remarks": null
+    },
+    {
+     "sr": 6,
+     "unit": "Extension Sub Division, Jhang",
+     "name": "Mr. Yaqoob",
+     "designation": "FPO, Ext. Range Jhang",
+     "vehicle": null,
+     "area": null,
+     "status": "active",
+     "remarks": null
+    },
+    {
+     "sr": 7,
+     "unit": "Extension Range Kasur",
+     "name": "Mr. Muhammad Ashraf Bhatti",
+     "designation": "FPO, Ext. Range Kasur",
+     "vehicle": "GAA-5534",
+     "area": "Kasur",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-4690070",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 8,
+     "unit": "Extension Range Sheikhupura",
+     "name": "Mr. Sharafat Ali",
+     "designation": "FPO, Ext. Range Sheikhupura",
+     "vehicle": "GAA-5522",
+     "area": "Sheikhupura",
+     "status": "active",
+     "remarks": null,
+     "contact": "0348-1814640",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 9,
+     "unit": "Extension Range Sialkot / Narowal",
+     "name": null,
+     "designation": null,
+     "vehicle": null,
+     "area": null,
+     "status": "vacant",
+     "remarks": null
+    },
+    {
+     "sr": 10,
+     "unit": "Extension Range Chiniot",
+     "name": null,
+     "designation": null,
+     "vehicle": null,
+     "area": null,
+     "status": "vacant",
+     "remarks": null
+    },
+    {
+     "sr": 11,
+     "unit": "Extension Range Toba Tek Singh",
+     "name": null,
+     "designation": null,
+     "vehicle": null,
+     "area": null,
+     "status": "vacant",
+     "remarks": null
+    }
+   ]
+  },
+  {
+   "id": "nursery",
+   "label": "Nursery In-Charge",
+   "title": "DAILY ACTIVITY REPORT OF FIELD STAFF POSTED AT EXTENSION NURSERIES",
+   "areaLabel": "Nursery Location",
+   "rows": [
+    {
+     "sr": 1,
+     "unit": "Extension Sub Division, Lahore",
+     "name": "Mr. Zafar Iqbal",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5560",
+     "area": "Extension Nursery, 108-Ravi Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0323-4431453",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 2,
+     "unit": "Extension Sub Division, Lahore",
+     "name": "Mr. Najam ul Saqib",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5557",
+     "area": "Extension Nursery, Royal Palm, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0307-4139378",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 3,
+     "unit": "Extension Sub Division, Lahore",
+     "name": "Mr. Muhammad Naveed",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5562",
+     "area": "Extension Nursery, Jallo Park, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0307-4407307",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 4,
+     "unit": "Extension Sub Division Nankana Sahib",
+     "name": "Mr. Asghar Ali",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5549",
+     "area": "Extension Nursery, Chandar Kot, Nankana",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-4523604",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 5,
+     "unit": "Extension Sub Division, Gujrat/ Mandi Bahauddin",
+     "name": "Mr. Nadeem Akhtar",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5509",
+     "area": "Extension Nursery, THQ Kharian",
+     "status": "active",
+     "remarks": null,
+     "contact": "0306-9602987",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 6,
+     "unit": "Extension Sub Division, Gujranwala/ Hafizabad",
+     "name": "Mr. Muhammad Sufiyan",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5514",
+     "area": "Extension Nursery Lohianwala, Gujranwala",
+     "status": "active",
+     "remarks": null,
+     "contact": "0303-4609606",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 7,
+     "unit": "Extension Sub Division, Faisalabad",
+     "name": "Mr. Riaz Ahmad",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5530",
+     "area": "Extension Nursery Gatwala, Faisalabad",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-4438762",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 8,
+     "unit": "Extension Sub Division, Jhang",
+     "name": "Mr. Khalid Nadeem",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5515",
+     "area": "Extension Nursery Jamia Chowk, Jhang",
+     "status": "active",
+     "remarks": null,
+     "contact": "0341-8784671",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 9,
+     "unit": "Extension Range Sheikhupura",
+     "name": "Mr. Muhammad Akram",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-5517",
+     "area": "Extension Nursery Murike",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-4338487",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 10,
+     "unit": "Extension Range Sheikhupura",
+     "name": "Mr. Irfan Ali",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-4494",
+     "area": "Extension Nursery Sharaqpur, Sheikhupura",
+     "status": "active",
+     "remarks": null,
+     "contact": "0301-4490212",
+     "vehicleType": "Motorbike",
+     "model": 2022,
+     "tracker": "online"
+    },
+    {
+     "sr": 11,
+     "unit": "Extension Range Kasur",
+     "name": "Mr. Abdul Qadeer",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-5546",
+     "area": "Extension Nursery, Hamza Town, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-6594102",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 12,
+     "unit": "Extension Range Kasur",
+     "name": "Mr. Tanveer Hussain",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5536",
+     "area": "Extension Nursery Jagowala Pattoki",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-7927115",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 13,
+     "unit": "Extension Range Sialkot / Narowal",
+     "name": "Mr. Saqib Naeem",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5513",
+     "area": "Extension Nursery Sambrial Sialkot",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-6104045",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 14,
+     "unit": "Extension Range Sialkot / Narowal",
+     "name": "Mr. Rizwan Ullah",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5510",
+     "area": "Extension Nursery Motra Pull Daska Sialkot",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-7176085",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 15,
+     "unit": "Extension Range Sialkot / Narowal",
+     "name": null,
+     "designation": null,
+     "vehicle": null,
+     "area": "Extension Nursery Qila Ahamabad, Narowal",
+     "status": "vacant",
+     "remarks": null
+    },
+    {
+     "sr": 16,
+     "unit": "Extension Range Chiniot",
+     "name": "Mr. Riaz Ahmad",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5542",
+     "area": "Extension Nursery Jamiabad Bhowana, Chiniot",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-7747794",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 17,
+     "unit": "Extension Range Toba Tek Singh",
+     "name": "Mr. Ausaf ur Rehman",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5531",
+     "area": "Extension Nursery Toba Tek Singh",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-4345265",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    }
+   ]
+  },
+  {
+   "id": "special",
+   "label": "Special Duty",
+   "title": "DAILY ACTIVITY REPORT OF FIELD STAFF DEPUTED FOR SPECIAL ASSIGNMENTS",
+   "areaLabel": "Assigned Duty",
+   "rows": [
+    {
+     "sr": 1,
+     "unit": null,
+     "name": "Mr. Ansar Baig",
+     "designation": null,
+     "area": "Forest Complex, 24-Cooper Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": null,
+     "vehicle": "GBC-4902",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "offline"
+    },
+    {
+     "sr": 2,
+     "unit": null,
+     "name": "Muhammad Abu Saeed",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-4530",
+     "area": "Woodlots at District Jhang",
+     "status": "active",
+     "remarks": null,
+     "contact": "0343-7992281",
+     "vehicleType": "Motorbike",
+     "model": 2022,
+     "tracker": "offline"
+    },
+    {
+     "sr": 3,
+     "unit": null,
+     "name": "Mr. Sajjad Rafique",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-5561",
+     "area": "1-A Upper Mall, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0321-1334338",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 4,
+     "unit": null,
+     "name": "Mr. Safdar Ali",
+     "designation": "Inspector Forest",
+     "vehicle": "GAA-5558",
+     "area": "Forest Complex (Main Gate), 24-Cooper Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0300-4760476",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "online"
+    },
+    {
+     "sr": 5,
+     "unit": null,
+     "name": "Mr. Nauman Sadiq",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5543",
+     "area": "Forest Complex (Main Gate), 24-Cooper Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0305-4775566",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 6,
+     "unit": null,
+     "name": "Mr. Amir Javed",
+     "designation": "Forest Ranger",
+     "vehicle": "GBC-6869",
+     "area": "Forest Complex (Main Gate), 24-Cooper Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-4575720",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 7,
+     "unit": null,
+     "name": "Mr. Sajjad Hussain",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5508",
+     "area": "Armory at 108-Ravi Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0345-7595701",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    },
+    {
+     "sr": 8,
+     "unit": null,
+     "name": "Mr. Muhammad Sohail Khan",
+     "designation": "Forest Ranger",
+     "vehicle": "GAA-5502",
+     "area": "Armory at 108-Ravi Road, Lahore",
+     "status": "active",
+     "remarks": null,
+     "contact": "0343-1170542",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    }
+   ]
+  },
+  {
+   "id": "parked",
+   "label": "Pool",
+   "title": "POOL VEHICLES",
+   "areaLabel": "Area",
+   "notPosts": true,
+   "rows": [
+    {
+     "sr": 1,
+     "unit": null,
+     "name": null,
+     "designation": null,
+     "area": null,
+     "status": "parked",
+     "remarks": null,
+     "vehicle": "GBC-7205",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "online"
+    },
+    {
+     "sr": 2,
+     "unit": null,
+     "name": null,
+     "designation": null,
+     "area": null,
+     "status": "parked",
+     "remarks": null,
+     "vehicle": "GAA-5563",
+     "vehicleType": "Motorbike",
+     "model": 2026,
+     "tracker": "offline"
+    },
+    {
+     "sr": 3,
+     "unit": null,
+     "name": null,
+     "designation": null,
+     "area": null,
+     "status": "parked",
+     "remarks": null,
+     "vehicle": "GAA-5503",
+     "vehicleType": "Motorbike",
+     "model": 2023,
+     "tracker": "offline"
+    }
+   ]
+  }
+ ],
+ "fleetReport": "07.11.2026",
+ "live": {
+  "asOf": "16 Nov 2026, 9:00 AM",
+  "source": "Vehicle tracking portal",
+  "summary": {
+   "total": 43,
+   "moving": 8,
+   "idle": 1,
+   "weakGsm": 5,
+   "offline": 14,
+   "noGps": 0
+  },
+  "vehicles": [
+   {
+    "reg": "GAA-5522",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-4494",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5527",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5506",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GBC-6316",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GBC-9522",
+    "state": "moving",
+    "signal": "weak"
+   },
+   {
+    "reg": "GBC-3010",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5514",
+    "state": "moving",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5531",
+    "state": "idle",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5561",
+    "state": "stop",
+    "signal": "low"
+   },
+   {
+    "reg": "GAA-5560",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5557",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5562",
+    "state": "stop",
+    "signal": "low"
+   },
+   {
+    "reg": "GBC-4036",
+    "state": "stop",
+    "signal": "low"
+   },
+   {
+    "reg": "GBC-6869",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5510",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5509",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5534",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5546",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5536",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GBC-1547",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5558",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5515",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5530",
+    "state": "stop",
+    "signal": "strong"
+   },
+   {
+    "reg": "GAA-5517",
+    "state": "stop",
+    "signal": "weak"
+   },
+   {
+    "reg": "GAA-4495",
+    "state": "stop",
+    "signal": "weak"
+   },
+   {
+    "reg": "GAA-5507",
+    "state": "stop",
+    "signal": "weak"
+   },
+   {
+    "reg": "GBC-7205",
+    "state": "stop",
+    "signal": "weak"
+   },
+   {
+    "reg": "GBC-5424",
+    "state": "stop",
+    "signal": "weak"
+   }
+  ]
+ },
+ "fleet": [
+  "GAA-4494",
+  "GAA-4495",
+  "GAA-4530",
+  "GAA-5563",
+  "GAA-5562",
+  "GAA-5561",
+  "GAA-5560",
+  "GAA-5557",
+  "GAA-5558",
+  "GAA-5549",
+  "GAA-5527",
+  "GAA-5514",
+  "GAA-5509",
+  "GAA-5548",
+  "GAA-5546",
+  "GAA-5543",
+  "GAA-5536",
+  "GAA-5534",
+  "GAA-5517",
+  "GAA-5513",
+  "GAA-5510",
+  "GAA-5507",
+  "GAA-5559",
+  "GAA-5506",
+  "GAA-5522",
+  "GAA-5508",
+  "GAA-5531",
+  "GAA-5502",
+  "GAA-5530",
+  "GAA-5515",
+  "GAA-5542",
+  "GBC-9522",
+  "GBC-9515",
+  "GBC-4036",
+  "GBC-1743",
+  "GBC-1547",
+  "GBC-6869",
+  "GBC-5424",
+  "GBC-4902",
+  "GBC-7205",
+  "GBC-3010",
+  "GBC-6316",
+  "GAA-5503"
+ ]
+}
+</script>
+<!-- ======================================================================= -->
+
+<script>
+function __boot(){
+  /* ---- Settings ---- */
+
+  var DATA = window.__DATA;
+  var LABELS = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
+  var ORDER  = ['active','inuse','field','leave','absent','suspended','parked','vacant'];
+  var ICONS = {
+    parked:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17" r="3"/><circle cx="18.5" cy="17" r="3"/><path d="M5.5 17 9 10h5l4.5 7M9 10 7.5 7H5M14 10l1.3-2.6H18"/><path d="M8 3.5h8" stroke-width="2.4"/></svg>',
+    office:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18M11 12.5v1.5h2v-1.5"/></svg>',
+    all:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="m2 12 10 5 10-5M2 16l10 5 10-5"/></svg>',
+    acf:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.2"/><circle cx="5" cy="9" r="2.4"/><circle cx="19" cy="9" r="2.4"/><path d="M6 20c0-3.6 2.7-6.5 6-6.5s6 2.9 6 6.5z"/><path d="M0 20c0-2.8 2-5 4.6-5 .9 0 1.7.3 2.4.7A8 8 0 0 0 4.6 20zM24 20c0-2.8-2-5-4.6-5-.9 0-1.7.3-2.4.7a8 8 0 0 1 2.4 4.3z"/></svg>',
+    nursery:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12C12 7 8.5 4 3 4c0 5 3.5 8 9 8z"/><path d="M12 14c0-4 3-7 8.5-7 0 4-3 7-8.5 7z"/></svg>',
+    special:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path d="m12 7.5 1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z" fill="currentColor" stroke="none"/></svg>'
+  };
+  var current = 'all', statusFilter = '', trackerFilter = false;
+
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  var term = '';
+  function hl(v){
+    var s = esc(v);
+    if(!term) return s;
+    var t = esc(term).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return s.replace(new RegExp('('+t+')','ig'),'<mark>$1</mark>');
+  }
+  function cell(v){ return v ? hl(v) : '<span class="dash">—</span>'; }
+
+  /* ---- Splash (video intro) ---- */
+  var splash = document.getElementById('splash'), spVid = document.getElementById('spVid'), spBarEl = document.getElementById('spBar');
+  var splashDone = false, splashWaiters = [];
+  function whenSplashDone(fn){ if(splashDone) fn(); else splashWaiters.push(fn); }
+  function closeSplash(){
+    if(splashDone) return; splashDone = true;
+    splash.classList.add('out'); try{ spVid.pause(); }catch(e){}
+    setTimeout(function(){ splash.classList.add('gone'); spVid.removeAttribute('src'); spVid.innerHTML=''; try{ spVid.load(); }catch(e){} }, 850);
+    splashWaiters.forEach(function(f){ setTimeout(f, 250); });
+  }
+  if(window.__introSkipped){ splashDone = true; }
+  else {
+    splash.addEventListener('click', closeSplash);
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') closeSplash(); });
+    var hardStop = setTimeout(closeSplash, 9000);       // never hold people longer than this
+    if(window.__introLite){ spBarEl.style.transition = 'width 2.2s linear'; requestAnimationFrame(function(){ spBarEl.style.width='100%'; }); setTimeout(closeSplash, 2400); }
+    else {
+      var started = false;
+      spVid.addEventListener('playing', function(){ started = true; spVid.classList.add('on'); });
+      spVid.addEventListener('timeupdate', function(){ if(spVid.duration) spBarEl.style.width = (spVid.currentTime / spVid.duration * 100) + '%'; });
+      spVid.addEventListener('ended', closeSplash);
+      spVid.addEventListener('error', function(){ setTimeout(closeSplash, 1800); });
+      var p; try{ spVid.muted = true; p = spVid.play(); }catch(e){ p = null; setTimeout(closeSplash, 2200); }
+      if(p && p.catch) p.catch(function(){ setTimeout(closeSplash, 2200); });   // autoplay blocked: show title over the still, then go
+      setTimeout(function(){ if(!started) closeSplash(); }, 4000);            // very slow connection: don't wait for the video
+    }
+  }
+
+  /* ---- Toast ---- */
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT);
+    toastT = setTimeout(function(){ toastEl.classList.remove('show'); }, 1800); }
+
+  /* ---- Theme: green (default) / light ---- */
+  var root = document.documentElement, themeMeta = document.getElementById('themeColor');
+  function syncTheme(){
+    var light = root.getAttribute('data-theme') === 'light';
+    document.getElementById('themeLabel').textContent = light ? 'Green mode' : 'Light mode';
+    themeMeta.setAttribute('content', light ? '#f6f0e1' : '#071a0d');
+  }
+  document.getElementById('themebtn').onclick = function(){
+    var light = root.getAttribute('data-theme') !== 'light';
+    if(light) root.setAttribute('data-theme','light'); else root.removeAttribute('data-theme');
+    try{ localStorage.setItem('theme', light ? 'light' : 'green'); }catch(e){}
+    syncTheme();
+  };
+  syncTheme();
+
+  /* ---- Header ---- */
+  document.getElementById('org').textContent = DATA.org;
+  var d = new Date(DATA.date + 'T00:00:00');
+  /* header shows today's date from the device, and updates itself after midnight */
+  function showToday(){ document.getElementById('date').textContent =
+    new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
+  showToday(); setInterval(showToday, 60000);
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  /* ---- At a glance ---- */
+  var all = [], posts = [];
+  DATA.sections.forEach(function(s){ s.rows.forEach(function(r){ all.push(r); if(!s.notPosts) posts.push(r); }); });
+  function count(st){ return all.filter(function(r){ return r.status === st; }).length; }
+  var staffed = posts.filter(function(r){ return r.status !== 'vacant'; }).length;
+  document.getElementById('bigNum').innerHTML = staffed + ' <small>of ' + posts.length + '</small>';
+  var vehicles = all.filter(function(r){ return r.vehicle; }).length;
+  var offlineN = all.filter(function(r){ return r.tracker === 'offline'; }).length;
+  document.getElementById('meta').innerHTML =
+    '<span><b>' + vehicles + '</b> vehicles assigned</span><i class="sep"></i><span><b>' + DATA.sections.length + '</b> groups</span>' + (offlineN ? '<i class="sep"></i>' : '') +
+    (offlineN ? '<button class="tbtn" id="tbtn" type="button" aria-pressed="false" title="Show only vehicles whose tracker is offline">'+
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M3 3l18 18"/></svg>'+
+      offlineN + ' trackers offline</button>' : '');
+  var tbtn = document.getElementById('tbtn');
+  if(tbtn) tbtn.addEventListener('click', function(){
+    trackerFilter = !trackerFilter; tbtn.setAttribute('aria-pressed', trackerFilter); render();
+    if(trackerFilter) scrollToResults();
+  });
+
+  var bar = document.getElementById('bar');
+  bar.innerHTML = ORDER.filter(function(k){ return count(k); }).map(function(k){
+    return '<span class="s-'+k+'" data-s="'+k+'" style="flex-grow:'+count(k)+';background:var(--c)" title="'+LABELS[k]+': '+count(k)+'"></span>';
+  }).join('');
+  bar.querySelectorAll('.s-active').forEach(function(el){ el.style.background=''; });
+
+  var chips = document.getElementById('chips');
+  var CHIP_IC = {
+    active:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    parked:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.2"/><circle cx="18.5" cy="16.5" r="3.2"/><path d="M5.5 16.5 9 9.5h5l4.5 7M9 9.5 7.6 7H5.4M14 9.5l1.3-2.6H18"/></svg>',
+    vacant:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a1 1 0 0 1 1 1v8H6V4a1 1 0 0 1 1-1z"/><path d="M5 12h14l-1 4H6z"/><path d="M8 16v5M16 16v5"/></svg>'
+  };
+  function drawChips(){
+    chips.innerHTML = ORDER.filter(function(k){ return count(k); }).map(function(k){
+      return '<button class="chip s-'+k+'" type="button" data-s="'+k+'" aria-pressed="'+(statusFilter===k)+'"><i>'+(CHIP_IC[k]||'')+'</i>'+
+        LABELS[k]+' <b>'+count(k)+'</b></button>';
+    }).join('');
+    bar.classList.toggle('dim', !!statusFilter);
+    bar.querySelectorAll('span').forEach(function(el){ el.classList.toggle('on', el.getAttribute('data-s') === statusFilter); });
+  }
+  chips.addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if(!b) return;
+    statusFilter = statusFilter === b.getAttribute('data-s') ? '' : b.getAttribute('data-s');
+    drawChips(); render();
+    if(statusFilter) scrollToResults();
+  });
+
+  /* ---- Filter tiles ---- */
+  var tilesEl = document.getElementById('tiles');
+  function drawTiles(){
+    var t = [{id:'all',label:'All',n:all.length}].concat(DATA.sections.map(function(s){
+      return {id:s.id,label:s.label.replace('In-Charge','In-charge'),n:s.rows.length,
+        sub:s.notPosts ? s.rows.length+' bikes' : s.rows.filter(function(r){ return r.status!=='vacant'; }).length+' staffed'}; }));
+    t[0].sub = staffed + ' staffed';
+    tilesEl.innerHTML = t.map(function(x){
+      return '<button class="tile t-'+esc(x.id)+'" type="button" data-id="'+esc(x.id)+'" aria-pressed="'+(x.id===current)+'">'+
+        '<span class="ic">'+(ICONS[x.id]||ICONS.all)+'</span><span class="tl">'+esc(x.label)+'<small>'+esc(x.sub)+'</small></span><span class="n">'+x.n+'</span></button>';
+    }).join('');
+  }
+  tilesEl.addEventListener('click', function(e){
+    var b = e.target.closest('.tile'); if(!b) return;
+    var id = b.getAttribute('data-id');
+    current = (current === id && id !== 'all') ? 'all' : id;
+    drawTiles(); render();
+  });
+
+  /* ---- Search ---- */
+  var q = document.getElementById('q'), qx = document.getElementById('qx');
+  q.addEventListener('input', function(){ qx.hidden = !q.value; render(); });
+  qx.addEventListener('click', function(){ q.value=''; qx.hidden=true; render(); q.focus(); });
+  var clearBtn = document.getElementById('clear');
+  clearBtn.addEventListener('click', function(){
+    current='all'; statusFilter=''; trackerFilter=false; if(tbtn) tbtn.setAttribute('aria-pressed','false'); q.value=''; qx.hidden=true; drawTiles(); drawChips(); render();
+  });
+  function jumpTo(reg){
+    current='all'; statusFilter=''; trackerFilter=false; q.value=''; qx.hidden=true;
+    if(typeof tbtn!=='undefined' && tbtn) tbtn.setAttribute('aria-pressed','false');
+    drawTiles(); drawChips(); render();
+    var el = document.querySelector('.card[data-veh="'+reg+'"]');
+    if(!el){ toast(reg + ' is not on the staff list'); return; }
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+  function scrollToResults(){
+    var el = document.getElementById('sections');
+    if(el.getBoundingClientRect().top > window.innerHeight * .8) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  /* ---- Cards ---- */
+  function dkey(des){
+    var s = (des||'').toLowerCase();
+    if(s.indexOf('acf') === 0) return ['d-acf','ACF'];
+    if(s.indexOf('fpo') === 0) return ['d-fpo','FPO'];
+    if(s.indexOf('inspector') === 0) return ['d-insp','Inspector Forest'];
+    if(s.indexOf('forest ranger') === 0) return ['d-rang','Forest Ranger'];
+    return ['d-off', des || ''];
+  }
+  function initials(n){
+    var p = n.replace(/^(mr|mrs|ms|dr)\.?\s+/i,'').split(/\s+/).filter(Boolean);
+    return (((p[0]||'')[0]||'') + ((p.length>1 ? p[p.length-1][0] : '')||'')).toUpperCase();
+  }
+  function title(s){
+    return s.title.replace(/^DAILY ACTIVITY REPORT OF /i,'').toLowerCase()
+      .replace(/(^|\s)\S/g,function(m){return m.toUpperCase();})
+      .replace(/\bAcfs\b/,'ACFs').replace(/\bFpos\b/,'FPOs').replace(/\bOf\b/g,'of').replace(/\bAt\b/g,'at').replace(/\bFor\b/g,'for');
+  }
+  function render(){
+    term = q.value.trim();
+    var lt = term.toLowerCase(), html = '';
+    DATA.sections.forEach(function(s){
+      if(current !== 'all' && current !== s.id) return;
+      var rows = s.rows.filter(function(r){
+        if(statusFilter && r.status !== statusFilter) return false;
+        if(trackerFilter && r.tracker !== 'offline') return false;
+        if(!lt) return true;
+        return [r.name, r.designation, r.vehicle, r.unit, r.area, r.remarks, r.contact, r.vehicleType, r.tracker ? 'tracker ' + r.tracker : '', LABELS[r.status]].join(' ').toLowerCase().indexOf(lt) > -1;
+      });
+      if(!rows.length) return;
+      var showUnit = s.id !== 'special', compact = s.id === 'office' || !!s.notPosts;
+      var staffedN = s.rows.filter(function(r){ return r.status !== 'vacant'; }).length;
+      html += '<section class="panel sec-'+esc(s.id)+'"><div class="ph"><h3>'+esc(title(s))+'</h3>'+
+        '<div class="cnt">'+(s.notPosts ? '<b>'+s.rows.length+'</b>in pool' : '<b>'+staffedN+' of '+s.rows.length+'</b>staffed')+'</div></div><div class="cards">'+
+        rows.map(function(r){
+          var dk = dkey(r.designation);
+          var vacantLabel = r.status==='parked' ? 'Pool vehicle' : r.status==='inuse' ? 'Pool vehicle' : (r.vehicle && s.id==='office' ? 'Unassigned vehicle' : 'Vacant post');
+          var vehAv = (r.status==='parked' || r.status==='inuse') && !r.name;
+          var who = r.name
+            ? '<div class="who"><span class="av '+dk[0]+'">'+esc(initials(r.name))+'</span><div><div class="nm">'+hl(r.name)+
+              '</div>'+(r.designation?'<span class="dchip '+dk[0]+'" title="'+esc(r.designation)+'">'+esc(dk[1])+'</span>':'')+'</div></div>'
+            : vehAv ? '<div class="who"><span class="av veh-av s-'+esc(r.status)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5M14 9l1.5-3H18"/></svg></span><div><div class="nm">'+vacantLabel+'</div></div></div>'
+            : '<div class="who"><span class="av none">?</span><div><div class="nm dash">'+vacantLabel+'</div></div></div>';
+          return '<article class="card s-'+esc(r.status)+(r.status==='vacant'?' vacant':'')+'"'+(r.vehicle?' data-veh="'+esc(r.vehicle)+'"':'')+'>'+who+'<dl>'+
+            (showUnit && !(compact && !r.unit)?'<dt>Sub division</dt><dd>'+cell(r.unit)+'</dd>':'')+
+            '<dt>Vehicle</dt><dd>'+(r.vehicle?'<div class="vline"><button class="plate" type="button" data-copy="'+esc(r.vehicle)+'" title="Copy vehicle number">'+hl(r.vehicle)+'</button>'+
+              (r.vehicleType?'<span class="vmeta">'+esc(r.vehicleType)+(r.model?' · '+esc(r.model):'')+'</span>':'')+
+              (window.__live && window.__live[r.vehicle] ? '<span class="livechip '+window.__live[r.vehicle].state+'"><i></i>'+({moving:'Moving',idle:'Idle',stop:'Stopped'}[window.__live[r.vehicle].state]||'Stopped')+'</span>' : '')+
+              (r.tracker?'<span class="trk'+(r.tracker==='offline'?' off':'')+'">'+(r.tracker==='offline'?'● Tracker offline':'● Tracker online')+'</span>':'')+
+              '</div>':'<span class="dash">—</span>')+'</dd>'+
+            (r.contact?'<dt>Contact</dt><dd><a class="tel" href="tel:'+esc(r.contact.replace(/\D/g,''))+'"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>'+hl(r.contact)+'</a></dd>':'')+
+            (compact && !r.area ? '' : '<dt>'+esc(s.areaLabel)+'</dt><dd>'+cell(r.area)+'</dd>')+
+            '<dt>Status</dt><dd><span class="badge s-'+esc(r.status)+'">'+esc(LABELS[r.status]||r.status)+'</span></dd>'+
+            (compact && !r.remarks ? '' : '<dt>Remarks</dt><dd>'+cell(r.remarks)+'</dd>')+'</dl></article>';
+        }).join('')+'</div></section>';
+    });
+    document.getElementById('sections').innerHTML = html ||
+      '<div class="panel"><div class="empty">No records match. Clear the search or pick another filter.</div></div>';
+    clearBtn.hidden = current === 'all' && !statusFilter && !term && !trackerFilter;
+  }
+  document.getElementById('sections').addEventListener('click', function(e){
+    var p = e.target.closest('[data-copy]'); if(!p) return;
+    var v = p.getAttribute('data-copy');
+    if(navigator.clipboard){ navigator.clipboard.writeText(v).then(function(){ toast('Copied ' + v); }, function(){}); }
+  });
+
+  document.getElementById('foot').textContent =
+    'Source: Daily Activity Report dated ' + d.toLocaleDateString('en-GB') + (DATA.fleetReport ? '; vehicle, contact and tracker details from the Vehicle Trackers Installation Report of ' + DATA.fleetReport : '') + '.';
+  drawChips(); drawTiles(); render();
+
+
+  /* ---- Live fleet ---- */
+  (function(){
+    var L = DATA.live; if(!L) return;
+    var byReg = {};
+    DATA.sections.forEach(function(s){ s.rows.forEach(function(r){ if(r.vehicle && !byReg[r.vehicle]) byReg[r.vehicle] = {r:r, s:s}; }); });
+    var seen = {}, list = L.vehicles.map(function(v){ seen[v.reg]=1; return v; });
+    (DATA.fleet||[]).forEach(function(reg){ if(!seen[reg]) list.push({reg:reg, state:'none', signal:'none'}); });
+    var S = L.summary, T = (typeof S.total === 'number' && S.total > 0) ? S.total : list.length;
+    function num(n){ return typeof n === 'number' && isFinite(n); }
+    var BIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5M14 9l1.5-3H18"/></svg>';
+    var IC = {
+      total:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l3-6h5l4 6M9 11 8 9H6M14 11l1.2-2.5H17"/><path d="M9.5 5.2a4 4 0 0 1 5 0M7.6 3.4a7 7 0 0 1 8.8 0" stroke-width="1.8"/></svg>',
+      moving:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>',
+      idle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>',
+      weak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20v-3M10 20v-7M15 20v-2M20 20v-1"/><path d="M17 4l4 4M21 4l-4 4"/></svg>',
+      off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>',
+      nogps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M4 4l16 16"/></svg>'
+    };
+    var stats = [
+      {k:'total', n:S.total, lb:'Total vehicles', sub:'on tracking', f:''},
+      {k:'moving', n:S.moving, lb:'Moving', sub:'as of ' + (L.asOf.split(', ').pop() || L.asOf), f:'moving'},
+      {k:'idle', n:S.idle, lb:'Idle', sub:'engine on, parked', f:'idle'},
+      {k:'weak', n:S.weakGsm, lb:'Weak GSM', sub:'poor mobile signal', f:'weak'},
+      {k:'off', n:S.offline, lb:'Offline', sub:'not reporting', f:'none'},
+      {k:'nogps', n:S.noGps, lb:'No GPS', sub:'no location fix', f:''}
+    ];
+    var lf = '';
+    window.__paintFresh && window.__paintFresh();
+    var statsEl = document.getElementById('lvStats');
+    statsEl.innerHTML = stats.map(function(x){
+      var ok = num(x.n);
+      return '<button type="button" class="st k-'+x.k+'" data-f="'+x.f+'" aria-pressed="false"'+(ok?'':' title="Not available from the tracking portal"')+'><div class="st-top">'+(ok?'<b data-to="'+x.n+'">0</b>':'<b class="na">—</b>')+
+        '<span class="ring" style="--p:0" data-p="'+(!ok?0:x.k==='total'?100:Math.round(x.n/T*100))+'"><span>'+IC[x.k]+'</span></span></div>'+
+        '<div class="lb">'+x.lb+'</div><div class="sub"><span>'+x.sub+'</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></div></button>';
+    }).join('');
+    // count-up + ring fill
+    whenSplashDone(function(){
+      statsEl.querySelectorAll('.ring').forEach(function(r){ r.style.setProperty('--p', r.getAttribute('data-p')); });
+      statsEl.querySelectorAll('b[data-to]').forEach(function(b){
+        var to = +b.getAttribute('data-to'), t0 = performance.now();
+        (function step(t){ var k = Math.min(1,(t-t0)/900); b.textContent = Math.round(to*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(step); })(t0);
+      });
+    });
+
+    function match(v){ return !lf || (lf==='weak' ? v.signal==='weak' : v.state===lf); }
+    var tabs = [{f:'',lb:'All',k:'#fcde84'},{f:'moving',lb:'Moving',k:'#4ade80'},{f:'idle',lb:'Idle',k:'#ff7a2f'},{f:'stop',lb:'Stopped',k:'#fbbf24'},
+                {f:'weak',lb:'Weak signal',k:'#fb7185'},{f:'none',lb:'Offline',k:'#a3aab5'}];
+    function draw(){
+      document.getElementById('lvTabs').innerHTML = '<span class="lab">Vehicles</span>' + tabs.map(function(t){
+        var n = list.filter(function(v){ return !t.f || (t.f==='weak' ? v.signal==='weak' : v.state===t.f); }).length;
+        return '<button type="button" class="seg" style="--k:'+t.k+'" data-f="'+t.f+'" aria-pressed="'+(lf===t.f)+'"><i></i>'+t.lb+' <b>'+n+'</b></button>';
+      }).join('');
+      statsEl.querySelectorAll('.st').forEach(function(b){ b.setAttribute('aria-pressed', !!lf && b.getAttribute('data-f')===lf); });
+      document.getElementById('lvList').innerHTML = list.filter(match).map(function(v,i){
+        var o = byReg[v.reg], r = o && o.r;
+        var who = r ? (r.name ? r.name.replace(/^Mr\.\s*/,'') + (r.designation ? ' · ' + (r.designation.split(',')[0]) : '') : (r.status === 'parked' ? 'Pool bike' : 'Unassigned')) : 'Not on roster';
+        var pill = v.state==='moving' ? 'Moving' : v.state==='idle' ? 'Idle' : v.state==='stop' ? 'Stopped' : 'Offline';
+        return '<button type="button" class="veh '+v.state+'" data-reg="'+esc(v.reg)+'" style="animation-delay:'+Math.min(i*25,500)+'ms" title="Show '+esc(v.reg)+' in the list">'+
+          '<span class="vic">'+BIKE+'</span><span class="vtx"><span class="pl">'+esc(v.reg)+'</span><div class="who2">'+esc(who)+'</div></span>'+
+          '<span class="vst"><span class="vpill">'+pill+'</span>'+(v.signal!=='none'?'<span class="sig '+v.signal+'" title="Signal: '+v.signal+'"><span></span><span></span><span></span><span></span></span>':'')+'</span></button>';
+      }).join('');
+    }
+    document.getElementById('lvTabs').addEventListener('click', function(e){ var b = e.target.closest('.seg'); if(!b) return; lf = b.getAttribute('data-f'); draw(); });
+    statsEl.addEventListener('click', function(e){ var b = e.target.closest('.st'); if(!b) return; var f = b.getAttribute('data-f'); lf = (lf===f) ? '' : f; draw(); });
+    document.getElementById('lvList').addEventListener('click', function(e){
+      var b = e.target.closest('.veh'); if(!b) return;
+      jumpTo(b.getAttribute('data-reg'));
+    });
+    document.getElementById('lvNote').textContent = 'Tracker data last updated ' + L.asOf + ', from the ' + L.source.toLowerCase() + (L.auto ? ' (synced automatically every 5 minutes)' : '') + '. "Offline" lists vehicles whose trackers were not reporting at that time. A dash (—) means the portal did not supply that number. Tap a vehicle to see who it is assigned to.';
+    window.__live = {};
+    L.vehicles.forEach(function(v){ window.__live[v.reg] = v; });
+    draw(); render();
+  })();
+
+
+  /* ---- Global tree loss meter (estimate) ----
+     About 15 billion trees are cut down worldwide each year (Crowther et al., Nature 2015),
+     which is ~475 a second. The meter multiplies that rate by elapsed time. */
+  (function(){
+    var PER_YEAR = 15e9, RATE = PER_YEAR / (365.25*24*3600);   // ≈ 475 per second
+    var opened = Date.now(), mode = 'live';
+    var MODES = [
+      {id:'live', lb:'Live', txt:'trees cut down since you opened this page'},
+      {id:'s', lb:'1 s', txt:'trees cut down every second', n:RATE},
+      {id:'m', lb:'1 m', txt:'trees cut down every minute', n:RATE*60},
+      {id:'h', lb:'1 h', txt:'trees cut down every hour', n:RATE*3600},
+      {id:'d', lb:'1 d', txt:'trees cut down every day', n:RATE*86400},
+      {id:'today', lb:'Today', txt:'trees cut down so far today'},
+      {id:'y', lb:'This year', txt:'trees cut down so far this year'}
+    ];
+    var seg = document.getElementById('trSeg'), num = document.getElementById('trNum'), lb = document.getElementById('trLb'), bar = document.getElementById('trBar');
+    if(!seg) return;
+    function drawSeg(){ seg.innerHTML = MODES.map(function(m){ return '<button type="button" data-m="'+m.id+'" aria-pressed="'+(m.id===mode)+'">'+m.lb+'</button>'; }).join(''); }
+    seg.addEventListener('click', function(e){ var b = e.target.closest('button'); if(!b) return; mode = b.getAttribute('data-m'); drawSeg(); tick(true); });
+    var fmt = new Intl.NumberFormat('en-US'), last = -1;
+    function tick(force){
+      var now = new Date(), m = MODES.filter(function(x){ return x.id===mode; })[0], v, frac;
+      if(mode==='live'){ v = (now - opened)/1000*RATE; frac = ((now - opened)/1000 % 1); }
+      else if(mode==='today'){ var t0 = new Date(now); t0.setHours(0,0,0,0); v = (now - t0)/1000*RATE; frac = (now - t0)/864e5; }
+      else if(mode==='y'){ var y0 = new Date(now.getFullYear(),0,1); v = (now - y0)/1000*RATE; frac = (now - y0)/(365.25*864e5); }
+      else { v = m.n; frac = 1; }
+      var n = Math.round(v);
+      if(n !== last || force){ num.textContent = fmt.format(n); last = n; }
+      lb.textContent = m.txt;
+      bar.style.width = (Math.min(1,frac)*100).toFixed(2) + '%';
+    }
+    drawSeg(); tick(true);
+    var treeEl = document.getElementById('tree');
+    if('IntersectionObserver' in window) new IntersectionObserver(function(es){ treeEl.classList.toggle('paused', !es[0].isIntersecting); }).observe(treeEl);
+    setInterval(tick, 100);
+  })();
+
+  /* ---- Restart app: fresh load from the server, back to the top, intro video plays again ---- */
+  document.querySelectorAll('[data-restart]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('[data-restart]').forEach(function(b){ b.classList.add('busy'); b.querySelector('span').textContent = 'Restarting…'; });
+      try{ sessionStorage.removeItem('introSeen'); sessionStorage.removeItem('refreshed'); }catch(e){}
+      if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0,0);
+      document.documentElement.style.transition = 'opacity .35s'; document.documentElement.style.opacity = '0';
+      var go = function(){ var u = new URL(location.href); u.search = ''; u.hash = ''; location.replace(u.toString()); };
+      var jobs = [];
+      if('caches' in window) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.open(k).then(function(c){ return c.delete('index.html').then(function(){ return c.delete('./'); }); }); })); }));
+      Promise.all(jobs).catch(function(){}).then(function(){ setTimeout(go, 350); });
+    });
+  });
+  /* ---- Refresh: reload from the server, not the offline copy ---- */
+  document.querySelectorAll('[data-refresh]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('[data-refresh]').forEach(function(b){ b.classList.add('busy'); b.querySelector('span').textContent = 'Refreshing…'; });
+      var done = function(){
+        try{ sessionStorage.setItem('refreshed','1'); }catch(e){}
+        var u = new URL(location.href); u.searchParams.set('r', Date.now()); location.replace(u.toString());
+      };
+      var jobs = [];
+      if('caches' in window) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.open(k).then(function(c){ return c.delete('index.html').then(function(){ return c.delete('./'); }); }); })); }));
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistration) jobs.push(navigator.serviceWorker.getRegistration().then(function(r){ return r && r.update(); }));
+      Promise.all(jobs).catch(function(){}).then(function(){ setTimeout(done, 350); });
+    });
+  });
+  try{
+    if(sessionStorage.getItem('refreshed')){
+      sessionStorage.removeItem('refreshed');
+      if(history.replaceState){ var cu = new URL(location.href); cu.searchParams.delete('r'); history.replaceState(null,'',cu.toString()); }
+      whenSplashDone(function(){ setTimeout(function(){ toast('Showing the latest numbers'); }, 300); });
+    }
+  }catch(e){}
+
+
+  /* ---- Header search: every motorbike, with its rider, post, live status and tracker ---- */
+  (function(){
+    var gq = document.getElementById('gq'), gres = document.getElementById('gres'); if(!gq) return;
+    var L = DATA.live || {vehicles:[]}, LV = {}; L.vehicles.forEach(function(v){ LV[v.reg] = v; });
+    var STATE = {moving:['Moving','#4ade80'], idle:['Idle','#ff7a2f'], stop:['Stopped','#fbbf24'], none:['Offline','#a3aab5']};
+    var items = [], seen = {};
+    DATA.sections.forEach(function(s){ s.rows.forEach(function(r){
+      if(!r.vehicle || seen[r.vehicle]) return; seen[r.vehicle] = 1;
+      items.push({reg:r.vehicle, r:r, s:s});
+    }); });
+    (DATA.fleet||[]).forEach(function(reg){ if(!seen[reg]){ seen[reg]=1; items.push({reg:reg, r:null, s:null}); } });
+    items.forEach(function(it){
+      var r = it.r || {}, v = LV[it.reg], st = v ? v.state : 'none';
+      it.st = st;
+      it.who = r.name ? r.name : (r.status==='parked' ? 'Pool bike' : (it.r ? 'Unassigned' : 'Not on staff list'));
+      it.meta = [r.designation, it.s && it.s.label, r.unit, r.area].filter(Boolean).join(' · ');
+      it.hay = [it.reg, it.reg.replace('-',''), it.who, r.designation, it.s && it.s.label, r.unit, r.area, r.remarks, r.contact, r.contact && r.contact.replace(/\D/g,''),
+        r.vehicleType, r.model, STATE[st][0], v && v.signal==='weak' ? 'weak signal gsm' : '', r.tracker ? 'tracker '+r.tracker : '', LABELS[r.status]].join(' ').toLowerCase();
+    });
+    var act = -1, shown = [];
+    function esc2(x){ return esc(x == null ? '' : x); }
+    function mk(text, t){ var h = esc2(text); if(!t) return h; var re = new RegExp('('+esc(t).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); return h.replace(re,'<mark>$1</mark>'); }
+    function draw(){
+      var t = gq.value.trim(), words = t.toLowerCase().split(/\s+/).filter(Boolean);
+      if(!words.length){ close(); return; }
+      shown = items.filter(function(it){ return words.every(function(w){ return it.hay.indexOf(w) > -1; }); });
+      act = shown.length ? 0 : -1;
+      gres.innerHTML = '<div class="gr-h"><span>'+shown.length+' of '+items.length+' motorbikes</span><span>Tracker data: '+esc2(L.asOf||'')+'</span></div>' +
+        (shown.length ? shown.map(function(it,i){
+          var r = it.r || {}, sp = STATE[it.st];
+          return '<button type="button" class="gr'+(i===0?' act':'')+'" role="option" data-reg="'+esc2(it.reg)+'">'+
+            '<span class="pl">'+mk(it.reg,t)+'</span>'+
+            '<span><div class="nm2">'+mk(it.who.replace(/^Mr\.\s*/,''),t)+'</div><div class="mt">'+mk(it.meta||'—',t)+
+              (r.contact?' · '+mk(r.contact,t):'')+(r.vehicleType?' · '+esc2(r.vehicleType)+(r.model?' '+esc2(r.model):''):'')+'</div></span>'+
+            '<span class="tg"><span style="--k:'+sp[1]+'">'+sp[0]+'</span>'+(r.status==='parked'?'<span style="--k:#f0a35e">Pool</span>':'')+'</span></button>';
+        }).join('') : '<div class="gr-empty">No motorbike matches “'+esc2(t)+'”.</div>');
+      gres.hidden = false; gq.setAttribute('aria-expanded','true');
+    }
+    function close(){ gres.hidden = true; gq.setAttribute('aria-expanded','false'); }
+    function pick(reg){ close(); gq.blur(); jumpTo(reg); }
+    gq.addEventListener('input', draw);
+    gq.addEventListener('focus', function(){ if(gq.value.trim()) draw(); });
+    gq.addEventListener('keydown', function(e){
+      var btns = gres.querySelectorAll('.gr');
+      if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){ if(!btns.length) return; e.preventDefault();
+        act = (act + (e.key==='ArrowDown'?1:-1) + btns.length) % btns.length;
+        btns.forEach(function(b,i){ b.classList.toggle('act', i===act); }); btns[act].scrollIntoView({block:'nearest'}); }
+      else if(e.key === 'Enter' && act > -1 && btns[act]){ e.preventDefault(); pick(btns[act].getAttribute('data-reg')); }
+      else if(e.key === 'Escape'){ close(); }
+    });
+    gres.addEventListener('click', function(e){ var b = e.target.closest('.gr'); if(b) pick(b.getAttribute('data-reg')); });
+    document.addEventListener('click', function(e){ if(!e.target.closest('#gsearch')) close(); });
+    document.addEventListener('keydown', function(e){
+      if(e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.preventDefault(); gq.focus(); }
+    });
+  })();
+
+  /* ---- Install as app ----
+     Chrome/Edge/Android: the browser's own install prompt.
+     iPhone/iPad: Safari has no prompt, so a short how-to sheet is shown instead. */
+  var deferred = null, installBtn = document.getElementById('installbtn'), bar = document.getElementById('installbar');
+  var sheet = document.getElementById('sheet'), steps = document.getElementById('sheetSteps');
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  var ua = navigator.userAgent, isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  function dismissedRecently(){ try{ return Date.now() - (+localStorage.getItem('ibHidden') || 0) < 3*864e5; }catch(e){ return false; } }
+  function showBar(){
+    if(standalone || dismissedRecently()) return;
+    bar.hidden = false; document.body.classList.add('has-ib');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ bar.classList.add('show'); }); });
+  }
+  function hideBar(){ bar.classList.remove('show'); document.body.classList.remove('has-ib'); setTimeout(function(){ bar.hidden = true; }, 500); }
+  function openHelp(){
+    steps.innerHTML = isIOS
+      ? '<li><span>Tap the <b>Share</b> button '+SHARE+' at the bottom of Safari</span></li><li><span>Scroll down and tap <b>Add to Home Screen</b></span></li><li><span>Tap <b>Add</b>. The app appears on your home screen.</span></li>'
+      : '<li><span>Open the browser menu <b>⋮</b> (top right)</span></li><li><span>Tap <b>Install app</b> or <b>Add to Home screen</b></span></li><li><span>Confirm with <b>Install</b>.</span></li>';
+    sheet.hidden = false;
+  }
+  function install(){
+    if(deferred){
+      deferred.prompt();
+      deferred.userChoice.then(function(c){ if(c && c.outcome === 'accepted') hideBar(); }).finally(function(){ deferred = null; });
+    } else openHelp();
+  }
+  if(!standalone){ installBtn.hidden = false; whenSplashDone(function(){ setTimeout(showBar, 1200); }); }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; });
+  installBtn.addEventListener('click', install);
+  document.getElementById('ibMain').addEventListener('click', install);
+  document.getElementById('ibX').addEventListener('click', function(){ try{ localStorage.setItem('ibHidden', Date.now()); }catch(e){} hideBar(); });
+  document.getElementById('sheetOk').addEventListener('click', function(){ sheet.hidden = true; });
+  sheet.addEventListener('click', function(e){ if(e.target === sheet) sheet.hidden = true; });
+  window.addEventListener('appinstalled', function(){ installBtn.hidden = true; hideBar(); toast('App installed'); });
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
+}
+
+/* ---- Tracker snapshot loader ----
+   live.json is written by the sync connector (see sync/). If it is missing, invalid or
+   unreachable, the page keeps the "live" block embedded in the DAILY DATA section. */
+(function(){
+  var STALE_MIN = 15, POLL_MS = 5*60*1000;
+  var DATA = JSON.parse(document.getElementById('data').textContent);
+  window.__DATA = DATA;
+  var STATES = {moving:1, idle:1, stop:1, none:1}, SIGNALS = {strong:1, weak:1, low:1, none:1};
+  var KEYS = ['total','moving','idle','weakGsm','offline','noGps'];
+
+  function validInt(n){ return n === null || (typeof n === 'number' && n >= 0 && Math.floor(n) === n); }
+  function validate(j){
+    if(!j || j.schema !== 1 || typeof j.lastSuccessAt !== 'string' || isNaN(Date.parse(j.lastSuccessAt))) return null;
+    if(!j.summary || !KEYS.every(function(k){ return k in j.summary && validInt(j.summary[k]); })) return null;
+    if(!Array.isArray(j.vehicles) || !j.vehicles.every(function(v){
+      return v && typeof v.reg === 'string' && STATES[v.state] && SIGNALS[v.signal]; })) return null;
+    return j;
+  }
+  function fmt(iso){
+    try{
+      var d = new Date(iso), o = {timeZone:'Asia/Karachi'};
+      return d.toLocaleDateString('en-GB', Object.assign({day:'numeric', month:'short', year:'numeric'}, o)) + ', ' +
+             d.toLocaleTimeString('en-US', Object.assign({hour:'numeric', minute:'2-digit'}, o));
+    }catch(e){ return iso; }
+  }
+  function toLive(j){
+    return {asOf: fmt(j.lastSuccessAt), source: j.source || 'Vehicle tracking portal', summary: j.summary,
+            vehicles: j.vehicles, lastSuccessAt: j.lastSuccessAt, lastError: j.lastError || null, auto: true};
+  }
+  function minsOld(){ var L = DATA.live; return L && L.lastSuccessAt ? (Date.now() - Date.parse(L.lastSuccessAt))/60000 : null; }
+
+  window.__paintFresh = function(){
+    var L = DATA.live, el = document.getElementById('lvAsof'); if(!L || !el) return;
+    var m = minsOld(), stale = m !== null && m > STALE_MIN, tag;
+    if(!L.auto) tag = '<span class="fresh stale" title="Automatic sync not connected; showing the numbers entered by hand">Manual update</span>';
+    else if(stale) tag = '<span class="fresh stale" title="The tracking portal has not answered since this time; showing the last good numbers">Stale · ' + (m < 120 ? Math.round(m) + ' min' : Math.round(m/60) + ' h') + ' old</span>';
+    else tag = '<span class="fresh">Up to date</span>';
+    el.innerHTML = 'Last updated: <b>' + L.asOf.replace(/[&<>]/g, '') + '</b> ' + tag;
+    el.parentNode.classList.toggle('stale', stale || !L.auto);
+    var pill = document.querySelector('.livepill');
+    if(pill){ pill.classList.toggle('stale', stale || !L.auto); pill.lastChild.textContent = stale ? 'STALE' : L.auto ? 'LIVE' : 'DAILY'; }
+  };
+
+  function get(){
+    var ctl = 'AbortController' in window ? new AbortController() : null;
+    var timer = setTimeout(function(){ ctl && ctl.abort(); }, 2500);
+    return fetch('live.json', {cache:'no-store', signal: ctl && ctl.signal})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(validate).catch(function(){ return null; })
+      .finally(function(){ clearTimeout(timer); });
+  }
+
+  var booted = false;
+  function boot(){ if(booted) return; booted = true; __boot(); window.__paintFresh(); }
+  get().then(function(j){
+    if(j) DATA.live = Object.assign({}, DATA.live || {}, toLive(j));
+    boot();
+  });
+
+  // Keep the freshness badge honest and check for new numbers while the page stays open.
+  setInterval(window.__paintFresh, 60000);
+  setInterval(function(){
+    if(document.hidden) return;
+    get().then(function(j){
+      if(!j) { window.__paintFresh(); return; }
+      if(DATA.live && DATA.live.auto && j.lastSuccessAt !== DATA.live.lastSuccessAt){
+        var t = document.getElementById('toast');
+        if(t){ t.textContent = 'New tracker numbers are ready — tap Refresh'; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 6000); }
+      }
+    });
+  }, POLL_MS);
+})();
+</script>
+</body>
+</html>
