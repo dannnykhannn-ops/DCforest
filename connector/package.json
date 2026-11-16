@@ -1,0 +1,15 @@
+{
+  "name": "dc-forest-live-connector",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "dry-run": "node scripts/dry-run.mjs",
+    "dev": "node scripts/dev-server.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "vercel": "^65.16.0",
+    "wrangler": "^4.162.0"
+  }
+}

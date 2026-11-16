@@ -216,14 +216,11 @@ button{-webkit-tap-highlight-color:transparent}
   color:#ffb4b4;font-weight:800;font-size:.72rem;letter-spacing:.14em}
 .livepill i{width:8px;height:8px;border-radius:50%;background:#ff5f5f;box-shadow:0 0 0 0 rgba(255,95,95,.7);animation:ping 1.6s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 9px rgba(255,95,95,0)}100%{box-shadow:0 0 0 0 rgba(255,95,95,0)}}
+.livepill.stale{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.55);color:#fcd34d}
+.livepill.stale i{background:#fbbf24;box-shadow:none;animation:none}
 .lv-asof{display:inline-flex;align-items:center;gap:8px;color:#d9e6cc;font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
 .lv-asof b{color:#fff4d1;font-weight:800}
 .lv-asof svg{width:15px;height:15px;color:var(--gold-light)}
-.lv-asof.stale{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.55)}
-.lv-asof .fresh{margin-left:2px;font-size:.7rem;padding:2px 8px}
-.livepill.stale{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.55)}
-.livepill.stale i{background:#fbbf24;animation:none}
-.st b.na{opacity:.6}
 
 .lv-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;padding:16px 22px 14px}
 /* status cards: tinted glass in the accent colour, big icon in a progress ring, LED glow on hover/focus */
@@ -785,7 +782,7 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
 <header>
   <div class="hero">
     <div class="hero-bg"></div>
-    <img class="hero-img" src="assets/hero-banner.webp" srcset="assets/hero-banner-sm.webp 900w, assets/hero-banner.webp 1220w" sizes="(max-width:1000px) 100vw, 1000px" width="1220" height="893" alt="Majid Shamrez, Deputy Conservator of Forest, Publicity and Extension, Division Lahore. Greener Lahore, Healthier Tomorrow.">
+    <img class="hero-img" src="assets/hero-banner.webp" srcset="assets/hero-banner-sm.webp 900w, assets/hero-banner.webp 1220w" sizes="(max-width:1000px) 100vw, 1000px" width="1220" height="874" alt="Majid Shamrez, Deputy Conservator of Forest, Publicity and Extension, Division Lahore. Greener Lahore, Healthier Tomorrow.">
   </div>
   <div class="bar-top">
    <div class="hdr">
@@ -806,6 +803,7 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
           </svg>
           <span id="themeLabel">Light mode</span>
         </button>
+        <a class="hbtn" href="gate" title="Access passes (owner)" aria-label="Access passes" style="text-decoration:none;font-size:1.25rem;line-height:1;padding-top:0;padding-bottom:2px">&infin;</a>
         <button class="hbtn install" id="installbtn" type="button" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
           Install app
@@ -830,7 +828,7 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
     <div class="lv-head">
       <div class="lv-title">
         <div><h2>Live Fleet</h2><p>Tracker status of division vehicles</p></div>
-        <span class="livepill"><i></i>LIVE</span>
+        <span class="livepill" id="lvPill"><i></i>LIVE</span>
       </div>
       <span class="lv-right"><button class="lv-refresh" type="button" data-refresh title="Reload for the latest numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Refresh</span></button><button class="lv-restart" type="button" data-restart title="Restart the app and replay the intro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v7"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><span>Restart app</span></button><span class="lv-asof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="lvAsof"></span></span></span>
     </div>
@@ -1837,10 +1835,10 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
 <!-- ======================================================================= -->
 
 <script>
-function __boot(){
+(function(){
   /* ---- Settings ---- */
 
-  var DATA = window.__DATA;
+  var DATA = JSON.parse(document.getElementById('data').textContent);
   var LABELS = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
   var ORDER  = ['active','inuse','field','leave','absent','suspended','parked','vacant'];
   var ICONS = {
@@ -1928,14 +1926,27 @@ function __boot(){
   var staffed = posts.filter(function(r){ return r.status !== 'vacant'; }).length;
   document.getElementById('bigNum').innerHTML = staffed + ' <small>of ' + posts.length + '</small>';
   var vehicles = all.filter(function(r){ return r.vehicle; }).length;
-  var offlineN = all.filter(function(r){ return r.tracker === 'offline'; }).length;
-  document.getElementById('meta').innerHTML =
-    '<span><b>' + vehicles + '</b> vehicles assigned</span><i class="sep"></i><span><b>' + DATA.sections.length + '</b> groups</span>' + (offlineN ? '<i class="sep"></i>' : '') +
-    (offlineN ? '<button class="tbtn" id="tbtn" type="button" aria-pressed="false" title="Show only vehicles whose tracker is offline">'+
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M3 3l18 18"/></svg>'+
-      offlineN + ' trackers offline</button>' : '');
-  var tbtn = document.getElementById('tbtn');
-  if(tbtn) tbtn.addEventListener('click', function(){
+  /* Tracker online/offline follows the live feed whenever it knows the vehicle (offline = no report for 48 h,
+     the portal's own rule); the daily data block is only the fallback. */
+  function trk(r){
+    var v = r.vehicle && window.__live && window.__live[r.vehicle];
+    if(v && v.state) return v.state === 'none' ? 'offline' : 'online';
+    return r.tracker || '';
+  }
+  var metaEl = document.getElementById('meta'), tbtn = null;
+  function drawMeta(){
+    var offlineN = all.filter(function(r){ return trk(r) === 'offline'; }).length;
+    if(!offlineN) trackerFilter = false;
+    metaEl.innerHTML =
+      '<span><b>' + vehicles + '</b> vehicles assigned</span><i class="sep"></i><span><b>' + DATA.sections.length + '</b> groups</span>' + (offlineN ? '<i class="sep"></i>' : '') +
+      (offlineN ? '<button class="tbtn" id="tbtn" type="button" aria-pressed="'+trackerFilter+'" title="Show only vehicles whose tracker is offline">'+
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M3 3l18 18"/></svg>'+
+        offlineN + ' trackers offline</button>' : '');
+    tbtn = document.getElementById('tbtn');
+  }
+  drawMeta(); window.__drawMeta = drawMeta;
+  metaEl.addEventListener('click', function(e){
+    if(!e.target.closest('#tbtn')) return;
     trackerFilter = !trackerFilter; tbtn.setAttribute('aria-pressed', trackerFilter); render();
     if(trackerFilter) scrollToResults();
   });
@@ -2033,9 +2044,9 @@ function __boot(){
       if(current !== 'all' && current !== s.id) return;
       var rows = s.rows.filter(function(r){
         if(statusFilter && r.status !== statusFilter) return false;
-        if(trackerFilter && r.tracker !== 'offline') return false;
+        if(trackerFilter && trk(r) !== 'offline') return false;
         if(!lt) return true;
-        return [r.name, r.designation, r.vehicle, r.unit, r.area, r.remarks, r.contact, r.vehicleType, r.tracker ? 'tracker ' + r.tracker : '', LABELS[r.status]].join(' ').toLowerCase().indexOf(lt) > -1;
+        return [r.name, r.designation, r.vehicle, r.unit, r.area, r.remarks, r.contact, r.vehicleType, trk(r) ? 'tracker ' + trk(r) : '', LABELS[r.status]].join(' ').toLowerCase().indexOf(lt) > -1;
       });
       if(!rows.length) return;
       var showUnit = s.id !== 'special', compact = s.id === 'office' || !!s.notPosts;
@@ -2055,8 +2066,8 @@ function __boot(){
             (showUnit && !(compact && !r.unit)?'<dt>Sub division</dt><dd>'+cell(r.unit)+'</dd>':'')+
             '<dt>Vehicle</dt><dd>'+(r.vehicle?'<div class="vline"><button class="plate" type="button" data-copy="'+esc(r.vehicle)+'" title="Copy vehicle number">'+hl(r.vehicle)+'</button>'+
               (r.vehicleType?'<span class="vmeta">'+esc(r.vehicleType)+(r.model?' · '+esc(r.model):'')+'</span>':'')+
-              (window.__live && window.__live[r.vehicle] ? '<span class="livechip '+window.__live[r.vehicle].state+'"><i></i>'+({moving:'Moving',idle:'Idle',stop:'Stopped'}[window.__live[r.vehicle].state]||'Stopped')+'</span>' : '')+
-              (r.tracker?'<span class="trk'+(r.tracker==='offline'?' off':'')+'">'+(r.tracker==='offline'?'● Tracker offline':'● Tracker online')+'</span>':'')+
+              (window.__live && window.__live[r.vehicle] && window.__live[r.vehicle].state !== 'none' ? '<span class="livechip '+window.__live[r.vehicle].state+'"><i></i>'+({moving:'Moving',idle:'Idle',stop:'Stopped'}[window.__live[r.vehicle].state]||'Stopped')+'</span>' : '')+
+              (trk(r)?'<span class="trk'+(trk(r)==='offline'?' off':'')+'">'+(trk(r)==='offline'?'● Tracker offline':'● Tracker online')+'</span>':'')+
               '</div>':'<span class="dash">—</span>')+'</dd>'+
             (r.contact?'<dt>Contact</dt><dd><a class="tel" href="tel:'+esc(r.contact.replace(/\D/g,''))+'"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>'+hl(r.contact)+'</a></dd>':'')+
             (compact && !r.area ? '' : '<dt>'+esc(s.areaLabel)+'</dt><dd>'+cell(r.area)+'</dd>')+
@@ -2084,10 +2095,18 @@ function __boot(){
     var L = DATA.live; if(!L) return;
     var byReg = {};
     DATA.sections.forEach(function(s){ s.rows.forEach(function(r){ if(r.vehicle && !byReg[r.vehicle]) byReg[r.vehicle] = {r:r, s:s}; }); });
-    var seen = {}, list = L.vehicles.map(function(v){ seen[v.reg]=1; return v; });
-    (DATA.fleet||[]).forEach(function(reg){ if(!seen[reg]) list.push({reg:reg, state:'none', signal:'none'}); });
-    var S = L.summary, T = (typeof S.total === 'number' && S.total > 0) ? S.total : list.length;
-    function num(n){ return typeof n === 'number' && isFinite(n); }
+    var list = [], S = L.summary, T = 0, firstPaint = true;
+    /* load(): take a live snapshot (the embedded one, or a newer one from the connector) into the page */
+    function load(next){
+      L = next; DATA.live = L; S = L.summary;
+      var seen = {}; list = L.vehicles.map(function(v){ seen[v.reg]=1; return v; });
+      (DATA.fleet||[]).forEach(function(reg){ if(!seen[reg]) list.push({reg:reg, state:'none', signal:'none'}); });
+      T = (typeof S.total === 'number' && S.total) || list.length;
+      window.__live = {};
+      L.vehicles.forEach(function(v){ window.__live[v.reg] = v; });
+    }
+    load(L);
+    function pct(x){ return x.n == null || !T ? 0 : x.k === 'total' ? 100 : Math.round(x.n/T*100); }
     var BIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5M14 9l1.5-3H18"/></svg>';
     var IC = {
       total:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l3-6h5l4 6M9 11 8 9H6M14 11l1.2-2.5H17"/><path d="M9.5 5.2a4 4 0 0 1 5 0M7.6 3.4a7 7 0 0 1 8.8 0" stroke-width="1.8"/></svg>',
@@ -2097,6 +2116,10 @@ function __boot(){
       off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>',
       nogps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><path d="M4 4l16 16"/></svg>'
     };
+    var lf = '', statsEl = document.getElementById('lvStats');
+    /* paint(): draw the header pill, "last updated" and the six stat cards. A number the source did not
+       supply is shown as a dash, never as 0. */
+    function paint(stale){
     var stats = [
       {k:'total', n:S.total, lb:'Total vehicles', sub:'on tracking', f:''},
       {k:'moving', n:S.moving, lb:'Moving', sub:'as of ' + (L.asOf.split(', ').pop() || L.asOf), f:'moving'},
@@ -2105,23 +2128,26 @@ function __boot(){
       {k:'off', n:S.offline, lb:'Offline', sub:'not reporting', f:'none'},
       {k:'nogps', n:S.noGps, lb:'No GPS', sub:'no location fix', f:''}
     ];
-    var lf = '';
-    window.__paintFresh && window.__paintFresh();
-    var statsEl = document.getElementById('lvStats');
+    document.getElementById('lvAsof').innerHTML = (stale ? 'Last successful update: ' : 'Last updated: ') + '<b>' + esc(L.asOf) + '</b>';
+    var pill = document.getElementById('lvPill');
+    if(pill){ pill.classList.toggle('stale', !!stale); pill.lastChild.textContent = stale ? 'STALE' : 'LIVE';
+      pill.title = stale ? 'The tracking portal could not be reached recently. These are the last numbers received.' : ''; }
     statsEl.innerHTML = stats.map(function(x){
-      var ok = num(x.n);
-      return '<button type="button" class="st k-'+x.k+'" data-f="'+x.f+'" aria-pressed="false"'+(ok?'':' title="Not available from the tracking portal"')+'><div class="st-top">'+(ok?'<b data-to="'+x.n+'">0</b>':'<b class="na">—</b>')+
-        '<span class="ring" style="--p:0" data-p="'+(!ok?0:x.k==='total'?100:Math.round(x.n/T*100))+'"><span>'+IC[x.k]+'</span></span></div>'+
+      return '<button type="button" class="st k-'+x.k+'" data-f="'+x.f+'" aria-pressed="false"><div class="st-top">'+(x.n == null ? '<b title="Not available from the portal">—</b>' : '<b data-to="'+x.n+'">'+(firstPaint ? 0 : x.n)+'</b>')+
+        '<span class="ring" style="--p:'+(firstPaint ? 0 : pct(x))+'" data-p="'+pct(x)+'"><span>'+IC[x.k]+'</span></span></div>'+
         '<div class="lb">'+x.lb+'</div><div class="sub"><span>'+x.sub+'</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></div></button>';
     }).join('');
-    // count-up + ring fill
-    whenSplashDone(function(){
+    // count-up + ring fill (first paint only; later updates just swap the numbers)
+    if(firstPaint) whenSplashDone(function(){
       statsEl.querySelectorAll('.ring').forEach(function(r){ r.style.setProperty('--p', r.getAttribute('data-p')); });
       statsEl.querySelectorAll('b[data-to]').forEach(function(b){
         var to = +b.getAttribute('data-to'), t0 = performance.now();
         (function step(t){ var k = Math.min(1,(t-t0)/900); b.textContent = Math.round(to*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(step); })(t0);
       });
     });
+    firstPaint = false;
+    }
+    paint(false);
 
     function match(v){ return !lf || (lf==='weak' ? v.signal==='weak' : v.state===lf); }
     var tabs = [{f:'',lb:'All',k:'#fcde84'},{f:'moving',lb:'Moving',k:'#4ade80'},{f:'idle',lb:'Idle',k:'#ff7a2f'},{f:'stop',lb:'Stopped',k:'#fbbf24'},
@@ -2138,7 +2164,7 @@ function __boot(){
         var pill = v.state==='moving' ? 'Moving' : v.state==='idle' ? 'Idle' : v.state==='stop' ? 'Stopped' : 'Offline';
         return '<button type="button" class="veh '+v.state+'" data-reg="'+esc(v.reg)+'" style="animation-delay:'+Math.min(i*25,500)+'ms" title="Show '+esc(v.reg)+' in the list">'+
           '<span class="vic">'+BIKE+'</span><span class="vtx"><span class="pl">'+esc(v.reg)+'</span><div class="who2">'+esc(who)+'</div></span>'+
-          '<span class="vst"><span class="vpill">'+pill+'</span>'+(v.signal!=='none'?'<span class="sig '+v.signal+'" title="Signal: '+v.signal+'"><span></span><span></span><span></span><span></span></span>':'')+'</span></button>';
+          '<span class="vst"><span class="vpill">'+pill+'</span>'+(v.signal && v.signal!=='none'?'<span class="sig '+esc(v.signal)+'" title="Signal: '+v.signal+'"><span></span><span></span><span></span><span></span></span>':'')+'</span></button>';
       }).join('');
     }
     document.getElementById('lvTabs').addEventListener('click', function(e){ var b = e.target.closest('.seg'); if(!b) return; lf = b.getAttribute('data-f'); draw(); });
@@ -2147,10 +2173,41 @@ function __boot(){
       var b = e.target.closest('.veh'); if(!b) return;
       jumpTo(b.getAttribute('data-reg'));
     });
-    document.getElementById('lvNote').textContent = 'Tracker data last updated ' + L.asOf + ', from the ' + L.source.toLowerCase() + (L.auto ? ' (synced automatically every 5 minutes)' : '') + '. "Offline" lists vehicles whose trackers were not reporting at that time. A dash (—) means the portal did not supply that number. Tap a vehicle to see who it is assigned to.';
-    window.__live = {};
-    L.vehicles.forEach(function(v){ window.__live[v.reg] = v; });
-    draw(); render();
+    function note(){ document.getElementById('lvNote').textContent = 'Tracker data last updated ' + L.asOf + ', from the ' + L.source.toLowerCase() + '. "Offline" lists vehicles whose trackers were not reporting at that time. Tap a vehicle to see who it is assigned to.'; }
+    note(); draw(); render();
+
+    /* ---- Automatic sync ----
+       The connector (see connector/README.md) polls the tracking portal every 5 minutes and publishes the
+       last successful snapshot at LIVE_URL. This page only ever talks to the connector: no portal address,
+       login or token appears here. If the connector cannot be reached, the numbers already on screen stay
+       (the embedded DAILY DATA block, or the last snapshot this device received) and are marked STALE. */
+    var LIVE_URL = 'api/live.json', POLL_MS = 5*60*1000, STALE_AFTER_MS = 15*60*1000;
+    var lastGood = null, STATE_OK = {moving:1, idle:1, stop:1, none:1};
+    function fmtAsOf(iso){ var t = new Date(iso);
+      return t.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) + ', ' + t.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}); }
+    function usable(j){
+      return !!j && j.schema === 1 && j.available !== false && !!j.summary && typeof j.summary === 'object' &&
+        typeof j.fetchedAt === 'string' && !isNaN(Date.parse(j.fetchedAt)) && Array.isArray(j.vehicles) && j.vehicles.length > 0 &&
+        j.vehicles.every(function(v){ return v && typeof v.reg === 'string' && STATE_OK[v.state] === 1; });
+    }
+    function show(){
+      if(!lastGood){ paint(true); draw(); return; }
+      var stale = Date.now() - Date.parse(lastGood.fetchedAt) > STALE_AFTER_MS;
+      load({asOf: fmtAsOf(lastGood.fetchedAt), source: lastGood.source || L.source, summary: lastGood.summary, vehicles: lastGood.vehicles});
+      if(window.__drawMeta) window.__drawMeta();
+      paint(stale); note(); draw(); render();
+      if(window.__rebuildSearch) window.__rebuildSearch();
+    }
+    function pull(){
+      fetch(LIVE_URL, {cache:'no-store'})
+        .then(function(r){ if(r.status === 401){ location.reload(); throw new Error('locked'); }   // access ended: back to the entry page
+          if(!r.ok) throw new Error('http'); return r.json(); })
+        .then(function(j){ if(!usable(j)) throw new Error('invalid'); lastGood = j; try{ localStorage.setItem('liveSnap', JSON.stringify(j)); }catch(e){} })
+        .catch(function(){ if(!lastGood){ try{ var s = JSON.parse(localStorage.getItem('liveSnap')); if(usable(s)) lastGood = s; }catch(e){} } })
+        .then(show);
+    }
+    pull(); setInterval(pull, POLL_MS);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) pull(); });
   })();
 
 
@@ -2231,7 +2288,6 @@ function __boot(){
   /* ---- Header search: every motorbike, with its rider, post, live status and tracker ---- */
   (function(){
     var gq = document.getElementById('gq'), gres = document.getElementById('gres'); if(!gq) return;
-    var L = DATA.live || {vehicles:[]}, LV = {}; L.vehicles.forEach(function(v){ LV[v.reg] = v; });
     var STATE = {moving:['Moving','#4ade80'], idle:['Idle','#ff7a2f'], stop:['Stopped','#fbbf24'], none:['Offline','#a3aab5']};
     var items = [], seen = {};
     DATA.sections.forEach(function(s){ s.rows.forEach(function(r){
@@ -2239,14 +2295,15 @@ function __boot(){
       items.push({reg:r.vehicle, r:r, s:s});
     }); });
     (DATA.fleet||[]).forEach(function(reg){ if(!seen[reg]){ seen[reg]=1; items.push({reg:reg, r:null, s:null}); } });
-    items.forEach(function(it){
-      var r = it.r || {}, v = LV[it.reg], st = v ? v.state : 'none';
+    function build(){ items.forEach(function(it){
+      var r = it.r || {}, v = (window.__live || {})[it.reg], st = v ? v.state : 'none';
       it.st = st;
       it.who = r.name ? r.name : (r.status==='parked' ? 'Pool bike' : (it.r ? 'Unassigned' : 'Not on staff list'));
       it.meta = [r.designation, it.s && it.s.label, r.unit, r.area].filter(Boolean).join(' · ');
       it.hay = [it.reg, it.reg.replace('-',''), it.who, r.designation, it.s && it.s.label, r.unit, r.area, r.remarks, r.contact, r.contact && r.contact.replace(/\D/g,''),
-        r.vehicleType, r.model, STATE[st][0], v && v.signal==='weak' ? 'weak signal gsm' : '', r.tracker ? 'tracker '+r.tracker : '', LABELS[r.status]].join(' ').toLowerCase();
-    });
+        r.vehicleType, r.model, STATE[st][0], v && v.signal==='weak' ? 'weak signal gsm' : '', v ? 'tracker '+(st==='none'?'offline':'online') : (r.tracker ? 'tracker '+r.tracker : ''), LABELS[r.status]].join(' ').toLowerCase();
+    }); }
+    build(); window.__rebuildSearch = build;   // re-run when a newer live snapshot arrives
     var act = -1, shown = [];
     function esc2(x){ return esc(x == null ? '' : x); }
     function mk(text, t){ var h = esc2(text); if(!t) return h; var re = new RegExp('('+esc(t).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); return h.replace(re,'<mark>$1</mark>'); }
@@ -2255,7 +2312,7 @@ function __boot(){
       if(!words.length){ close(); return; }
       shown = items.filter(function(it){ return words.every(function(w){ return it.hay.indexOf(w) > -1; }); });
       act = shown.length ? 0 : -1;
-      gres.innerHTML = '<div class="gr-h"><span>'+shown.length+' of '+items.length+' motorbikes</span><span>Tracker data: '+esc2(L.asOf||'')+'</span></div>' +
+      gres.innerHTML = '<div class="gr-h"><span>'+shown.length+' of '+items.length+' motorbikes</span><span>Tracker data: '+esc2((DATA.live||{}).asOf||'')+'</span></div>' +
         (shown.length ? shown.map(function(it,i){
           var r = it.r || {}, sp = STATE[it.st];
           return '<button type="button" class="gr'+(i===0?' act':'')+'" role="option" data-reg="'+esc2(it.reg)+'">'+
@@ -2323,79 +2380,6 @@ function __boot(){
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
   }
-}
-
-/* ---- Tracker snapshot loader ----
-   live.json is written by the sync connector (see sync/). If it is missing, invalid or
-   unreachable, the page keeps the "live" block embedded in the DAILY DATA section. */
-(function(){
-  var STALE_MIN = 15, POLL_MS = 5*60*1000;
-  var DATA = JSON.parse(document.getElementById('data').textContent);
-  window.__DATA = DATA;
-  var STATES = {moving:1, idle:1, stop:1, none:1}, SIGNALS = {strong:1, weak:1, low:1, none:1};
-  var KEYS = ['total','moving','idle','weakGsm','offline','noGps'];
-
-  function validInt(n){ return n === null || (typeof n === 'number' && n >= 0 && Math.floor(n) === n); }
-  function validate(j){
-    if(!j || j.schema !== 1 || typeof j.lastSuccessAt !== 'string' || isNaN(Date.parse(j.lastSuccessAt))) return null;
-    if(!j.summary || !KEYS.every(function(k){ return k in j.summary && validInt(j.summary[k]); })) return null;
-    if(!Array.isArray(j.vehicles) || !j.vehicles.every(function(v){
-      return v && typeof v.reg === 'string' && STATES[v.state] && SIGNALS[v.signal]; })) return null;
-    return j;
-  }
-  function fmt(iso){
-    try{
-      var d = new Date(iso), o = {timeZone:'Asia/Karachi'};
-      return d.toLocaleDateString('en-GB', Object.assign({day:'numeric', month:'short', year:'numeric'}, o)) + ', ' +
-             d.toLocaleTimeString('en-US', Object.assign({hour:'numeric', minute:'2-digit'}, o));
-    }catch(e){ return iso; }
-  }
-  function toLive(j){
-    return {asOf: fmt(j.lastSuccessAt), source: j.source || 'Vehicle tracking portal', summary: j.summary,
-            vehicles: j.vehicles, lastSuccessAt: j.lastSuccessAt, lastError: j.lastError || null, auto: true};
-  }
-  function minsOld(){ var L = DATA.live; return L && L.lastSuccessAt ? (Date.now() - Date.parse(L.lastSuccessAt))/60000 : null; }
-
-  window.__paintFresh = function(){
-    var L = DATA.live, el = document.getElementById('lvAsof'); if(!L || !el) return;
-    var m = minsOld(), stale = m !== null && m > STALE_MIN, tag;
-    if(!L.auto) tag = '<span class="fresh stale" title="Automatic sync not connected; showing the numbers entered by hand">Manual update</span>';
-    else if(stale) tag = '<span class="fresh stale" title="The tracking portal has not answered since this time; showing the last good numbers">Stale · ' + (m < 120 ? Math.round(m) + ' min' : Math.round(m/60) + ' h') + ' old</span>';
-    else tag = '<span class="fresh">Up to date</span>';
-    el.innerHTML = 'Last updated: <b>' + L.asOf.replace(/[&<>]/g, '') + '</b> ' + tag;
-    el.parentNode.classList.toggle('stale', stale || !L.auto);
-    var pill = document.querySelector('.livepill');
-    if(pill){ pill.classList.toggle('stale', stale || !L.auto); pill.lastChild.textContent = stale ? 'STALE' : L.auto ? 'LIVE' : 'DAILY'; }
-  };
-
-  function get(){
-    var ctl = 'AbortController' in window ? new AbortController() : null;
-    var timer = setTimeout(function(){ ctl && ctl.abort(); }, 2500);
-    return fetch('live.json', {cache:'no-store', signal: ctl && ctl.signal})
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(validate).catch(function(){ return null; })
-      .finally(function(){ clearTimeout(timer); });
-  }
-
-  var booted = false;
-  function boot(){ if(booted) return; booted = true; __boot(); window.__paintFresh(); }
-  get().then(function(j){
-    if(j) DATA.live = Object.assign({}, DATA.live || {}, toLive(j));
-    boot();
-  });
-
-  // Keep the freshness badge honest and check for new numbers while the page stays open.
-  setInterval(window.__paintFresh, 60000);
-  setInterval(function(){
-    if(document.hidden) return;
-    get().then(function(j){
-      if(!j) { window.__paintFresh(); return; }
-      if(DATA.live && DATA.live.auto && j.lastSuccessAt !== DATA.live.lastSuccessAt){
-        var t = document.getElementById('toast');
-        if(t){ t.textContent = 'New tracker numbers are ready — tap Refresh'; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 6000); }
-      }
-    });
-  }, POLL_MS);
 })();
 </script>
 </body>

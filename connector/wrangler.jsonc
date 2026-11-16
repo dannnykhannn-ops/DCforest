@@ -1,0 +1,34 @@
+{
+  // DC Forest live-fleet connector. Deploy with:  npx wrangler deploy
+  "name": "dc-forest-live",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+
+  // Poll the portal every 5 minutes (cron runs in UTC; the interval is what matters here).
+  "triggers": { "crons": ["*/5 * * * *"] },
+
+  // Last successful snapshot. Create it once with:  npx wrangler kv namespace create LIVE
+  // then paste the id it prints below.
+  "kv_namespaces": [{ "binding": "LIVE", "id": "46f14c1c42e743f5b733d9fc38b44cfd" }],
+
+  // Serves the website from the same address as /api/live.json, so no CORS setup is needed.
+  // Remove this block if the site stays on its current host, and set ALLOWED_ORIGIN instead.
+  "assets": {
+    "directory": "../site-v19-extracted/forest-tracker-site",
+    "binding": "ASSETS",
+    "run_worker_first": true        // every request passes the access gate in src/gate.js first
+  },
+
+  "vars": {
+    "GUEST_SESSION_MINUTES": "30",  // how long a visitor stays in after entering a one-time pass
+    "STALE_AFTER_SECONDS": "900",   // 3 missed runs => the site shows the snapshot as stale
+    "ALLOWED_ORIGIN": ""            // e.g. "https://your-site.example" when the site is hosted elsewhere
+  },
+
+  "observability": { "enabled": true }
+
+  // Secrets are NOT stored in this file. Set each with:  npx wrangler secret put NAME
+  //   PORTAL_TOKEN    the tracking portal token (renew about every 30 days)
+  //   ADMIN_PIN       the owner PIN for the infinity box
+  //   SESSION_SECRET  any long random text; signs the access sessions
+}

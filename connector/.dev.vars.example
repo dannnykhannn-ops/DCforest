@@ -1,0 +1,7 @@
+# Copy this file to ".dev.vars" (same folder) and paste the token after the = sign.
+# .dev.vars is for local testing only. Never put it in the website folder or share it.
+#
+# Where the token comes from: while signed in to the portal, open
+#   https://nevigo-backend.vtssmartsolutions.com/auth/me
+# in the same browser. The page shows {"token":"..."}; copy the value between the quotes.
+PORTAL_TOKEN=
