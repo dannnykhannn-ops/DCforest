@@ -81,6 +81,11 @@ test('Control Room and its data need the owner, even when the site is open to ev
     assert.equal(res.status, 200, path + ' must not hand a redirect to the browser');
     assert.equal(await res.text(), 'PAGE:/control.html');
   }
+  for (const path of ['/dashboard', '/dashboard.html']) {
+    assert.equal((await call(env, path)).status, 401, path + ' is owner-only');
+    const res = await call(env, path, { cookie: owner });
+    assert.equal(res.status, 200); assert.equal(await res.text(), 'PAGE:/dashboard.html');
+  }
   const trail = await (await call(env, '/api/trail.json?date=2026-11-16', { cookie: owner })).json();
   assert.deepEqual(trail.vehicles, {});
   assert.equal((await call(env, '/api/trail.json?date=../../x', { cookie: owner })).status, 400);

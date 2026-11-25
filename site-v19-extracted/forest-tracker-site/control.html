@@ -121,15 +121,91 @@ button{font:inherit;color:inherit}
   .top h1 .sub{display:none}
   .hide-sm{display:none}
 }
+
+/* ================= Living Wall ================= */
+body{background:#0a2210 url(assets/v2/moss.webp) center/cover fixed}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(120% 90% at 50% 40%,rgba(5,25,10,.15),rgba(5,25,10,.6));pointer-events:none}
+.app{position:relative;grid-template-rows:auto auto 1fr auto;gap:12px;padding:12px;height:100dvh}
+.top{border:2px solid #c9a545;border-radius:18px;background:linear-gradient(180deg,rgba(8,40,18,.88),rgba(5,28,12,.9));box-shadow:0 12px 28px rgba(0,0,0,.45);padding:10px 14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:34px;height:34px}
+.top h1{font-size:1.6rem;color:#fff;font-weight:800;line-height:1.05}
+.top h1 .sub{font-size:.82rem;color:#e8e0c2;font-family:"Playfair Display",Georgia,serif;font-weight:700;margin-top:2px}
+.ribbon{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:700;letter-spacing:.12em;color:#fcde84;padding:5px 20px;border:1.5px solid #c9a545;border-radius:12px;
+  background:linear-gradient(180deg,#123f1e,#0a2a12);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.clock{font-family:"Playfair Display",Georgia,serif;font-weight:700;color:#fff;padding:6px 14px;border:1.5px solid #c9a545;border-radius:12px;background:rgba(5,30,14,.8);white-space:nowrap}
+.wstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wst{--a:#14532a;--b:#0b3519;position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:12px;min-height:96px;padding:10px 16px;border-radius:16px;cursor:pointer;text-align:left;
+  border:2px solid #c9a545;background:linear-gradient(160deg,var(--a),var(--b));box-shadow:0 10px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);color:#fff}
+.wst img{height:84px;width:auto;max-width:46%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));flex:none}
+.wst .tx{margin-left:auto;padding-left:14px;border-left:1.5px solid rgba(252,222,132,.6);text-align:center}
+.wst .tx span{display:block;font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:1.25rem}
+.wst .tx b{display:block;font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:2.6rem;line-height:1}
+.wst.k-weak{--a:#a8781a;--b:#6b4a0c}
+.wst.k-off{--a:#0f3b26;--b:#082418}
+.wst[aria-pressed="true"]{box-shadow:0 0 0 3px #fcde84,0 10px 24px rgba(0,0,0,.45)}
+.main{gap:12px;grid-template-columns:var(--panel) 1fr}
+.side{border:2px solid #c9a545;border-radius:18px;overflow:hidden;background:rgba(8,36,16,.9);box-shadow:0 12px 28px rgba(0,0,0,.45)}
+.main.nolist{grid-template-columns:1fr}
+.main.nolist .side{display:none}
+#map{border:3px solid #c9a545;border-radius:18px;overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.2)}
+/* Selected bike panel: parchment */
+.card{top:14px;right:14px;background:#f5eedb;color:#1d2a17;border:2px solid #c9a545;border-top:2px solid #c9a545;border-radius:18px;padding:0 0 14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.card .sel-h{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#14532a,#0c3a1c);color:#fff;
+  font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:1.2rem;padding:10px 54px 10px 16px;border-radius:14px;margin:8px}
+.card .sel-h svg{width:22px;height:22px;color:#fcde84}
+.card .x{top:14px;right:16px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:#fff}
+.card .hd,.card .grid,.card .acts,.card .note{margin-left:16px;margin-right:16px}
+.card .hd{padding-right:0;margin-top:10px;padding-bottom:12px;border-bottom:1px solid #d8ccab}
+.card h2{color:#14240f;font-size:1.35rem}
+.card .ds{color:#4d5a43}
+.card .kv{background:#ebe2c8}
+.card .kv .k{color:#6a6a4a}
+.card .kv .v small,.card .dash,.card .note{color:#5e664f}
+.card .act{background:#e8dfc3;border-color:#d0c39c;color:#1d2a17}
+.card .act.primary{background:#14532a;border-color:#14532a;color:#fff}
+.wnav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wnav>*{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:14px;border:2px solid #c9a545;cursor:pointer;text-decoration:none;
+  background:linear-gradient(180deg,#14532a,#0b3519);color:#fff;font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:1.15rem;box-shadow:0 10px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15)}
+.wnav svg{width:24px;height:24px;color:#fcde84}
+.wnav [aria-pressed="true"]{background:linear-gradient(180deg,#2f8a3f,#1b6a2c)}
+@media (max-width:1100px){ .ribbon,.clock{display:none} }
+@media (max-width:760px){
+  .app{padding:0;gap:0;grid-template-rows:auto 1fr auto}
+  body{background:#0a2210}
+  .top{border-radius:0;border-width:0 0 2px}
+  .top h1{font-size:1.2rem}
+  .top h1 .sub{display:none}
+  .wstats{display:none}
+  .main{grid-template-columns:1fr}
+  #map{border-radius:0;border-width:0}
+  .side{border-radius:18px 18px 0 0;border-width:2px 0 0}
+  .main.nolist .side{display:flex}
+  .wnav{gap:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:#082812;border-top:2px solid #c9a545}
+  .wnav>*{flex-direction:column;gap:2px;font-size:.78rem;padding:7px 2px;border:0;box-shadow:none;background:transparent;font-family:Figtree,sans-serif;font-weight:800}
+  .wnav [aria-pressed="true"]{background:#1b6a2c}
+  .mobile-tog{display:none}
+  .side{height:58%;bottom:0}
+  .main{overflow:hidden}
+  .side.collapsed{transform:translateY(105%)}
+  .card{top:auto;bottom:0;left:0;right:0;width:auto;max-height:64%;border-radius:18px 18px 0 0;border-width:2px 0 0}
+  .card .sel-h{font-size:1.05rem;padding:8px 50px 8px 14px}
+  .card .x{top:12px}
+  .card{bottom:0}
+}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
-    <a class="back" href="./" title="Back to the tracker" aria-label="Back to the tracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-    <h1>Control Room <span class="sub">Who is where, right now</span></h1>
+    <a class="back" href="dashboard" title="Owner dashboard" aria-label="Owner dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+    <div class="brand"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#e0bb4b" d="M24 4c-6 6-9 12-9 18 0 5 3 9 8 10V44h2V32c5-1 8-5 8-10 0-6-3-12-9-18zm-1 25c-3-1-5-4-5-7 0-4 2-9 5-13z"/></svg>
+      <h1>DC Forest <span class="sub" id="org2">Publicity &amp; Extension Division, Lahore</span></h1></div>
+    <span class="ribbon">Living Wall</span>
     <span class="fresh" id="fresh"><i></i><span>Loading…</span></span>
     <span class="spacer"></span>
+    <span class="clock" id="clock"></span>
     <button class="tbtn" id="trailsBtn" type="button" aria-pressed="false" title="Show everyone's route today">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7.5"/></svg>
       <span>Routes today</span></button>
@@ -141,6 +217,7 @@ button{font:inherit;color:inherit}
     </div>
   </header>
 
+  <div class="wstats" id="wstats" aria-label="Fleet summary"></div>
   <div class="main">
     <aside class="side" id="side" aria-label="Staff list">
       <button class="mobile-tog" id="sideTog" type="button" aria-expanded="true"><span id="sideTogTxt">People</span></button>
@@ -153,6 +230,12 @@ button{font:inherit;color:inherit}
     <div id="map" aria-label="Map"></div>
     <section class="card" id="card" hidden aria-live="polite"></section>
   </div>
+  <nav class="wnav" aria-label="Sections">
+    <button type="button" id="navFleet" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5M14 9l1.5-3H18"/></svg>Fleet</button>
+    <button type="button" id="navMap" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Map</button>
+    <a href="dashboard#staff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9-.2 5 1.8 5.5 4.8"/></svg>Staff</a>
+    <a href="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Dashboard</a>
+  </nav>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -313,7 +396,38 @@ button{font:inherit;color:inherit}
   chipsEl.addEventListener('click', function(e){ var b = e.target.closest('.chip'); if(!b) return; filter = b.getAttribute('data-f'); refreshViews(); });
   qEl.addEventListener('input', function(){ term = qEl.value.trim().toLowerCase(); refreshViews(); });
   listEl.addEventListener('click', function(e){ var b = e.target.closest('.row'); if(b) select(b.getAttribute('data-reg'), true); });
-  function refreshViews(){ drawChips(); drawList(); drawMarkers(); }
+  function refreshViews(){ drawChips(); drawList(); drawMarkers(); drawWall(); }
+
+  /* Living Wall stat cards (computer): click to filter the map and list */
+  function drawWall(){
+    var S = (fleetMeta && fleetMeta.summary) || {};
+    var defs = [{k:'total',f:'',lb:'All bikes',n:S.total,img:'bike'},{k:'moving',f:'moving',lb:'Moving',n:S.moving,img:'rider'},
+                {k:'weak',f:'weak',lb:'Weak GSM',n:S.weakGsm,img:'tower'},{k:'off',f:'none',lb:'Offline',n:S.offline,img:'tracker'}];
+    document.getElementById('wstats').innerHTML = defs.map(function(d){
+      return '<button type="button" class="wst k-'+d.k+'" data-f="'+d.f+'" aria-pressed="'+(!!d.f && filter===d.f)+'"><img src="assets/v2/'+d.img+'.webp" alt="">'+
+        '<span class="tx"><span>'+d.lb+'</span><b>'+(typeof d.n === 'number' ? d.n : '—')+'</b></span></button>';
+    }).join('');
+  }
+  document.getElementById('wstats').addEventListener('click', function(e){ var b = e.target.closest('.wst'); if(!b) return; var f = b.getAttribute('data-f'); filter = filter === f ? '' : f; refreshViews(); });
+
+  /* bottom navigation: Fleet shows/hides the list, Map shows the whole fleet */
+  var sideEl = document.getElementById('side'), mainEl = document.querySelector('.main'), navFleet = document.getElementById('navFleet'), navMap = document.getElementById('navMap');
+  var phoneMQ = window.matchMedia('(max-width:760px)');
+  function setList(open){
+    if(phoneMQ.matches){ sideEl.classList.toggle('collapsed', !open); }
+    else { mainEl.classList.toggle('nolist', !open); setTimeout(function(){ map.invalidateSize(); declutter(); }, 50); }
+    navFleet.setAttribute('aria-pressed', open); navMap.setAttribute('aria-pressed', !open);
+  }
+  navFleet.addEventListener('click', function(){ setList(navFleet.getAttribute('aria-pressed') !== 'true'); });
+  navMap.addEventListener('click', function(){
+    setList(false);
+    var pts = vehicles.filter(function(v){ return v.lat !== null && matches(v); }).map(function(v){ return [v.lat, v.lon]; });
+    if(pts.length) map.fitBounds(pts, {padding:[40,40], maxZoom:14});
+  });
+  function tickClock(){ try{ document.getElementById('clock').textContent = new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi',day:'numeric',month:'short',year:'numeric'}) + ' · ' +
+    new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Karachi',hour:'numeric',minute:'2-digit'}); }catch(e){} }
+  tickClock(); setInterval(tickClock, 30000);
+  setList(!phoneMQ.matches);
 
   var side = document.getElementById('side'), sideTog = document.getElementById('sideTog');
   sideTog.addEventListener('click', function(){ var c = side.classList.toggle('collapsed'); sideTog.setAttribute('aria-expanded', !c); });
@@ -325,7 +439,8 @@ button{font:inherit;color:inherit}
     var v = vehicles.find(function(x){ return x.reg === reg; });
     if(!v){ card.hidden = true; return; }
     var phone = window.matchMedia('(max-width:760px)').matches;
-    if(phone){ side.classList.add('collapsed'); sideTog.setAttribute('aria-expanded','false'); }
+    if(phone){ side.classList.add('collapsed'); sideTog.setAttribute('aria-expanded','false');
+      document.getElementById('navFleet').setAttribute('aria-pressed','false'); document.getElementById('navMap').setAttribute('aria-pressed','true'); }
     drawCard(v); drawList(); drawMarkers(); drawTrails();
     if(v.lat !== null && (fly || phone)) focusOn(v, fly ? Math.max(map.getZoom(), 15) : map.getZoom());
   }
@@ -345,6 +460,7 @@ button{font:inherit;color:inherit}
     var ign = v.ignition === 'on' ? 'On' : v.ignition === 'off' ? 'Off' : null;
     card.style.setProperty('--k', st.c);
     card.innerHTML =
+      '<div class="sel-h">Selected bike<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3C11 3 5 8 5 15c0 1.3.3 2.4.8 3.4M5.8 18.4C8 12 12 9 16 7"/></svg></div>'+
       '<button class="x" type="button" aria-label="Close">×</button>'+
       '<div class="hd"><span class="av" style="--k:'+st.c+'">'+esc(initials(who(v.reg)))+'</span><div><h2>'+esc(r.name || who(v.reg))+'</h2>'+
         '<div class="ds">'+esc([r.designation, r.section].filter(Boolean).join(' · ') || 'Not on the staff list')+'</div></div></div>'+
@@ -352,7 +468,7 @@ button{font:inherit;color:inherit}
         '<div class="kv"><div class="k">Now</div><div class="v"><span class="pill" style="--k:'+st.c+'">'+st.lb+'</span></div></div>'+
         '<div class="kv"><div class="k">Speed</div><div class="v">'+(v.state==='none' ? '<span class="dash">—</span>' : dash(v.speed===null?null:Math.round(v.speed),'km/h'))+'</div></div>'+
         '<div class="kv"><div class="k">Last report</div><div class="v">'+dash(ago(v.reportedAt))+'<br><small>'+esc(v.reportedAt ? clock(v.reportedAt) : '')+'</small></div></div>'+
-        '<div class="kv"><div class="k">Today</div><div class="v">'+dash(km,'km')+'<br><small>'+pts.length+' reports</small></div></div>'+
+        '<div class="kv"><div class="k">Today</div><div class="v">'+dash(km,'km')+'<br><small>'+pts.length+(pts.length===1?' report':' reports')+'</small></div></div>'+
         '<div class="kv"><div class="k">Engine</div><div class="v">'+dash(v.state==='none'?null:ign)+'</div></div>'+
         '<div class="kv"><div class="k">Signal</div><div class="v">'+dash(v.state==='none'?null:sig)+'</div></div>'+
         '<div class="kv wide"><div class="k">Bike</div><div class="v">'+esc(v.reg)+' <small>'+esc([r.vehicleType, r.model].filter(Boolean).join(' '))+'</small></div></div>'+
@@ -422,7 +538,10 @@ button{font:inherit;color:inherit}
       .then(function(j){ if(j){ trailData = j; drawTrails(); if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); } } }).catch(function(){});
   }
 
-  loadRoster().then(loadFleet).then(loadTrails);
+  loadRoster().then(loadFleet).then(loadTrails).then(function(){
+    var want = new URLSearchParams(location.search).get('reg');      // opened from the dashboard: focus that bike
+    if(want && vehicles.some(function(x){ return x.reg === want; })) select(want, true);
+  });
   setInterval(function(){ if(!document.hidden) loadFleet(); }, FLEET_MS);
   setInterval(function(){ if(!document.hidden) loadTrails(); }, TRAIL_MS);
   setInterval(paintFresh, 30000);
