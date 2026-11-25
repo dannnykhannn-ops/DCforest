@@ -803,6 +803,7 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
           </svg>
           <span id="themeLabel">Light mode</span>
         </button>
+        <a class="hbtn" id="crbtn" href="control" title="Control Room: map of everyone, live" style="text-decoration:none" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Control Room</span></a>
         <a class="hbtn" href="gate" title="Access passes (owner)" aria-label="Access passes" style="text-decoration:none;font-size:1.25rem;line-height:1;padding-top:0;padding-bottom:2px">&infin;</a>
         <button class="hbtn install" id="installbtn" type="button" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
@@ -2377,6 +2378,9 @@ footer{margin-top:10px;color:var(--muted);font-size:.82rem}
   document.getElementById('sheetOk').addEventListener('click', function(){ sheet.hidden = true; });
   sheet.addEventListener('click', function(e){ if(e.target === sheet) sheet.hidden = true; });
   window.addEventListener('appinstalled', function(){ installBtn.hidden = true; hideBar(); toast('App installed'); });
+  /* Control Room button: shown only to the signed-in owner (the server checks again on every request). */
+  fetch('api/gate/me', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ if(j && j.role === 'owner') document.getElementById('crbtn').hidden = false; }).catch(function(){});
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
   }

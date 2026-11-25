@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control Room — DC Forest</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#071a0d">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#071a0d; --surface:#0f2a16; --surface2:#15361d; --text:#eef3e4; --muted:#a6b99a; --line:#23462b;
+  --gold:#e0bb4b; --gold-light:#fcde84; --head-a:#06200d; --head-b:#0f3d1b;
+  --moving:#4ade80; --idle:#ff7a2f; --stop:#fbbf24; --none:#9aa4b2; --weak:#fb7185;
+  --panel:340px; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.app{display:grid;grid-template-rows:auto 1fr;height:100dvh}
+
+/* header */
+.top{background:linear-gradient(90deg,var(--head-a),var(--head-b) 55%,var(--head-a));border-bottom:3px solid var(--gold);
+  display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));flex-wrap:wrap;z-index:1000}
+.top h1{font-family:"Playfair Display",Georgia,serif;font-size:1.15rem;margin:0;color:var(--gold-light);white-space:nowrap}
+.top .sub{font-size:.74rem;color:var(--muted);display:block;font-family:Figtree,sans-serif;font-weight:600}
+.back{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;border:1px solid rgba(252,222,132,.45);color:var(--gold-light);text-decoration:none;flex:none}
+.back svg{width:18px;height:18px}
+.fresh{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:.74rem;font-weight:800;background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.5);color:#c8f5d6;white-space:nowrap}
+.fresh i{width:8px;height:8px;border-radius:50%;background:var(--moving)}
+.fresh.stale{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.55);color:#fde7a8}
+.fresh.stale i{background:var(--stop)}
+.fresh.demo{background:rgba(251,113,133,.16);border-color:rgba(251,113,133,.6);color:#ffd1da}
+.fresh.demo i{background:var(--weak)}
+.spacer{flex:1}
+.seg{display:inline-flex;border:1px solid rgba(252,222,132,.35);border-radius:10px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 10px;font-size:.78rem;font-weight:700;color:var(--gold-light);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#1a1400}
+.tbtn{display:inline-flex;align-items:center;gap:6px;background:rgba(252,222,132,.1);border:1px solid rgba(252,222,132,.45);color:var(--gold-light);
+  border-radius:10px;padding:6px 10px;font-size:.78rem;font-weight:700;cursor:pointer}
+.tbtn[aria-pressed="true"]{background:var(--gold);color:#1a1400;border-color:var(--gold)}
+.tbtn svg{width:15px;height:15px}
+
+/* body */
+.main{position:relative;display:grid;grid-template-columns:var(--panel) 1fr;min-height:0}
+.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;z-index:500}
+.search{padding:10px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.search input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;font-size:.9rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface2);border-radius:99px;padding:4px 10px;font-size:.76rem;font-weight:700;cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--k)}
+.chip b{opacity:.75}
+.chip[aria-pressed="true"]{border-color:var(--k);box-shadow:inset 0 0 0 1px var(--k);background:color-mix(in srgb,var(--k) 18%,var(--surface2))}
+.list{overflow:auto;flex:1;padding:6px}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:transparent;border:1px solid transparent;
+  border-radius:12px;padding:8px;cursor:pointer}
+.row:hover{background:var(--surface2)}
+.row[aria-current="true"]{background:var(--surface2);border-color:var(--gold)}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.8rem;color:#0a1f0e;background:var(--k);flex:none}
+.row .nm{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .mt{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt{text-align:right;font-size:.72rem;color:var(--muted);white-space:nowrap}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:800;color:#0a1f0e;background:var(--k)}
+.empty{padding:20px;color:var(--muted);text-align:center;font-size:.9rem}
+#map{position:relative;min-height:0;background:#0b2412}
+
+/* markers + always-on labels */
+.mk{position:relative}
+.mk .dot{width:22px;height:22px;border-radius:50%;background:var(--k);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:grid;place-items:center}
+.mk .dot svg{width:12px;height:12px;color:#0a1f0e}
+.mk.moving .dot{animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--k) 70%,transparent)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.mk .lab{position:absolute;left:26px;top:-1px;white-space:nowrap;background:rgba(7,26,13,.9);color:#fff;border:1px solid var(--k);border-radius:8px;
+  padding:2px 7px;font-size:11.5px;font-weight:700;line-height:1.35;pointer-events:none}
+.mk .lab small{display:block;font-weight:600;color:#cfe0c4;font-size:10.5px}
+.mk.hide-lab .lab{display:none}
+.mk.sel .dot{transform:scale(1.25);border-color:var(--gold)}
+.mk.sel .lab{border-color:var(--gold);z-index:2}
+.leaflet-container{font-family:inherit}
+.leaflet-tooltip.tip{background:#0f2a16;color:var(--text);border:1px solid var(--gold);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:12px;padding:6px 9px}
+.leaflet-tooltip.tip::before{display:none}
+
+/* person card */
+.card{position:absolute;top:12px;right:12px;width:min(360px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;z-index:900;
+  background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--k);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.5);padding:16px}
+.card[hidden]{display:none}
+.card .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);cursor:pointer;font-size:1.1rem;line-height:1}
+.card .hd{display:flex;gap:12px;align-items:center;padding-right:36px}
+.card .av{width:52px;height:52px;font-size:1.05rem}
+.card h2{margin:0;font-family:"Playfair Display",Georgia,serif;font-size:1.2rem;line-height:1.2}
+.card .ds{color:var(--muted);font-size:.82rem;margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.kv{background:var(--surface2);border-radius:12px;padding:8px 10px}
+.kv .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.kv .v{font-weight:800;font-size:.95rem;margin-top:2px}
+.kv .v small{font-weight:600;color:var(--muted);font-size:.75rem}
+.kv.wide{grid-column:1/-1}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.act{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface2);text-decoration:none;font-weight:800;font-size:.82rem;cursor:pointer;color:var(--text)}
+.act.primary{background:var(--gold);border-color:var(--gold);color:#1a1400}
+.act svg{width:16px;height:16px}
+.note{margin-top:12px;font-size:.74rem;color:var(--muted);line-height:1.45}
+.dash{color:var(--muted)}
+
+.mobile-tog{display:none}
+@media (max-width:760px){
+  .main{grid-template-columns:1fr}
+  .side{position:absolute;left:0;right:0;bottom:0;height:46%;border-right:0;border-top:3px solid var(--gold);border-radius:18px 18px 0 0;
+    transition:transform .3s ease;box-shadow:0 -10px 30px rgba(0,0,0,.4);padding-bottom:env(safe-area-inset-bottom)}
+  .side.collapsed{transform:translateY(calc(100% - 52px))}
+  .mobile-tog{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:transparent;border:0;padding:12px;font-weight:800;color:var(--gold-light);cursor:pointer}
+  .mobile-tog::before{content:"";width:40px;height:4px;border-radius:4px;background:var(--line);position:absolute;top:6px;left:50%;transform:translateX(-50%)}
+  .card{top:auto;bottom:0;right:0;left:0;width:auto;border-radius:18px 18px 0 0;max-height:58%;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .top h1 .sub{display:none}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="back" href="./" title="Back to the tracker" aria-label="Back to the tracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+    <h1>Control Room <span class="sub">Who is where, right now</span></h1>
+    <span class="fresh" id="fresh"><i></i><span>Loading…</span></span>
+    <span class="spacer"></span>
+    <button class="tbtn" id="trailsBtn" type="button" aria-pressed="false" title="Show everyone's route today">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7.5"/></svg>
+      <span>Routes today</span></button>
+    <button class="tbtn" id="labelsBtn" type="button" aria-pressed="true" title="Show names on the map"><span>Names</span></button>
+    <div class="seg" role="group" aria-label="Map style">
+      <button type="button" data-base="street" aria-pressed="true">Map</button>
+      <button type="button" data-base="dark" aria-pressed="false" class="hide-sm">Dark</button>
+      <button type="button" data-base="sat" aria-pressed="false">Satellite</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="side" id="side" aria-label="Staff list">
+      <button class="mobile-tog" id="sideTog" type="button" aria-expanded="true"><span id="sideTogTxt">People</span></button>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search name, post, bike, area…" autocomplete="off" aria-label="Search">
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="list" id="list" role="list"></div>
+    </aside>
+    <div id="map" aria-label="Map"></div>
+    <section class="card" id="card" hidden aria-live="polite"></section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  var STATES = {
+    moving:{lb:'Moving', k:'var(--moving)', c:'#4ade80'},
+    idle:  {lb:'Idle',   k:'var(--idle)',   c:'#ff7a2f'},
+    stop:  {lb:'Stopped',k:'var(--stop)',   c:'#fbbf24'},
+    none:  {lb:'Offline',k:'var(--none)',   c:'#9aa4b2'}
+  };
+  var DUTY = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
+  var BIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5"/></svg>';
+  var FLEET_MS = 60*1000, TRAIL_MS = 5*60*1000, STALE_MS = 15*60*1000;
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function initials(n){ return String(n||'?').replace(/^(Mr|Mrs|Ms|Dr)\.?\s+/i,'').split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase() || '?'; }
+  function short(n){ return String(n||'').replace(/^(Mr|Mrs|Ms|Dr)\.?\s+/i,''); }
+  function ago(iso){
+    if(!iso) return null;
+    var s = (Date.now() - Date.parse(iso))/1000;
+    if(s < 90) return 'just now';
+    if(s < 3600) return Math.round(s/60) + ' min ago';
+    if(s < 86400) return Math.round(s/3600) + ' h ago';
+    return Math.round(s/86400) + ' days ago';
+  }
+  function clock(iso){ try{ return new Date(iso).toLocaleString('en-GB',{timeZone:'Asia/Karachi',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}); }catch(e){ return iso; } }
+  function dash(v, unit){ return v === null || v === undefined ? '<span class="dash">—</span>' : esc(v) + (unit ? ' <small>'+unit+'</small>' : ''); }
+  function waNumber(c){ var d = String(c||'').replace(/\D/g,''); if(/^03\d{9}$/.test(d)) return '92' + d.slice(1); if(/^923\d{9}$/.test(d)) return d; return null; }
+
+  /* ---------- roster (from the daily data block in the main page) ---------- */
+  var roster = {};                       // reg -> {name, designation, section, status, contact, area, unit, vehicleType, model}
+  function loadRoster(){
+    return fetch('index.html', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.text(); }).then(function(html){
+      var m = /<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
+      if(!m) return;
+      var d = JSON.parse(m[1]);
+      (d.sections||[]).forEach(function(s){ (s.rows||[]).forEach(function(r){
+        if(r.vehicle && !roster[r.vehicle]) roster[r.vehicle] = {name:r.name, designation:r.designation, section:s.label, status:r.status, contact:r.contact,
+          area:r.area, unit:r.unit, vehicleType:r.vehicleType, model:r.model, remarks:r.remarks};
+      }); });
+    }).catch(function(){});
+  }
+  function who(reg){ var r = roster[reg]; return r && r.name ? short(r.name) : (r && r.status === 'parked' ? 'Pool bike' : 'Unassigned'); }
+
+  /* ---------- map ---------- */
+  var map = L.map('map', {zoomControl:true, preferCanvas:false}).setView([31.52, 74.35], 11);
+  var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  function esri(path, extra){ return L.tileLayer(ESRI + path + '/MapServer/tile/{z}/{y}/{x}', Object.assign({maxZoom:19, maxNativeZoom:18, attribution:'Tiles &copy; Esri'}, extra||{})); }
+  var BASES = {
+    street: esri('World_Street_Map'),
+    dark:   L.layerGroup([esri('Canvas/World_Dark_Gray_Base', {maxNativeZoom:16}), esri('Canvas/World_Dark_Gray_Reference', {maxNativeZoom:16})]),
+    sat:    L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places')])
+  };
+  var base = 'street'; try{ base = localStorage.getItem('crBase') || 'street'; }catch(e){}
+  if(!BASES[base]) base = 'street';
+  BASES[base].addTo(map);
+  document.querySelectorAll('[data-base]').forEach(function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-base') === base);
+    b.addEventListener('click', function(){
+      map.removeLayer(BASES[base]); base = b.getAttribute('data-base'); BASES[base].addTo(map);
+      document.querySelectorAll('[data-base]').forEach(function(x){ x.setAttribute('aria-pressed', x === b); });
+      try{ localStorage.setItem('crBase', base); }catch(e){}
+    });
+  });
+
+  var vehicles = [], markers = {}, selected = null, filter = '', term = '', fitted = false;
+  var trailLayer = L.layerGroup().addTo(map), trailData = null, showTrails = false, showLabels = true;
+
+  function iconFor(v){
+    var st = STATES[v.state] || STATES.none, r = roster[v.reg];
+    var sub = v.state === 'moving' && v.speed !== null ? Math.round(v.speed) + ' km/h' : st.lb + (v.state === 'none' && v.reportedAt ? ' · ' + ago(v.reportedAt) : '');
+    return L.divIcon({className:'', iconSize:[22,22], iconAnchor:[11,11],
+      html:'<div class="mk '+v.state+(selected===v.reg?' sel':'')+(showLabels?'':' hide-lab')+'" style="--k:'+st.c+'"><div class="dot">'+BIKE+'</div>'+
+        '<div class="lab">'+esc(who(v.reg))+'<small>'+esc(v.reg)+' · '+esc(sub)+'</small></div></div>'});
+  }
+  function tipFor(v){
+    var r = roster[v.reg] || {}, st = STATES[v.state] || STATES.none;
+    return '<b>'+esc(who(v.reg))+'</b>'+(r.designation?' · '+esc(r.designation):'')+'<br>'+esc(v.reg)+' — '+st.lb+
+      (v.speed!==null && v.state==='moving' ? ', '+Math.round(v.speed)+' km/h' : '')+'<br>Last report: '+esc(ago(v.reportedAt) || '—');
+  }
+
+  function drawMarkers(){
+    var seen = {};
+    vehicles.forEach(function(v){
+      seen[v.reg] = 1;
+      if(v.lat === null || v.lon === null){ if(markers[v.reg]){ map.removeLayer(markers[v.reg]); delete markers[v.reg]; } return; }
+      var m = markers[v.reg];
+      if(!m){
+        m = markers[v.reg] = L.marker([v.lat, v.lon], {icon:iconFor(v), riseOnHover:true, keyboard:true, title:who(v.reg)+' '+v.reg})
+          .on('click', function(){ select(v.reg, false); }).addTo(map);
+        m.bindTooltip('', {className:'tip', direction:'top', offset:[0,-12]});
+      } else { m.setLatLng([v.lat, v.lon]); m.setIcon(iconFor(v)); }
+      m.setTooltipContent(tipFor(v));
+      m.setZIndexOffset(selected === v.reg ? 1000 : v.state === 'moving' ? 500 : v.state === 'none' ? -500 : 0);
+      m.getElement() && (m.getElement().style.display = matches(v) ? '' : 'none');
+    });
+    Object.keys(markers).forEach(function(k){ if(!seen[k]){ map.removeLayer(markers[k]); delete markers[k]; } });
+    declutter();
+    if(!fitted){
+      var pts = vehicles.filter(function(v){ return v.lat !== null; }).map(function(v){ return [v.lat, v.lon]; });
+      if(pts.length){ map.fitBounds(pts, {padding:[40,40], maxZoom:14}); fitted = true; }
+    }
+  }
+
+  /* Hide labels that would overlap one already shown, so the map stays readable; the selected
+     person and moving vehicles get first claim on space. */
+  function declutter(){
+    if(!showLabels) return;
+    var order = vehicles.filter(function(v){ return markers[v.reg] && matches(v); }).sort(function(a,b){
+      function p(v){ return v.reg === selected ? 0 : v.state === 'moving' ? 1 : v.state === 'idle' ? 2 : v.state === 'stop' ? 3 : 4; }
+      return p(a) - p(b);
+    });
+    var taken = [];
+    order.forEach(function(v){
+      var el = markers[v.reg].getElement(); if(!el) return;
+      var mk = el.querySelector('.mk'); mk.classList.remove('hide-lab');
+      var lab = mk.querySelector('.lab'), r = lab.getBoundingClientRect(), dot = mk.querySelector('.dot').getBoundingClientRect();
+      var box = {l:Math.min(r.left,dot.left)-2, t:Math.min(r.top,dot.top)-2, r:r.right+2, b:Math.max(r.bottom,dot.bottom)+2};
+      var hit = taken.some(function(o){ return !(box.r < o.l || box.l > o.r || box.b < o.t || box.t > o.b); });
+      if(hit && v.reg !== selected) mk.classList.add('hide-lab'); else taken.push(box);
+    });
+  }
+  map.on('zoomend moveend', declutter);
+
+  /* ---------- list ---------- */
+  var chipsEl = document.getElementById('chips'), listEl = document.getElementById('list'), qEl = document.getElementById('q');
+  function hay(v){
+    var r = roster[v.reg] || {};
+    return [v.reg, v.reg.replace('-',''), who(v.reg), r.designation, r.section, r.area, r.unit, r.contact, r.remarks, (STATES[v.state]||STATES.none).lb, DUTY[r.status]].join(' ').toLowerCase();
+  }
+  function matches(v){
+    if(filter && (filter === 'weak' ? v.signal !== 'weak' : v.state !== filter)) return false;
+    if(!term) return true;
+    var h = hay(v); return term.split(/\s+/).every(function(w){ return h.indexOf(w) > -1; });
+  }
+  function drawChips(){
+    var defs = [{f:'',lb:'All',c:'#e0bb4b'},{f:'moving',lb:'Moving',c:STATES.moving.c},{f:'idle',lb:'Idle',c:STATES.idle.c},{f:'stop',lb:'Stopped',c:STATES.stop.c},{f:'none',lb:'Offline',c:STATES.none.c},{f:'weak',lb:'Weak signal',c:'#fb7185'}];
+    chipsEl.innerHTML = defs.map(function(d){
+      var n = vehicles.filter(function(v){ return !d.f || (d.f==='weak' ? v.signal==='weak' : v.state===d.f); }).length;
+      return '<button type="button" class="chip" style="--k:'+d.c+'" data-f="'+d.f+'" aria-pressed="'+(filter===d.f)+'"><i></i>'+d.lb+' <b>'+n+'</b></button>';
+    }).join('');
+  }
+  function drawList(){
+    var order = {moving:0, idle:1, stop:2, none:3};
+    var rows = vehicles.filter(matches).sort(function(a,b){ return (order[a.state]-order[b.state]) || who(a.reg).localeCompare(who(b.reg)); });
+    listEl.innerHTML = rows.length ? rows.map(function(v){
+      var r = roster[v.reg] || {}, st = STATES[v.state] || STATES.none;
+      var right = v.state === 'moving' && v.speed !== null ? Math.round(v.speed)+' km/h' : (ago(v.reportedAt) || '');
+      return '<button type="button" class="row" role="listitem" data-reg="'+esc(v.reg)+'" aria-current="'+(selected===v.reg)+'" style="--k:'+st.c+'">'+
+        '<span class="av">'+esc(initials(who(v.reg)))+'</span>'+
+        '<span style="min-width:0"><div class="nm">'+esc(who(v.reg))+'</div><div class="mt">'+esc([r.designation, v.reg].filter(Boolean).join(' · '))+'</div></span>'+
+        '<span class="rt"><span class="pill">'+st.lb+'</span><br>'+esc(right)+(v.lat===null?'<br>no location':'')+'</span></button>';
+    }).join('') : '<div class="empty">Nobody matches.</div>';
+    document.getElementById('sideTogTxt').textContent = 'People · ' + rows.length;
+  }
+  chipsEl.addEventListener('click', function(e){ var b = e.target.closest('.chip'); if(!b) return; filter = b.getAttribute('data-f'); refreshViews(); });
+  qEl.addEventListener('input', function(){ term = qEl.value.trim().toLowerCase(); refreshViews(); });
+  listEl.addEventListener('click', function(e){ var b = e.target.closest('.row'); if(b) select(b.getAttribute('data-reg'), true); });
+  function refreshViews(){ drawChips(); drawList(); drawMarkers(); }
+
+  var side = document.getElementById('side'), sideTog = document.getElementById('sideTog');
+  sideTog.addEventListener('click', function(){ var c = side.classList.toggle('collapsed'); sideTog.setAttribute('aria-expanded', !c); });
+
+  /* ---------- person card ---------- */
+  var card = document.getElementById('card');
+  function select(reg, fly){
+    selected = reg;
+    var v = vehicles.find(function(x){ return x.reg === reg; });
+    if(!v){ card.hidden = true; return; }
+    var phone = window.matchMedia('(max-width:760px)').matches;
+    if(phone){ side.classList.add('collapsed'); sideTog.setAttribute('aria-expanded','false'); }
+    drawCard(v); drawList(); drawMarkers(); drawTrails();
+    if(v.lat !== null && (fly || phone)) focusOn(v, fly ? Math.max(map.getZoom(), 15) : map.getZoom());
+  }
+  /* Centre a bike in the part of the map the card does not cover (above it on a phone, left of it on a computer). */
+  function focusOn(v, zoom){
+    var size = map.getSize(), r = card.getBoundingClientRect(), m = document.getElementById('map').getBoundingClientRect();
+    var phone = window.matchMedia('(max-width:760px)').matches;
+    var dx = phone || card.hidden ? 0 : -(m.right - r.left) / 2;
+    var dy = phone && !card.hidden ? -(m.bottom - r.top) / 2 : 0;
+    var pt = map.project([v.lat, v.lon], zoom).subtract([dx, dy]);
+    map.flyTo(map.unproject(pt, zoom), zoom, {duration:.6});
+  }
+  function drawCard(v){
+    var r = roster[v.reg] || {}, st = STATES[v.state] || STATES.none;
+    var km = trailData && trailData.km ? trailData.km[v.reg] : null, pts = trailData && trailData.vehicles ? (trailData.vehicles[v.reg]||[]) : [];
+    var wa = waNumber(r.contact), sig = {strong:'Strong', low:'Low', weak:'Weak', none:'—'}[v.signal] || null;
+    var ign = v.ignition === 'on' ? 'On' : v.ignition === 'off' ? 'Off' : null;
+    card.style.setProperty('--k', st.c);
+    card.innerHTML =
+      '<button class="x" type="button" aria-label="Close">×</button>'+
+      '<div class="hd"><span class="av" style="--k:'+st.c+'">'+esc(initials(who(v.reg)))+'</span><div><h2>'+esc(r.name || who(v.reg))+'</h2>'+
+        '<div class="ds">'+esc([r.designation, r.section].filter(Boolean).join(' · ') || 'Not on the staff list')+'</div></div></div>'+
+      '<div class="grid">'+
+        '<div class="kv"><div class="k">Now</div><div class="v"><span class="pill" style="--k:'+st.c+'">'+st.lb+'</span></div></div>'+
+        '<div class="kv"><div class="k">Speed</div><div class="v">'+(v.state==='none' ? '<span class="dash">—</span>' : dash(v.speed===null?null:Math.round(v.speed),'km/h'))+'</div></div>'+
+        '<div class="kv"><div class="k">Last report</div><div class="v">'+dash(ago(v.reportedAt))+'<br><small>'+esc(v.reportedAt ? clock(v.reportedAt) : '')+'</small></div></div>'+
+        '<div class="kv"><div class="k">Today</div><div class="v">'+dash(km,'km')+'<br><small>'+pts.length+' reports</small></div></div>'+
+        '<div class="kv"><div class="k">Engine</div><div class="v">'+dash(v.state==='none'?null:ign)+'</div></div>'+
+        '<div class="kv"><div class="k">Signal</div><div class="v">'+dash(v.state==='none'?null:sig)+'</div></div>'+
+        '<div class="kv wide"><div class="k">Bike</div><div class="v">'+esc(v.reg)+' <small>'+esc([r.vehicleType, r.model].filter(Boolean).join(' '))+'</small></div></div>'+
+        (r.status ? '<div class="kv"><div class="k">Duty today</div><div class="v">'+esc(DUTY[r.status]||r.status)+'</div></div>' : '')+
+        (r.area || r.unit ? '<div class="kv"><div class="k">Posted at</div><div class="v" style="font-size:.85rem">'+esc([r.unit, r.area].filter(Boolean).join(', '))+'</div></div>' : '')+
+        (r.remarks ? '<div class="kv wide"><div class="k">Remarks</div><div class="v" style="font-size:.85rem;font-weight:600">'+esc(r.remarks)+'</div></div>' : '')+
+      '</div>'+
+      '<div class="acts">'+
+        (r.contact ? '<a class="act primary" href="tel:'+esc(String(r.contact).replace(/[^\d+]/g,''))+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>Call '+esc(r.contact)+'</a>' : '')+
+        (wa ? '<a class="act" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>' : '')+
+        (v.lat !== null ? '<a class="act" href="https://www.google.com/maps/dir/?api=1&destination='+v.lat+','+v.lon+'" target="_blank" rel="noopener">Directions</a>' : '')+
+        (v.lat !== null ? '<button class="act" type="button" data-center>Show on map</button>' : '')+
+      '</div>'+
+      '<p class="note">'+(v.lat === null ? 'This tracker has not sent a usable location. ' : 'Location is the tracker’s last report. ')+
+        (pts.length > 1 ? 'Today’s route is drawn on the map.' : 'No route for today yet.')+
+        (v.state === 'moving' && v.reportedAt && Date.now() - Date.parse(v.reportedAt) > 3600000 ? ' Note: the portal still counts this bike as moving, but its last report is old.' : '')+'</p>';
+    card.hidden = false;
+    card.querySelector('.x').onclick = function(){ selected = null; card.hidden = true; drawList(); drawMarkers(); drawTrails(); };
+    var c = card.querySelector('[data-center]'); if(c) c.onclick = function(){ focusOn(v, 16); };
+  }
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !card.hidden){ card.querySelector('.x').click(); } });
+
+  /* ---------- routes today ---------- */
+  function drawTrails(){
+    trailLayer.clearLayers();
+    if(!trailData || !trailData.vehicles) return;
+    Object.keys(trailData.vehicles).forEach(function(reg){
+      if(!(showTrails || reg === selected)) return;
+      var v = vehicles.find(function(x){ return x.reg === reg; }); if(v && !matches(v) && reg !== selected) return;
+      var pts = trailData.vehicles[reg]; if(!pts || pts.length < 2) return;
+      var st = STATES[(v && v.state) || 'none'], ll = pts.map(function(p){ return [p[1], p[2]]; }), sel = reg === selected;
+      L.polyline(ll, {color: sel ? '#e0bb4b' : st.c, weight: sel ? 5 : 3, opacity: sel ? .95 : .55}).addTo(trailLayer);
+      if(sel){
+        L.circleMarker(ll[0], {radius:6, color:'#fff', weight:2, fillColor:'#1f6b45', fillOpacity:1}).bindTooltip('Start '+clock(new Date(pts[0][0]*1000).toISOString()), {className:'tip'}).addTo(trailLayer);
+      }
+    });
+  }
+  document.getElementById('trailsBtn').addEventListener('click', function(){
+    showTrails = !showTrails; this.setAttribute('aria-pressed', showTrails); drawTrails();
+  });
+  document.getElementById('labelsBtn').addEventListener('click', function(){
+    showLabels = !showLabels; this.setAttribute('aria-pressed', showLabels); drawMarkers();
+  });
+
+  /* ---------- data ---------- */
+  var freshEl = document.getElementById('fresh'), fleetMeta = null;
+  function paintFresh(){
+    if(!fleetMeta){ return; }
+    var age = Date.now() - Date.parse(fleetMeta.fetchedAt), stale = age > STALE_MS;
+    freshEl.className = 'fresh' + (fleetMeta.demo ? ' demo' : stale ? ' stale' : '');
+    freshEl.lastChild.textContent = (fleetMeta.demo ? 'DEMO DATA · ' : stale ? 'Stale · ' : 'Live · ') + 'updated ' + ago(fleetMeta.fetchedAt);
+    freshEl.title = 'Last successful sync with the tracking portal: ' + clock(fleetMeta.fetchedAt) + (fleetMeta.lastError ? ' (latest attempt failed: ' + fleetMeta.lastError + ')' : '');
+  }
+  function loadFleet(){
+    return fetch('api/fleet.json', {cache:'no-store', credentials:'same-origin'}).then(function(r){
+      if(r.status === 403){ location.href = 'gate'; throw new Error('owner-only'); }
+      return r.json();
+    }).then(function(j){
+      if(!j || !j.available || !Array.isArray(j.vehicles)){ freshEl.className = 'fresh stale'; freshEl.lastChild.textContent = 'No data from the portal yet'; return; }
+      fleetMeta = j; vehicles = j.vehicles;
+      paintFresh(); refreshViews();
+      if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); }
+    }).catch(function(e){ if(e.message !== 'owner-only'){ freshEl.className = 'fresh stale'; freshEl.lastChild.textContent = 'Can’t reach the server'; } });
+  }
+  function loadTrails(){
+    return fetch('api/trail.json', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if(j){ trailData = j; drawTrails(); if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); } } }).catch(function(){});
+  }
+
+  loadRoster().then(loadFleet).then(loadTrails);
+  setInterval(function(){ if(!document.hidden) loadFleet(); }, FLEET_MS);
+  setInterval(function(){ if(!document.hidden) loadTrails(); }, TRAIL_MS);
+  setInterval(paintFresh, 30000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFleet(); loadTrails(); } });
+})();
+</script>
+</body>
+</html>

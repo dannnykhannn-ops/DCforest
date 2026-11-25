@@ -96,6 +96,14 @@ const publicState = (cfg, env) => ({
 
 export const isPublic = (pathname) => PUBLIC.some((re) => re.test(pathname));
 
+/** True only for a valid owner session. Opening the site to everyone does not change this. */
+export async function isOwner(request, env) {
+  const s = await readSession(request, env, await loadCfg(env));
+  return !!(s && s.r === 'admin');
+}
+/** Entry page for an owner-only address (the owner signs in with the PIN there). */
+export const ownerPage = () => page(401);
+
 /** Returns null when the request may proceed, otherwise the response to send instead. */
 export async function guard(request, env, pathname) {
   const cfg = await loadCfg(env);
@@ -113,6 +121,10 @@ export async function route(request, env, url) {
   const now = Date.now();
   const cfg = await loadCfg(env);
 
+  if (action === 'me' && request.method === 'GET') {
+    const s = await readSession(request, env, cfg);
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : null });
+  }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
     return s && s.r === 'admin' ? json(publicState(cfg, env)) : json({ error: 'forbidden' }, 403);

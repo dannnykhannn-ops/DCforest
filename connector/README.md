@@ -108,6 +108,27 @@ or the passes is in the site's code.
 - **dcforest.vercel.app:** the `vercel-upload` folder holds a `vercel.json` that makes that address show
   this Worker, gate included. It is uploaded once; later site changes go out with `npx wrangler deploy`.
 
+## Control Room (owner only)
+
+`/control` is a live map of every bike for the owner: names on the map, a searchable list, and a card per
+person (post, duty, phone/WhatsApp, speed, engine, signal, last report, km today, today's route).
+
+- **Access:** owner session only (the PIN in the ∞ box). This holds **even when the site is opened to
+  everyone**: `/control`, `/api/fleet.json` and `/api/trail.json` check for the owner on every request.
+  The main page shows a "Control Room" button only to the signed-in owner.
+- **What it stores:** each sync also keeps every vehicle's last position, speed, ignition and report time
+  (inside `live:latest`, stripped from the public `/api/live.json`), and appends it to that day's trail
+  (`trail:YYYY-MM-DD`, Pakistan date). Trails are **deleted automatically after 31 days** (`TRAIL_DAYS`).
+- **Resolution:** one point per vehicle every 5 minutes (the sync interval), so routes are approximate.
+  Hops faster than 150 km/h between two reports are treated as GPS glitches and not counted in km.
+- **Staff details** (names, posts, phones) come from the daily data block in `index.html`, as before.
+- **Map tiles:** Esri street, dark and satellite layers (no key needed).
+- **Preview without a token:** `npm run dev -- --demo` serves made-up positions (marked DEMO DATA);
+  sign in at `/gate` with PIN `0000` (local only, change with `DEV_ADMIN_PIN`).
+
+Staff location history is personal data: tell staff it is recorded, and keep owner access to the people
+who need it.
+
 ## Renewing the login (about every 30 days)
 
 `/api/live.json` includes `authDaysLeft`. When it gets low, or the site turns STALE with
@@ -123,7 +144,7 @@ or the passes is in the site's code.
 |---|---|---|
 | Worker requests | 100,000 / day | 288 syncs + one request per site poll |
 | Cron triggers | 5 per account, every-minute allowed | 1, every 5 minutes |
-| KV writes | 1,000 / day | 288 / day (up to 576 on a day when every sync fails) |
+| KV writes | 1,000 / day | 576 / day (snapshot + day's trail; failures write a status instead) |
 | KV reads | 100,000 / day | 2 per site poll + 288 |
 | Static site files | free and unlimited | the site, if hosted on the Worker |
 | CPU per run | 10 ms | unpacking 3.5 KB of JSON; expected to fit, **not yet measured on Cloudflare** |
