@@ -90,3 +90,68 @@ test('Control Room and its data need the owner, even when the site is open to ev
   assert.deepEqual(trail.vehicles, {});
   assert.equal((await call(env, '/api/trail.json?date=../../x', { cookie: owner })).status, 400);
 });
+
+import { summarizeDay, dateRange } from '../src/transform.js';
+test('a day: moving and stopped time, stops, km; long silences are not counted as either', () => {
+  const t0 = Date.parse('2026-11-16T04:00:00Z') / 1000, m = 300;   // 9:00 PKT, 5-minute steps
+  const pts = [
+    [t0, 31.50, 74.30, 0], [t0 + m, 31.50, 74.30, 0], [t0 + 2 * m, 31.50, 74.30, 0], [t0 + 3 * m, 31.50, 74.30, 0],  // 15 min parked
+    [t0 + 4 * m, 31.51, 74.30, 30], [t0 + 5 * m, 31.52, 74.30, 28],                                                    // driving
+    [t0 + 6 * m, 31.52, 74.30, 0],
+    [t0 + 6 * m + 7200, 31.52, 74.30, 0],                                                                              // 2 h silence
+  ];
+  const s = summarizeDay(pts);
+  assert.equal(s.stoppedMin, 15); assert.equal(s.movingMin, 15); assert.equal(s.noDataMin, 120);
+  assert.equal(s.firstMove, t0 + 3 * m); assert.equal(s.lastMove, t0 + 6 * m);
+  assert.equal(s.stops.length, 1); assert.equal(s.stops[0].min, 15);
+  assert.ok(s.km > 2 && s.km < 2.4, 'about 2.2 km');
+  assert.equal(s.maxSpeed, 30);
+  assert.equal(summarizeDay([]), null);
+  assert.equal(summarizeDay([[t0, 31.5, 74.3, null]]).km, 0);
+});
+
+test('date ranges are capped', () => {
+  assert.deepEqual(dateRange('2026-11-29', '2026-12-02'), ['2026-11-29', '2026-11-30', '2026-12-01', '2026-12-02']);
+  assert.equal(dateRange('2026-01-01', '2026-12-31').length, 31);
+});
+
+test('activity and report need the owner and check their dates', async () => {
+  const env = newEnv(true);
+  assert.equal((await call(env, '/api/activity.json')).status, 403);
+  assert.equal((await call(env, '/api/report.json')).status, 403);
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  await env.LIVE.put('trail:2026-11-16', JSON.stringify({ date: '2026-11-16', v: { A: [[1, 31.5, 74.3, 20], [301, 31.51, 74.3, 20]] } }));
+  const a = await (await call(env, '/api/activity.json?date=2026-11-16', { cookie: owner })).json();
+  assert.equal(a.vehicles.A.movingMin, 5);
+  const r = await (await call(env, '/api/report.json?from=2026-11-15&to=2026-11-16', { cookie: owner })).json();
+  assert.deepEqual(r.recordedDays, ['2026-11-16']); assert.ok(r.vehicles.A['2026-11-16'].km > 1);
+  assert.equal((await call(env, '/api/report.json?from=2026-11-17&to=2026-11-16', { cookie: owner })).status, 400);
+  assert.equal((await call(env, '/api/activity.json?date=x', { cookie: owner })).status, 400);
+});
+
+test('site design: classic by default; the owner can switch everyone to the new design and back', async () => {
+  const html = (name) => new Response('<!DOCTYPE html><html lang="en"><body>' + name + '</body></html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  const env = newEnv(true);
+  env.ASSETS = { fetch: async (r) => {
+    const p = new URL(r.url).pathname;
+    if (p.endsWith('.html')) return new Response(null, { status: 307, headers: { Location: p === '/index.html' ? '/' : p.slice(0, -5) } });
+    return html(p === '/' ? 'CLASSIC-HOME' : 'PAGE' + p);
+  } };
+  const home = async (cookie) => (await call(env, '/', { cookie })).text();
+  assert.match(await home(), /CLASSIC-HOME/);
+  assert.equal((await (await call(env, '/api/gate/me')).json()).theme, 'classic');
+
+  assert.equal((await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' } })).status, 403, 'only the owner can switch');
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  assert.match(await (await call(env, '/control', { cookie: owner })).text(), /data-skin="classic"/);
+
+  assert.equal((await (await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' }, cookie: owner })).json()).theme, 'new');
+  const h = await home();
+  assert.match(h, /PAGE\/dashboard/); assert.match(h, /<html lang="en" data-skin="new">/);
+  assert.match(await (await call(env, '/classic')).text(), /CLASSIC-HOME/, 'the classic page stays reachable');
+  assert.match(await (await call(env, '/control', { cookie: owner })).text(), /data-skin="new"/);
+  assert.equal((await call(env, '/api/fleet.json')).status, 403, 'visitors still get no positions');
+
+  await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'classic' }, cookie: owner });
+  assert.match(await home(), /CLASSIC-HOME/);
+});

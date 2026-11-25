@@ -7,6 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0b2a16">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=3">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -268,20 +272,54 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
   .clip{width:36px;height:40px;top:-20px}
 }
 .t-short{display:none}
+
+/* Parts only the owner sees (the server also refuses their data to anyone else) */
+html:not(.is-owner) .owner-only{display:none!important}
+html:not(.is-owner) .dock{grid-template-columns:repeat(3,1fr)}
+html:not(.is-owner) .actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* ===== Classic design: the site's earlier look (no photos, moss or canopy) ===== */
+html:not([data-skin="new"]) body{background:#071a0d}
+html:not([data-skin="new"]) .hdr::before{background:linear-gradient(90deg,#06200d,#0f3d1b 55%,#06200d)}
+html:not([data-skin="new"]) .hdr::after{display:none}
+html:not([data-skin="new"]) .hdr-title h1{font-family:"Playfair Display",Georgia,serif;font-weight:700;color:#fcde84;text-shadow:none}
+html:not([data-skin="new"]) .ph{--k:#e0bb4b;min-height:0;background:#0f2a16;border:1px solid #23462b;border-left:4px solid var(--k);box-shadow:0 10px 24px rgba(0,0,0,.28)}
+html:not([data-skin="new"]) .ph img{display:none}
+html:not([data-skin="new"]) .ph .t,html:not([data-skin="new"]) .ph.k-weak .t{color:#eef3e4;font-size:1rem;font-weight:800;text-shadow:none}
+html:not([data-skin="new"]) .ph .n,html:not([data-skin="new"]) .ph.k-weak .n{font-family:"Playfair Display",Georgia,serif;color:var(--k);font-size:2.6rem;text-shadow:none}
+html:not([data-skin="new"]) .ph .s,html:not([data-skin="new"]) .ph.k-weak .s{color:#a6b99a;max-width:none}
+html:not([data-skin="new"]) .ph.k-moving{--k:#5fd38f} html:not([data-skin="new"]) .ph.k-weak{--k:#fb7185} html:not([data-skin="new"]) .ph.k-off{--k:#a3aab5}
+html:not([data-skin="new"]) .strip{background:#0f2a16;color:#eef3e4;border:1px solid #23462b}
+html:not([data-skin="new"]) .strip button{border-color:#23462b}
+html:not([data-skin="new"]) .strip span{color:#a6b99a}
+html:not([data-skin="new"]) .strip button[aria-pressed="true"]{background:#15361d}
+html:not([data-skin="new"]) .abtn,html:not([data-skin="new"]) .abtn.gold{background:rgba(252,222,132,.08);border-color:rgba(252,222,132,.45);color:#fcde84;box-shadow:none}
+html:not([data-skin="new"]) .panel{background:#0f2a16;border-color:#23462b}
+html:not([data-skin="new"]) thead th{background:#15361d}
+html:not([data-skin="new"]) .moss{background:#0b2412;border-color:#23462b}
+html:not([data-skin="new"]) .moss::before,html:not([data-skin="new"]) .moss::after{display:none}
+html:not([data-skin="new"]) .dir-head{background:#0f2a16;backdrop-filter:none;-webkit-backdrop-filter:none;border-color:#23462b}
+html:not([data-skin="new"]) .bdg{background:#0f2a16;border-color:#23462b;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.28);padding-top:14px}
+html:not([data-skin="new"]) .clip,html:not([data-skin="new"]) .pic{display:none}
+html:not([data-skin="new"]) .nm{background:transparent;border-bottom:1px solid #23462b;border-radius:0;padding:4px 6px 10px}
+html:not([data-skin="new"]) .nm b{font-family:"Playfair Display",Georgia,serif}
+html:not([data-skin="new"]) .call{background:rgba(252,222,132,.1);border-color:rgba(252,222,132,.45);color:#fcde84;box-shadow:none}
+html:not([data-skin="new"]) .badges{gap:16px;padding-top:12px}
+html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
 </style>
 </head>
 <body>
 <header class="hdr">
   <div class="wrap">
     <div class="hdr-top">
-      <a class="logo" href="dashboard" aria-label="DC Forest owner dashboard">
+      <a class="logo" href="./" aria-label="DC Forest home">
         <svg viewBox="0 0 48 48" fill="#fff" aria-hidden="true"><path d="M24 3 14 16h5l-8 10h6l-9 11h14v8h4v-8h14l-9-11h6l-8-10h5z"/></svg>
         <span class="sep"></span>
         <span><small>Punjab Forest Department</small><b>DC Forest</b></span>
       </a>
       <span class="spacer"></span>
       <button class="ibtn" id="refresh" type="button" title="Refresh the numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Refresh</span></button>
-      <a class="ibtn" href="control" title="Live map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Map</span></a>
+      <a class="ibtn owner-only" href="control" title="Live map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Map</span></a>
       <a class="ibtn" href="gate" title="Owner panel (passes, sign out)" style="font-size:1.3rem">&infin;</a>
     </div>
     <div class="hdr-title">
@@ -302,10 +340,10 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
     <div class="stats" id="stats"></div>
     <div class="strip" id="strip"></div>
     <nav class="actions" aria-label="Quick actions">
-      <a class="abtn gold" href="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Track Fleet</a>
+      <a class="abtn gold owner-only" href="control"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Track Fleet</a>
       <a class="abtn" href="#staff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9-.2 5 1.8 5.5 4.8"/></svg>View Posts</a>
       <a class="abtn" href="#staff" data-sec="nursery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12C12 7 8.5 4 3 4c0 5 3.5 8 9 8z"/><path d="M12 14c0-4 3-7 8.5-7 0 4-3 7-8.5 7z"/></svg>Nurseries</a>
-      <a class="abtn" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>Public site</a>
+      <a class="abtn owner-only" href="classic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>Classic page</a>
       <button class="abtn" type="button" data-refresh><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Refresh</button>
     </nav>
 
@@ -324,7 +362,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
               <th><button type="button" data-sort="who">Rider</button></th>
               <th><button type="button" data-sort="state">Status</button></th>
               <th><button type="button" data-sort="signal">GSM</button></th>
-              <th><button type="button" data-sort="time" data-dir="desc">Last update</button></th>
+              <th class="owner-only"><button type="button" data-sort="time" data-dir="desc">Last update</button></th>
             </tr></thead>
             <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
           </table>
@@ -374,7 +412,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
 
 <nav class="dock" aria-label="Sections">
   <a href="#fleet" class="on" data-tab="fleet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l1.6-5.2A2 2 0 0 1 7.5 9.4h9a2 2 0 0 1 1.9 1.4L20 16"/><rect x="3" y="15" width="18" height="4" rx="1.5"/><circle cx="7" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>Fleet</a>
-  <a href="control" data-tab="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
+  <a href="control" data-tab="map" class="owner-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
   <a href="#staff" data-tab="nursery" data-sec="nursery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12C12 7 8.5 4 3 4c0 5 3.5 8 9 8z"/><path d="M12 14c0-4 3-7 8.5-7 0 4-3 7-8.5 7z"/></svg>Nurseries</a>
   <a href="#staff" data-tab="staff" data-sec=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9-.2 5 1.8 5.5 4.8"/></svg>Staff</a>
 </nav>
@@ -397,9 +435,15 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
   $('today').textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
   /* ---------- data: staff list from the main page's daily data block, fleet from the owner feed ---------- */
-  var DATA = null, rows = [], byReg = {}, fleet = null, live = {};
+  var DATA = null, rows = [], byReg = {}, fleet = null, live = {}, owner = false;
+  /* Owner: full feed with positions and report times. Anyone else (the site switched to the new design):
+     the public numbers only, and the owner-only parts of the page are hidden. */
+  function loadRole(){
+    return fetch('api/gate/me',{cache:'no-store',credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+      .then(function(j){ owner = j.role === 'owner'; document.documentElement.classList.toggle('is-owner', owner); });
+  }
   function loadRoster(){
-    return fetch('index.html',{cache:'no-store',credentials:'same-origin'}).then(function(r){ return r.text(); }).then(function(html){
+    return fetch('classic',{cache:'no-store',credentials:'same-origin'}).then(function(r){ return r.text(); }).then(function(html){
       var m = /<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
       DATA = JSON.parse(m[1]); rows = [];
       DATA.sections.forEach(function(s){ s.rows.forEach(function(r){ var x = Object.assign({}, r, {sec:s}); rows.push(x); if(r.vehicle && !byReg[r.vehicle]) byReg[r.vehicle] = x; }); });
@@ -407,11 +451,12 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
     });
   }
   function loadFleet(){
-    return fetch('api/fleet.json',{cache:'no-store',credentials:'same-origin'}).then(function(r){
-      if(r.status === 403){ location.href = 'gate'; throw new Error('owner-only'); }
+    return fetch(owner ? 'api/fleet.json' : 'api/live.json',{cache:'no-store',credentials:'same-origin'}).then(function(r){
+      if(r.status === 403 || r.status === 401){ location.href = owner ? 'gate' : './'; throw new Error('owner-only'); }
       return r.json();
     }).then(function(j){
-      if(!j || !j.available || !Array.isArray(j.vehicles)) throw new Error('no data');
+      if(!j || j.available === false || !Array.isArray(j.vehicles)) throw new Error('no data');
+      if(!owner) j.vehicles = j.vehicles.map(function(v){ return {reg:v.reg, state:v.state, signal:v.signal, lat:null, lon:null, speed:null, reportedAt:null}; });
       fleet = j; live = {}; j.vehicles.forEach(function(v){ live[v.reg] = v; });
     });
   }
@@ -453,7 +498,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
   $('stats').addEventListener('click', onStat); $('strip').addEventListener('click', onStat);
 
   /* ---------- fleet table ---------- */
-  var sortKey = 'time', sortDir = -1;
+  var sortKey = 'state', sortDir = 1;
   function who(reg){ var r = byReg[reg]; return r ? (r.name ? short(r.name) : (r.status === 'parked' ? 'Pool bike' : 'Unassigned')) : 'Not on staff list'; }
   function fleetMatch(v){
     if(lf === 'weak' && v.signal !== 'weak') return false;
@@ -481,7 +526,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
       return '<tr data-reg="'+esc(v.reg)+'" title="Open on the map"><td class="reg">'+esc(v.reg)+'</td><td class="who">'+esc(who(v.reg))+'</td>'+
         '<td><span class="dot" style="--k:'+st.c+'"></span><span class="st">'+st.lb+'</span></td>'+
         '<td>'+(sig ? '<span class="bars '+esc(sig)+'"><i></i><i></i><i></i><i></i></span><span class="st sig-tx">'+esc(sig)+'</span>' : '<span class="dim">—</span>')+'</td>'+
-        '<td>'+(v.reportedAt ? '<span class="t-long">'+esc(clock(v.reportedAt))+'</span><span class="t-short">'+esc(ago(v.reportedAt))+'</span>' : '<span class="dim">—</span>')+'</td></tr>';
+        '<td class="owner-only">'+(v.reportedAt ? '<span class="t-long">'+esc(clock(v.reportedAt))+'</span><span class="t-short">'+esc(ago(v.reportedAt))+'</span>' : '<span class="dim">—</span>')+'</td></tr>';
     }).join('') : '<tr><td colspan="5" class="empty">No vehicles match.</td></tr>';
     document.querySelectorAll('thead [data-sort]').forEach(function(b){ b.setAttribute('data-dir', b.getAttribute('data-sort') === sortKey ? (sortDir > 0 ? 'asc' : 'desc') : ''); });
   }
@@ -490,7 +535,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
     if(k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = k === 'time' ? -1 : 1; } drawTable();
   });
   $('fq').addEventListener('input', drawTable);
-  $('rows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(tr) location.href = 'control?reg=' + encodeURIComponent(tr.getAttribute('data-reg')); });
+  $('rows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(tr && owner) location.href = 'control?reg=' + encodeURIComponent(tr.getAttribute('data-reg')); });
 
   /* ---------- staffing ---------- */
   function drawStaffing(){
@@ -559,7 +604,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
       '<div class="pic"><img src="assets/v2/'+prop(r)+'.webp" alt="" loading="lazy"></div>'+
       '<div class="nm"><b title="'+esc(r.name || name)+'">'+esc(name)+'</b><small title="'+esc(sub)+'">'+esc(sub)+'</small></div>'+lines+
       (tel ? '<a class="call" href="tel:'+esc(tel)+'">'+PHONE_I+'Call</a>' : '')+
-      ((wa || r.vehicle) ? '<div class="bdg-acts">'+(wa ? '<a href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>' : '')+(r.vehicle ? '<a href="control?reg='+encodeURIComponent(r.vehicle)+'">On the map</a>' : '')+'</div>' : '')+
+      ((wa || (r.vehicle && owner)) ? '<div class="bdg-acts">'+(wa ? '<a href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>' : '')+(r.vehicle && owner ? '<a href="control?reg='+encodeURIComponent(r.vehicle)+'">On the map</a>' : '')+'</div>' : '')+
       '</article>';
   }
   function drawSecChips(){
@@ -601,9 +646,9 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
     return loadFleet().catch(function(e){ if(e.message === 'owner-only') throw e; }).then(drawAll)
       .catch(function(){}).then(function(){ if(btn) btn.classList.remove('spin'); });
   }
-  loadRoster().then(function(){
+  loadRole().then(loadRoster).then(function(){
     $('foot').textContent = 'Staff details from the Daily Activity Report dated ' + new Date(DATA.date + 'T00:00:00').toLocaleDateString('en-GB') +
-      '. Vehicle status from the tracking portal, synced every 5 minutes. Owner view: not visible on the public site.';
+      '. Vehicle status from the tracking portal, synced every 5 minutes.' + (owner ? ' Owner view: report times and locations are not shown to visitors.' : '');
     return refresh();
   }).then(function(){ if(location.hash === '#staff') $('staff').scrollIntoView(); });
   $('refresh').addEventListener('click', function(){ refresh(this); });
@@ -611,6 +656,7 @@ td.who{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#d6e3cc}
   setInterval(function(){ if(!document.hidden) refresh(); }, 60000);
   setInterval(paintFresh, 30000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(); });
+  if('serviceWorker' in navigator) addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 })();
 </script>
 </body>

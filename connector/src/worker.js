@@ -8,7 +8,7 @@
    Vars: ALLOWED_ORIGIN (optional, for a site hosted elsewhere), STALE_AFTER_SECONDS. */
 
 import { fetchFleetSnapshot, tokenInfo } from './portal.js';
-import { buildSnapshot, validateSnapshot, buildPositions, appendTrail, pkDate, trailKm } from './transform.js';
+import { buildSnapshot, validateSnapshot, buildPositions, appendTrail, pkDate, trailKm, summarizeDay, dateRange } from './transform.js';
 import * as gate from './gate.js';
 
 const KEY_LATEST = 'live:latest';   // last SUCCESSFUL snapshot; only ever overwritten by another success
@@ -105,6 +105,7 @@ async function serveFleet(env) {
     stale: ageSeconds > (Number(env.STALE_AFTER_SECONDS) || 900),
     lastError: failedSince ? status.lastError : null,
     summary: latest.summary, vehicles: latest.positions, demo: latest.demo === true || undefined,
+    authDaysLeft: latest.authExpiresAt ? Math.floor((Date.parse(latest.authExpiresAt) - now) / 86400000) : null,
   }), { headers: noStore });
 }
 
@@ -137,8 +138,48 @@ async function ownerPage(env, url, name) {
   return new Response('Owner page not found', { status: 502 });
 }
 
+/* Marks a page with the site design (html data-skin="classic" | "new") so it renders in that look from
+   the first paint, and stops it being cached. */
+async function themed(res, theme) {
+  const headers = new Headers(res.headers);
+  headers.set('Cache-Control', 'no-store'); headers.set('X-Robots-Tag', 'noindex, nofollow');
+  if (!res.ok || !(headers.get('Content-Type') || '').includes('text/html')) return new Response(res.body, { status: res.status, headers });
+  const html = (await res.text()).replace(/<html\b([^>]*)>/i, (m, a) => '<html' + a.replace(/\sdata-skin="[^"]*"/, '') + ' data-skin="' + theme + '">');
+  headers.delete('Content-Length'); headers.delete('ETag');
+  return new Response(html, { status: res.status, headers });
+}
+
 const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail)\.json$/;
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
+
+/* Owner-only: every vehicle's day (moving / stopped time, stops, km) for one Pakistan date. */
+async function serveActivity(env, url) {
+  const date = url.searchParams.get('date') || pkDate(Date.now());
+  if (!DATE_RE.test(date)) return bad('bad date');
+  const trail = (await env.LIVE.get(trailKey(date), 'json')) || { v: {} };
+  const vehicles = {};
+  for (const [reg, pts] of Object.entries(trail.v || {})) vehicles[reg] = summarizeDay(pts);
+  return new Response(JSON.stringify({ date, today: pkDate(Date.now()), keptDays: TRAIL_DAYS, vehicles }), { headers: noStore });
+}
+
+/* Owner-only: per-vehicle daily totals over a date range (up to the 31 days that are kept). */
+async function serveReport(env, url) {
+  const today = pkDate(Date.now());
+  const to = url.searchParams.get('to') || today, from = url.searchParams.get('from') || to;
+  if (!DATE_RE.test(from) || !DATE_RE.test(to) || from > to) return bad('bad range');
+  const days = dateRange(from, to, TRAIL_DAYS);
+  const trails = await Promise.all(days.map((d) => env.LIVE.get(trailKey(d), 'json')));
+  const vehicles = {};
+  days.forEach((d, i) => {
+    for (const [reg, pts] of Object.entries((trails[i] && trails[i].v) || {})) {
+      const s = summarizeDay(pts); if (!s) continue;
+      (vehicles[reg] = vehicles[reg] || {})[d] = { km: s.km, movingMin: s.movingMin, stoppedMin: s.stoppedMin, firstMove: s.firstMove, lastMove: s.lastMove, points: s.points, maxSpeed: s.maxSpeed };
+    }
+  });
+  return new Response(JSON.stringify({ from, to: days[days.length - 1], days, recordedDays: days.filter((d, i) => trails[i]), vehicles }), { headers: noStore });
+}
 
 export default {
   async scheduled(event, env, ctx) {
@@ -161,11 +202,10 @@ export default {
       if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
       if (url.pathname === '/api/fleet.json') return serveFleet(env);
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
+      if (url.pathname === '/api/activity.json') return serveActivity(env, url);
+      if (url.pathname === '/api/report.json') return serveReport(env, url);
       if (!env.ASSETS) return new Response('Not found', { status: 404 });
-      const res = await ownerPage(env, url, OWNER_PAGES.exec(url.pathname)[1]);
-      const headers = new Headers(res.headers);
-      headers.set('Cache-Control', 'no-store'); headers.set('X-Robots-Tag', 'noindex, nofollow');
-      return new Response(res.body, { status: res.status, headers });
+      return themed(await ownerPage(env, url, OWNER_PAGES.exec(url.pathname)[1]), await gate.siteTheme(env));
     }
     if (!gate.isPublic(url.pathname)) {
       const denied = await gate.guard(request, env, url.pathname);
@@ -177,7 +217,13 @@ export default {
       if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
       return serveLive(request, env);
     }
-    if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response('Not found', { status: 404 });
+    if (!env.ASSETS) return new Response('Not found', { status: 404 });
+    // The classic page is always reachable at /classic (the new design reads the staff list from it).
+    if (url.pathname === '/classic') return themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
+    // Home page: the classic page, or the new design when the owner has switched the site to it.
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+      if (request.method === 'GET' && (await gate.siteTheme(env)) === 'new') return themed(await ownerPage(env, url, 'dashboard'), 'new');
+    }
+    return env.ASSETS.fetch(request);
   },
 };

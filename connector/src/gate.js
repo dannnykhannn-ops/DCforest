@@ -35,7 +35,8 @@ const configured = (env) => secretOf(env, 'ADMIN_PIN').length >= 4 && secretOf(e
 
 async function loadCfg(env) {
   const c = (await env.LIVE.get(CFG_KEY, 'json')) || {};
-  return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {} };
+  return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {},
+    theme: c.theme === 'new' ? 'new' : 'classic' };
 }
 const saveCfg = (env, cfg) => env.LIVE.put(CFG_KEY, JSON.stringify(cfg));
 
@@ -90,11 +91,15 @@ function newCode() {
 const cleanCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const publicState = (cfg, env) => ({
   open: cfg.open,
+  theme: cfg.theme,
   guestMinutes: guestMinutes(env),
   passes: cfg.passes.map((p) => ({ code: p.code, createdAt: p.createdAt, usedAt: p.usedAt || null })),
 });
 
 export const isPublic = (pathname) => PUBLIC.some((re) => re.test(pathname));
+
+/** Site design chosen by the owner: 'classic' (default) or 'new'. Applies to every visitor. */
+export async function siteTheme(env) { return (await loadCfg(env)).theme; }
 
 /** True only for a valid owner session. Opening the site to everyone does not change this. */
 export async function isOwner(request, env) {
@@ -123,7 +128,7 @@ export async function route(request, env, url) {
 
   if (action === 'me' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : null });
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : (cfg.open ? 'visitor' : null), theme: cfg.theme });
   }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
@@ -180,6 +185,11 @@ export async function route(request, env, url) {
   }
   if (action === 'open') {
     cfg.open = body.open === true;
+    await saveCfg(env, cfg);
+    return json({ ok: true, ...publicState(cfg, env) });
+  }
+  if (action === 'theme') {
+    cfg.theme = body.theme === 'new' ? 'new' : 'classic';
     await saveCfg(env, cfg);
     return json({ ok: true, ...publicState(cfg, env) });
   }

@@ -179,3 +179,50 @@ export function trailKm(pts) {
   }
   return Math.round(m / 100) / 10;
 }
+
+/* ---------------------------------------------------------------------------
+   Activity (owner only): one vehicle's day, worked out from its trail points.
+   Points arrive about every 5 minutes, so every time here is approximate to that.
+--------------------------------------------------------------------------- */
+export const MOVE_METRES = 150;          // a hop longer than this between two reports counts as moving
+export const GAP_SECONDS = 30 * 60;      // no report for longer than this = "no data", neither moving nor stopped
+export const STOP_MIN_SECONDS = 10 * 60; // a stop shorter than this is not listed
+
+/** points = [[epochSeconds, lat, lon, speedKphOrNull], ...] sorted by time. Returns null for an empty day. */
+export function summarizeDay(points) {
+  if (!Array.isArray(points) || !points.length) return null;
+  const pts = points.slice().sort((a, b) => a[0] - b[0]);
+  let movingS = 0, stoppedS = 0, noDataS = 0, firstMove = null, lastMove = null, maxSpeed = null;
+  const stops = []; let run = null;
+  const closeRun = () => { if (run && run.to - run.from >= STOP_MIN_SECONDS) stops.push(run); run = null; };
+  for (const p of pts) if (p[3] !== null && p[3] !== undefined) maxSpeed = Math.max(maxSpeed ?? 0, p[3]);
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], dt = b[0] - a[0];
+    if (dt <= 0) continue;
+    if (dt > GAP_SECONDS) { noDataS += dt; closeRun(); continue; }
+    const d = metres(a[1], a[2], b[1], b[2]);
+    const moving = (a[3] ?? 0) >= MOVING_MIN_KPH || (b[3] ?? 0) >= MOVING_MIN_KPH || (d > MOVE_METRES && d / 1000 / (dt / 3600) <= TRAIL_MAX_JUMP_KPH);
+    if (moving) {
+      movingS += dt; closeRun();
+      if (firstMove === null) firstMove = a[0];
+      lastMove = b[0];
+    } else {
+      stoppedS += dt;
+      if (!run) run = { from: a[0], to: b[0], lat: a[1], lon: a[2] }; else run.to = b[0];
+    }
+  }
+  closeRun();
+  return {
+    points: pts.length, firstReport: pts[0][0], lastReport: pts[pts.length - 1][0],
+    firstMove, lastMove, km: trailKm(pts) ?? 0,
+    movingMin: Math.round(movingS / 60), stoppedMin: Math.round(stoppedS / 60), noDataMin: Math.round(noDataS / 60),
+    maxSpeed, stops: stops.map((s) => ({ from: s.from, to: s.to, min: Math.round((s.to - s.from) / 60), lat: s.lat, lon: s.lon })),
+  };
+}
+
+/** Pakistan dates from `from` to `to` inclusive (YYYY-MM-DD), at most `max` days. */
+export function dateRange(from, to, max = 31) {
+  const out = [], end = Date.parse(to + 'T00:00:00Z');
+  for (let t = Date.parse(from + 'T00:00:00Z'); t <= end && out.length < max; t += 86400000) out.push(new Date(t).toISOString().slice(0, 10));
+  return out;
+}

@@ -33,6 +33,12 @@ button{font:inherit;cursor:pointer}
 .go:disabled{opacity:.6;cursor:default}
 .go.cr{display:block;margin:0 0 12px;text-align:center;text-decoration:none;color:#fff;background:linear-gradient(135deg,#2f8a52,#1f6b45);border:1px solid #fcde84}
 .go.cr.map{margin-bottom:22px;background:linear-gradient(135deg,#1d5a74,#173f58)}
+.theme{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 22px;padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(252,222,132,.35)}
+.theme b{display:block;color:#fcde84}
+.theme small{display:block;color:#b9cfa9;font-size:.78rem;margin-top:2px}
+.theme .seg{display:inline-flex;border:1px solid rgba(252,222,132,.5);border-radius:10px;overflow:hidden;flex:none}
+.theme .seg button{background:transparent;border:0;color:#fcde84;font-weight:800;padding:8px 14px;cursor:pointer;font:inherit;font-weight:800}
+.theme .seg button[aria-pressed="true"]{background:#e0bb4b;color:#1c2a10}
 .go.cr small{display:block;font-weight:600;font-size:.78rem;color:#d5ecd9;margin-top:3px}
 .msg{min-height:1.3em;margin:10px 0 0;font-size:.86rem;font-weight:600;color:#fca5a5}
 .msg.ok{color:#86efac}
@@ -96,6 +102,8 @@ a.mini{text-decoration:none;display:inline-block}
   <section id="vAdmin" class="panel" hidden>
     <a class="go cr" href="dashboard">Open owner dashboard<small>Fleet, staffing and staff directory (owner only)</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
+    <div class="theme"><div><b>Site design</b><small id="themeSub"></small></div>
+      <div class="seg" role="group" aria-label="Site design"><button type="button" data-theme="classic">Classic</button><button type="button" data-theme="new">New</button></div></div>
     <h2>Access passes</h2>
     <p class="sub">Each pass lets one person in, once, for <span id="mins">30</span> minutes.</p>
     <button class="go" id="bNew" type="button">Create one-time pass</button>
@@ -172,6 +180,8 @@ a.mini{text-decoration:none;display:inline-block}
     $('lUsed').innerHTML = used.length ? used.map(function(p){
       return '<li class="used"><div><code>' + esc(fmtCode(p.code)) + '</code><small>Used ' + esc(when(p.usedAt)) + '</small></div></li>';
     }).join('') : '<li><span>None yet.</span></li>';
+    document.querySelectorAll('[data-theme]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme') === (s.theme || 'classic')); });
+    $('themeSub').textContent = s.theme === 'new' ? 'Everyone sees the new design.' : 'Everyone sees the classic design.';
     $('openLabel').textContent = s.open ? 'Open to everyone' : 'Private';
     $('openSub').textContent = s.open ? 'Anyone with the address can view the site.' : 'A pass is needed to view the site.';
     $('bOpen').textContent = s.open ? 'Make private' : 'Open to everyone';
@@ -204,6 +214,12 @@ a.mini{text-decoration:none;display:inline-block}
     if(!confirm('Sign everyone out? Every visitor loses access now, and you will need your PIN again.')) return;
     act('signout', {}, function(){ isAdmin = false; show('vEnter'); });
   });
+  document.querySelector('.theme .seg').onclick = function(e){
+    var b = e.target.closest('[data-theme]'); if(!b) return;
+    var th = b.getAttribute('data-theme');
+    if(th === 'new' && !confirm('Switch the whole site to the new design? Every visitor will see it.')) return;
+    act('theme', {theme: th});
+  };
 
   /* already signed in as owner? go straight to the panel */
   fetch('/api/gate/state', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
