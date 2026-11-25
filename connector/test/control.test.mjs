@@ -44,7 +44,12 @@ const newEnv = (open) => ({
       positions: [{ reg: 'A', state: 'moving', signal: 'strong', lat: 31.5, lon: 74.3, speed: 20, ignition: 'on', reportedAt: new Date().toISOString() }] }),
   }),
   ADMIN_PIN: '4321', SESSION_SECRET: 'test-secret-test-secret-test',
-  ASSETS: { fetch: async (r) => new Response('PAGE:' + new URL(r.url).pathname) },
+  // Behaves like Cloudflare's default html_handling: "/x.html" redirects to "/x", and "/x" serves x.html.
+  ASSETS: { fetch: async (r) => {
+    const p = new URL(r.url).pathname;
+    if (p.endsWith('.html')) return new Response(null, { status: 307, headers: { Location: p.slice(0, -5) } });
+    return new Response('PAGE:' + (p === '/' ? '/index.html' : p + '.html'));
+  } },
 });
 const call = (env, path, { method = 'GET', body, cookie } = {}) => worker.fetch(new Request('http://x' + path, {
   method, body: body ? JSON.stringify(body) : undefined,
@@ -71,7 +76,11 @@ test('Control Room and its data need the owner, even when the site is open to ev
   assert.equal((await (await call(env, '/api/gate/me', { cookie: owner })).json()).role, 'owner');
   const fleet = await (await call(env, '/api/fleet.json', { cookie: owner })).json();
   assert.equal(fleet.vehicles[0].lat, 31.5);
-  assert.equal(await (await call(env, '/control', { cookie: owner })).text(), 'PAGE:/control.html');
+  for (const path of ['/control', '/control.html', '/control/']) {
+    const res = await call(env, path, { cookie: owner });
+    assert.equal(res.status, 200, path + ' must not hand a redirect to the browser');
+    assert.equal(await res.text(), 'PAGE:/control.html');
+  }
   const trail = await (await call(env, '/api/trail.json?date=2026-11-16', { cookie: owner })).json();
   assert.deepEqual(trail.vehicles, {});
   assert.equal((await call(env, '/api/trail.json?date=../../x', { cookie: owner })).status, 400);

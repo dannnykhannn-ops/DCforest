@@ -119,6 +119,24 @@ async function serveTrail(env, url) {
   return new Response(JSON.stringify({ date, keptDays: TRAIL_DAYS, vehicles: v, km }), { headers: noStore });
 }
 
+/* Fetch control.html from the static files. Cloudflare's asset handling redirects "/control.html" to
+   "/control" (and may do the reverse), so a redirect is followed here on the server and never handed to the
+   browser, where it would loop back into this route. */
+async function controlPage(env, url) {
+  let target = new URL('/control', url);
+  for (let hop = 0; hop < 3; hop++) {
+    const res = await env.ASSETS.fetch(new Request(target, { method: 'GET', redirect: 'manual' }));
+    if (res.status >= 300 && res.status < 400 && res.headers.get('Location')) {
+      target = new URL(res.headers.get('Location'), target);
+      if (target.origin !== url.origin) break;
+      continue;
+    }
+    if (res.status === 404 && hop === 0) { target = new URL('/control.html', url); continue; }
+    return res;
+  }
+  return new Response('Control Room page not found', { status: 502 });
+}
+
 const OWNER_PAGES = /^\/control(\.html)?\/?$/;
 const OWNER_APIS = /^\/api\/(fleet|trail)\.json$/;
 
@@ -144,8 +162,10 @@ export default {
       if (url.pathname === '/api/fleet.json') return serveFleet(env);
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
       if (!env.ASSETS) return new Response('Not found', { status: 404 });
-      const res = await env.ASSETS.fetch(new Request(new URL('/control.html', url), request));
-      return new Response(res.body, { status: res.status, headers: { ...Object.fromEntries(res.headers), 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
+      const res = await controlPage(env, url);
+      const headers = new Headers(res.headers);
+      headers.set('Cache-Control', 'no-store'); headers.set('X-Robots-Tag', 'noindex, nofollow');
+      return new Response(res.body, { status: res.status, headers });
     }
     if (!gate.isPublic(url.pathname)) {
       const denied = await gate.guard(request, env, url.pathname);
