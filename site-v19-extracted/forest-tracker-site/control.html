@@ -199,6 +199,29 @@ html[data-skin="new"] .wnav [aria-pressed="true"]{background:linear-gradient(180
 html:not([data-skin="new"]) .wstats,html:not([data-skin="new"]) .wnav,html:not([data-skin="new"]) .ribbon,html:not([data-skin="new"]) .clock,
 html:not([data-skin="new"]) .brand svg,html:not([data-skin="new"]) .card .sel-h,html:not([data-skin="new"]) .t-new{display:none}
 html[data-skin="new"] .t-classic{display:none}
+[data-control-theme="aurora"]{
+  --bg:#090d20;--surface:#151b31;--surface2:#202840;--line:#39435c;
+  --text:#eff2ff;--muted:#bbc5da;--gold:#5ce4ef;--gold-light:#bbf5ff;
+  --head-a:#12283d;--head-b:#30204d;
+}
+[data-control-theme="daylight"]{
+  color-scheme:light;
+  --bg:#f2f5fa;--surface:#fff;--surface2:#e9eef8;--line:#d5deec;
+  --text:#141c31;--muted:#43516a;--gold:#075ba5;--gold-light:#095d79;
+  --head-a:#ddf6f1;--head-b:#eae6fc;
+}
+html[data-control-theme] body{background:var(--bg)}
+html[data-control-theme] body::before{display:none}
+html[data-control-theme] :is(.top,.side,#map,.card,.wnav){border-color:var(--line)}
+html[data-control-theme] .top{background:linear-gradient(110deg,var(--head-a),var(--head-b))}
+html[data-control-theme] :is(.side,.card,.card .sel-h,.wnav,.leaflet-tooltip.tip){background:var(--surface);color:var(--text)}
+html[data-control-theme] :is(.top h1,.top h1 .sub,.card h2,.card .ds,.card .sel-h svg,.card .dash,.card .note,.card .kv .k,.card .kv .v small,.wnav svg){color:var(--text);font-family:inherit}
+html[data-control-theme] :is(.card .kv,.card .act,.wnav>*,.wst){background:var(--surface2);color:var(--text);border-color:var(--line)}
+html[data-control-theme] :is(.back,.tbtn,.seg,.ribbon,.clock,.card .x){border-color:var(--line);background:var(--surface);color:var(--text)}
+html[data-control-theme] :is(.seg button,.card .hd){border-color:var(--line)}
+html[data-control-theme] :is(.seg button[aria-pressed="true"],.tbtn[aria-pressed="true"],.wnav [aria-pressed="true"],.card .act.primary){background:var(--gold);color:var(--bg)}
+html[data-control-theme="daylight"] :is(.fresh,.fresh.stale,.fresh.demo){color:var(--text)}
+html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotate(175deg) saturate(1.4)}
 </style>
 </head>
 <body>
@@ -216,6 +239,7 @@ html[data-skin="new"] .t-classic{display:none}
       <span>Routes today</span></button>
     <button class="tbtn" id="labelsBtn" type="button" aria-pressed="true" title="Show names on the map"><span>Names</span></button>
     <div class="seg" role="group" aria-label="Map style">
+      <button type="button" data-base="match" aria-pressed="false">Match my theme</button>
       <button type="button" data-base="street" aria-pressed="true">Map</button>
       <button type="button" data-base="dark" aria-pressed="false" class="hide-sm">Dark</button>
       <button type="button" data-base="sat" aria-pressed="false">Satellite</button>
@@ -252,6 +276,11 @@ html[data-skin="new"] .t-classic{display:none}
     idle:  {lb:'Idle',   k:'var(--idle)',   c:'#ff7a2f'},
     stop:  {lb:'Stopped',k:'var(--stop)',   c:'#fbbf24'},
     none:  {lb:'Offline',k:'var(--none)',   c:'#9aa4b2'}
+  };
+  var mapThemes = {
+    forest: {base:'street', colors:['#4ade80','#ff7a2f','#fbbf24','#9aa4b2'], route:'#e0bb4b'},
+    aurora: {base:'dark', colors:['#53efac','#ff9b67','#ffe170','#adb9d3'], route:'#55e7ff'},
+    daylight: {base:'street', colors:['#39be92','#ff9252','#f4c846','#aab5ca'], route:'#075db0'}
   };
   var DUTY = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
   var BIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5"/></svg>';
@@ -296,17 +325,52 @@ html[data-skin="new"] .t-classic{display:none}
     dark:   L.layerGroup([esri('Canvas/World_Dark_Gray_Base', {maxNativeZoom:16}), esri('Canvas/World_Dark_Gray_Reference', {maxNativeZoom:16})]),
     sat:    L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places')])
   };
-  var base = 'street'; try{ base = localStorage.getItem('crBase') || 'street'; }catch(e){}
-  if(!BASES[base]) base = 'street';
-  BASES[base].addTo(map);
-  document.querySelectorAll('[data-base]').forEach(function(b){
-    b.setAttribute('aria-pressed', b.getAttribute('data-base') === base);
+  var baseChoice = 'match', dashboardTheme = 'forest', activeBase, mapTheme;
+  try{
+    baseChoice = localStorage.getItem('crBase') || 'match';
+    dashboardTheme = localStorage.getItem('dcforest-dashboard-theme') || 'forest';
+  }catch(e){}
+  if(!Object.hasOwn(BASES, baseChoice) && baseChoice !== 'match') baseChoice = 'match';
+  if(!Object.hasOwn(mapThemes, dashboardTheme)) dashboardTheme = 'forest';
+  var baseButtons = document.querySelectorAll('[data-base]');
+  function applyMapStyle(){
+    var matchedTheme = baseChoice === 'match' ? dashboardTheme : 'forest';
+    mapTheme = mapThemes[matchedTheme];
+    if(matchedTheme === 'forest') delete document.documentElement.dataset.controlTheme;
+    else document.documentElement.dataset.controlTheme = matchedTheme;
+    ['moving','idle','stop','none'].forEach(function(state, index){
+      STATES[state].c = mapTheme.colors[index];
+      document.documentElement.style.setProperty('--'+state, mapTheme.colors[index]);
+    });
+    var nextBase = baseChoice === 'match' ? mapTheme.base : baseChoice;
+    if(activeBase !== nextBase){
+      if(activeBase) map.removeLayer(BASES[activeBase]);
+      BASES[nextBase].addTo(map);
+      activeBase = nextBase;
+    }
+    baseButtons.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.base === baseChoice); });
+  }
+  applyMapStyle();
+  baseButtons.forEach(function(b){
     b.addEventListener('click', function(){
-      map.removeLayer(BASES[base]); base = b.getAttribute('data-base'); BASES[base].addTo(map);
-      document.querySelectorAll('[data-base]').forEach(function(x){ x.setAttribute('aria-pressed', x === b); });
-      try{ localStorage.setItem('crBase', base); }catch(e){}
+      baseChoice = b.dataset.base;
+      try{ localStorage.setItem('crBase', baseChoice); }catch(e){}
+      refreshMapStyle();
     });
   });
+  window.addEventListener('storage', function(e){
+    if(e.key !== 'dcforest-dashboard-theme') return;
+    dashboardTheme = Object.hasOwn(mapThemes, e.newValue) ? e.newValue : 'forest';
+    if(baseChoice === 'match') refreshMapStyle();
+  });
+  function refreshMapStyle(){
+    applyMapStyle();
+    drawList();
+    drawMarkers();
+    drawTrails();
+    var bike = vehicles.find(function(v){ return v.reg === selected; });
+    if(bike) drawCard(bike);
+  }
 
   var vehicles = [], markers = {}, selected = null, filter = '', term = '', fitted = false;
   var trailLayer = L.layerGroup().addTo(map), trailData = null, showTrails = false, showLabels = true;
@@ -505,7 +569,7 @@ html[data-skin="new"] .t-classic{display:none}
       var v = vehicles.find(function(x){ return x.reg === reg; }); if(v && !matches(v) && reg !== selected) return;
       var pts = trailData.vehicles[reg]; if(!pts || pts.length < 2) return;
       var st = STATES[(v && v.state) || 'none'], ll = pts.map(function(p){ return [p[1], p[2]]; }), sel = reg === selected;
-      L.polyline(ll, {color: sel ? '#e0bb4b' : st.c, weight: sel ? 5 : 3, opacity: sel ? .95 : .55}).addTo(trailLayer);
+      L.polyline(ll, {color: sel ? mapTheme.route : st.c, weight: sel ? 5 : 3, opacity: sel ? .95 : .55}).addTo(trailLayer);
       if(sel){
         L.circleMarker(ll[0], {radius:6, color:'#fff', weight:2, fillColor:'#1f6b45', fillOpacity:1}).bindTooltip('Start '+clock(new Date(pts[0][0]*1000).toISOString()), {className:'tip'}).addTo(trailLayer);
       }

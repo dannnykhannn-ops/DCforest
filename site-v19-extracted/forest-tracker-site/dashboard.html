@@ -14,6 +14,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+const dashboardThemes = ['forest', 'aurora', 'daylight'];
+try {
+  const savedTheme = localStorage.getItem('dcforest-dashboard-theme');
+  if (dashboardThemes.includes(savedTheme)) document.documentElement.dataset.dashboardTheme = savedTheme;
+} catch {}
+</script>
 <style>
 :root{
   --bg:#06180c; --panel:#0d2a17; --panel2:#123620; --line:#24502f; --text:#eef3e4; --muted:#a9bf9f;
@@ -372,6 +379,79 @@ html:not([data-skin="new"]) .nm b{font-family:"Playfair Display",Georgia,serif}
 html:not([data-skin="new"]) .call{background:rgba(252,222,132,.1);border-color:rgba(252,222,132,.45);color:#fcde84;box-shadow:none}
 html:not([data-skin="new"]) .badges{gap:16px;padding-top:12px}
 html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
+.theme-select{max-width:100%;cursor:pointer}
+.theme-select option{background:var(--panel);color:var(--text)}
+@media(max-width:760px){
+  .hdr-top{flex-wrap:wrap}
+}
+
+/* Dashboard themes share the existing fleet and directory components. */
+:root:is([data-dashboard-theme="aurora"],[data-dashboard-theme="daylight"]){
+  --g1:#087d91;--g2:#1469a2;
+}
+[data-dashboard-theme="aurora"]{
+  --bg:#090d20;--panel:#151b31;--panel2:#202840;--line:#39435c;
+  --text:#eff2ff;--muted:#bbc5da;--gold:#5ce4ef;--gold-light:#bbf5ff;
+  --glass:rgba(25,31,52,.78);--shadow:0 16px 32px #03061375;
+  --ambient:radial-gradient(ellipse at 0 0,#12627880,transparent 36%),radial-gradient(ellipse at 100% 0,#6a369681,transparent 36%),radial-gradient(ellipse at 65% 100%,#12685765,transparent 40%);
+}
+[data-dashboard-theme="daylight"]{
+  color-scheme:light;
+  --bg:#f2f5fa;--panel:#fff;--panel2:#e9eef8;--line:#d5deec;
+  --text:#141c31;--muted:#43516a;--gold:#075ba5;--gold-light:#095d79;
+  --glass:rgba(255,255,255,.88);--shadow:0 14px 30px #24375a19;
+  --ambient:radial-gradient(ellipse at 0 0,#acefdf80,transparent 36%),radial-gradient(ellipse at 100% 0,#d5c2f680,transparent 36%),radial-gradient(ellipse at 65% 100%,#b6ebf080,transparent 40%);
+}
+:root:is([data-dashboard-theme="aurora"],[data-dashboard-theme="daylight"]) body{
+  background:var(--ambient),var(--bg);background-attachment:fixed;
+}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .hdr{border:0}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .hdr::before,
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .hdr::after,
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .moss::before,
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .moss::after{display:none}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(.logo,.logo small,.hdr-title .div,.hdr-title .div b,td.who,.ring span,.strip span,.ptitle svg,.dir-head small,.dir-head .em svg,.sec-h em,.nm small,.ln .vm,.dock a){color:var(--muted)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .logo b{color:var(--text)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .logo svg{padding:7px;border-radius:12px;background:linear-gradient(145deg,#087cb0,#087e62)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .hdr-title h1{letter-spacing:-.035em;text-shadow:none}
+[data-dashboard-theme="aurora"] .hdr-title h1{background-image:linear-gradient(100deg,#9cf6fd,#bec5ff,#e0b8ff);background-clip:text;color:transparent}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .hdr-title .div b{text-transform:none;letter-spacing:0}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(.panel,.strip,.ibtn,.pill,.moss,.dir-head,.bdg,.dock,.abtn,.fchip,.sel,.dsearch,.lead,.ptitle .search){
+  background:var(--glass);color:var(--text);border-color:var(--line);box-shadow:var(--shadow);
+}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(.ptitle,tbody tr,.legend div,.strip button,.ln){border-color:var(--line)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(thead th,.ring::before,.sel select option,.nm){background:var(--panel)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .sec-h h3{text-shadow:none}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .strip button[aria-pressed="true"]{background:var(--panel2)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .fchip[aria-pressed="true"]{background:var(--gold);color:var(--bg)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(.abtn,.theme-select){border-radius:99px}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .abtn svg{color:inherit}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .ph{border-radius:26px;color:#fff}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) .ph.k-weak :is(.t,.n,.s){color:inherit}
+[data-dashboard-theme="aurora"] .ph{
+  border-color:var(--line);background:radial-gradient(ellipse at 100% 105%,var(--a),transparent 55%),var(--glass);
+}
+[data-dashboard-theme="aurora"] .ph.k-total{--a:#146385}
+[data-dashboard-theme="aurora"] .ph.k-moving{--a:#126255}
+[data-dashboard-theme="aurora"] .ph.k-weak{--a:#613aa0}
+[data-dashboard-theme="aurora"] .ph.k-off{--a:#8e315d}
+[data-dashboard-theme="daylight"] .ph{
+  background:linear-gradient(130deg,var(--a),var(--b));box-shadow:0 14px 26px color-mix(in srgb,var(--a) 34%,transparent);
+}
+[data-dashboard-theme="daylight"] .ph.k-total{--a:#0077b8;--b:#4656d8}
+[data-dashboard-theme="daylight"] .ph.k-moving{--a:#007d60;--b:#008696}
+[data-dashboard-theme="daylight"] .ph.k-weak{--a:#ac4f00;--b:#c65206}
+[data-dashboard-theme="daylight"] .ph.k-off{--a:#c12054;--b:#a62fb3}
+[data-dashboard-theme="daylight"] .ph[aria-pressed="true"]{outline-color:var(--text)}
+[data-dashboard-theme]:not([data-dashboard-theme="forest"]) :is(.abtn[href="control"],.dock a.on){
+  background:linear-gradient(110deg,#007e9f,#087e5e);color:#fff;
+}
+[data-dashboard-theme="aurora"] .abtn[href="#staff"]{background:linear-gradient(110deg,#254aa9,#5940bd);color:#fff}
+[data-dashboard-theme="aurora"] .abtn[href="#activity"]{background:linear-gradient(110deg,#7138a9,#aa296e);color:#fff}
+[data-dashboard-theme="aurora"] .abtn[href="#reports"]{background:linear-gradient(110deg,#a85400,#ad302b);color:#fff}
+[data-dashboard-theme="daylight"] .abtn[href="#staff"] svg{color:#2259ba}
+[data-dashboard-theme="daylight"] .abtn[href="#activity"] svg{color:#7340cb}
+[data-dashboard-theme="daylight"] .abtn[href="#reports"] svg{color:#aa4300}
 </style>
 </head>
 <body>
@@ -395,6 +475,24 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
         <div class="div">Division: <b id="org">Publicity &amp; Extension Division, Lahore</b></div>
       </div>
       <div class="pills">
+        <select class="ibtn theme-select" id="dashboard-theme" aria-label="Dashboard theme">
+          <option value="forest">Forest</option>
+          <option value="aurora">Aurora Night</option>
+          <option value="daylight">Daylight Glass</option>
+        </select>
+        <script>
+          const themePicker = document.getElementById('dashboard-theme');
+          const themeRoot = document.documentElement;
+          const browserThemeColor = document.querySelector('meta[name="theme-color"]');
+          const dashboardThemeColors = {forest:'#0b2a16', aurora:'#090d20', daylight:'#f2f5fa'};
+          themePicker.value = themeRoot.dataset.dashboardTheme || 'forest';
+          browserThemeColor.content = dashboardThemeColors[themePicker.value];
+          themePicker.addEventListener('change', () => {
+            themeRoot.dataset.dashboardTheme = themePicker.value;
+            browserThemeColor.content = dashboardThemeColors[themePicker.value];
+            try { localStorage.setItem('dcforest-dashboard-theme', themePicker.value); } catch {}
+          });
+        </script>
         <span class="pill live" id="fresh" title=""><i></i><span>Loading…</span></span>
         <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="today"></span></span>
       </div>
