@@ -31,6 +31,8 @@ input::placeholder{color:rgba(255,255,255,.28);letter-spacing:.22em}
 button{font:inherit;cursor:pointer}
 .go{width:100%;margin-top:12px;padding:14px;border:0;border-radius:14px;font-weight:800;font-size:1rem;color:#1c2a10;background:linear-gradient(135deg,#fcde84,#e2b64a)}
 .go:disabled{opacity:.6;cursor:default}
+.go.cr{display:block;margin:0 0 22px;text-align:center;text-decoration:none;color:#fff;background:linear-gradient(135deg,#2f8a52,#1f6b45);border:1px solid #fcde84}
+.go.cr small{display:block;font-weight:600;font-size:.78rem;color:#d5ecd9;margin-top:3px}
 .msg{min-height:1.3em;margin:10px 0 0;font-size:.86rem;font-weight:600;color:#fca5a5}
 .msg.ok{color:#86efac}
 .inf{position:fixed;top:14px;right:14px;width:46px;height:46px;border-radius:13px;border:1px solid rgba(252,222,132,.35);background:rgba(12,38,22,.8);color:#fcde84;
@@ -91,6 +93,7 @@ a.mini{text-decoration:none;display:inline-block}
   </section>
 
   <section id="vAdmin" class="panel" hidden>
+    <a class="go cr" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
     <h2>Access passes</h2>
     <p class="sub">Each pass lets one person in, once, for <span id="mins">30</span> minutes.</p>
     <button class="go" id="bNew" type="button">Create one-time pass</button>
