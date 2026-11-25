@@ -39,4 +39,11 @@ export async function seedDemo(env, regs, now = Date.now()) {
   snap.demo = true;
   await env.LIVE.put('live:latest', JSON.stringify(snap));
   await env.LIVE.put('trail:' + date, JSON.stringify(trail));
+  // the six days before today, 8 am to 6 pm, so the reports have a week to show
+  for (let k = 1; k <= 6; k++) {
+    const d = pkDate(now - k * 86400000), start = Date.parse(d + 'T08:00:00+05:00');
+    let tr = null;
+    for (let t = start; t <= start + 10 * 3600000; t += 5 * 60000) tr = appendTrail(tr, buildPositions(regs.map((g, i) => vehicleAt(g, i + k, t, start)), t), d);
+    await env.LIVE.put('trail:' + d, JSON.stringify(tr));
+  }
 }
