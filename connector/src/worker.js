@@ -205,7 +205,7 @@ export default {
       if (url.pathname === '/api/activity.json') return serveActivity(env, url);
       if (url.pathname === '/api/report.json') return serveReport(env, url);
       if (!env.ASSETS) return new Response('Not found', { status: 404 });
-      return themed(await ownerPage(env, url, OWNER_PAGES.exec(url.pathname)[1]), await gate.siteTheme(env));
+      return themed(await ownerPage(env, url, OWNER_PAGES.exec(url.pathname)[1]), gate.themeFor(request));
     }
     if (!gate.isPublic(url.pathname)) {
       const denied = await gate.guard(request, env, url.pathname);
@@ -220,9 +220,9 @@ export default {
     if (!env.ASSETS) return new Response('Not found', { status: 404 });
     // The classic page is always reachable at /classic (the new design reads the staff list from it).
     if (url.pathname === '/classic') return themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
-    // Home page: the classic page, or the new design when the owner has switched the site to it.
+    // Home page: the classic page, or the new design on a device where the owner picked it.
     if (url.pathname === '/' || url.pathname === '/index.html') {
-      if (request.method === 'GET' && (await gate.siteTheme(env)) === 'new') return themed(await ownerPage(env, url, 'dashboard'), 'new');
+      if (request.method === 'GET' && (gate.themeFor(request)) === 'new') return themed(await ownerPage(env, url, 'dashboard'), 'new');
     }
     return env.ASSETS.fetch(request);
   },

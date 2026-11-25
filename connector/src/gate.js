@@ -36,7 +36,7 @@ const configured = (env) => secretOf(env, 'ADMIN_PIN').length >= 4 && secretOf(e
 async function loadCfg(env) {
   const c = (await env.LIVE.get(CFG_KEY, 'json')) || {};
   return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {},
-    theme: c.theme === 'new' ? 'new' : 'classic' };
+  };
 }
 const saveCfg = (env, cfg) => env.LIVE.put(CFG_KEY, JSON.stringify(cfg));
 
@@ -91,15 +91,20 @@ function newCode() {
 const cleanCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const publicState = (cfg, env) => ({
   open: cfg.open,
-  theme: cfg.theme,
   guestMinutes: guestMinutes(env),
   passes: cfg.passes.map((p) => ({ code: p.code, createdAt: p.createdAt, usedAt: p.usedAt || null })),
 });
 
 export const isPublic = (pathname) => PUBLIC.some((re) => re.test(pathname));
 
-/** Site design chosen by the owner: 'classic' (default) or 'new'. Applies to every visitor. */
-export async function siteTheme(env) { return (await loadCfg(env)).theme; }
+/* Design for THIS browser only: 'new' once the owner picks it in the owner panel on this device,
+   otherwise 'classic'. Visitors never get the cookie, so they always see the classic site. */
+const THEME_COOKIE = 'dcf_theme';
+export function themeFor(request) {
+  const m = new RegExp('(?:^|;\\s*)' + THEME_COOKIE + '=(new|classic)').exec(request.headers.get('Cookie') || '');
+  return m && m[1] === 'new' ? 'new' : 'classic';
+}
+const themeCookie = (theme) => `${THEME_COOKIE}=${theme}; Path=/; Secure; SameSite=Lax; Max-Age=${theme === 'new' ? 31536000 : 0}`;
 
 /** True only for a valid owner session. Opening the site to everyone does not change this. */
 export async function isOwner(request, env) {
@@ -128,11 +133,11 @@ export async function route(request, env, url) {
 
   if (action === 'me' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : (cfg.open ? 'visitor' : null), theme: cfg.theme });
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : (cfg.open ? 'visitor' : null), theme: themeFor(request) });
   }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return s && s.r === 'admin' ? json(publicState(cfg, env)) : json({ error: 'forbidden' }, 403);
+    return s && s.r === 'admin' ? json({ ...publicState(cfg, env), theme: themeFor(request) }) : json({ error: 'forbidden' }, 403);
   }
   if (request.method !== 'POST') return json({ error: 'method' }, 405);
   if (action === 'leave') return json({ ok: true }, 200, { 'Set-Cookie': clearCookie });
@@ -162,7 +167,7 @@ export async function route(request, env, url) {
       return json({ error: 'invalid' }, 401);
     }
     if (cfg.fails.pin) { delete cfg.fails.pin; await saveCfg(env, cfg); }
-    return json({ ok: true, ...publicState(cfg, env) }, 200, { 'Set-Cookie': await makeCookie(env, 'admin', cfg.gen, ADMIN_HOURS * 60) });
+    return json({ ok: true, ...publicState(cfg, env), theme: themeFor(request) }, 200, { 'Set-Cookie': await makeCookie(env, 'admin', cfg.gen, ADMIN_HOURS * 60) });
   }
 
   // Everything below needs an owner session.
@@ -188,10 +193,10 @@ export async function route(request, env, url) {
     await saveCfg(env, cfg);
     return json({ ok: true, ...publicState(cfg, env) });
   }
-  if (action === 'theme') {
-    cfg.theme = body.theme === 'new' ? 'new' : 'classic';
-    await saveCfg(env, cfg);
-    return json({ ok: true, ...publicState(cfg, env) });
+  if (action === 'theme') {                      // this device only: stored in a cookie, not on the server
+    const theme = body.theme === 'new' ? 'new' : 'classic';
+    if (cfg.theme) { delete cfg.theme; await saveCfg(env, cfg); }   // drop the old site-wide setting
+    return json({ ok: true, ...publicState(cfg, env), theme }, 200, { 'Set-Cookie': themeCookie(theme) });
   }
   if (action === 'signout') {
     cfg.gen++;                                    // every existing session (visitors and owner) stops working

@@ -129,7 +129,7 @@ test('activity and report need the owner and check their dates', async () => {
   assert.equal((await call(env, '/api/activity.json?date=x', { cookie: owner })).status, 400);
 });
 
-test('site design: classic by default; the owner can switch everyone to the new design and back', async () => {
+test('design switch changes only the owner device that picked it; visitors always get classic', async () => {
   const html = (name) => new Response('<!DOCTYPE html><html lang="en"><body>' + name + '</body></html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   const env = newEnv(true);
   env.ASSETS = { fetch: async (r) => {
@@ -137,21 +137,27 @@ test('site design: classic by default; the owner can switch everyone to the new 
     if (p.endsWith('.html')) return new Response(null, { status: 307, headers: { Location: p === '/index.html' ? '/' : p.slice(0, -5) } });
     return html(p === '/' ? 'CLASSIC-HOME' : 'PAGE' + p);
   } };
-  const home = async (cookie) => (await call(env, '/', { cookie })).text();
-  assert.match(await home(), /CLASSIC-HOME/);
-  assert.equal((await (await call(env, '/api/gate/me')).json()).theme, 'classic');
-
+  const page = async (path, cookie) => (await call(env, path, { cookie })).text();
+  assert.match(await page('/'), /CLASSIC-HOME/);
   assert.equal((await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' } })).status, 403, 'only the owner can switch');
+
   const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
-  assert.match(await (await call(env, '/control', { cookie: owner })).text(), /data-skin="classic"/);
+  assert.match(await page('/control', owner), /data-skin="classic"/);
+  const res = await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' }, cookie: owner });
+  assert.equal((await res.json()).theme, 'new');
+  const themeCookie = (res.headers.get('Set-Cookie') || '').split(';')[0];
+  assert.equal(themeCookie, 'dcf_theme=new');
+  const mine = owner + '; ' + themeCookie;
 
-  assert.equal((await (await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' }, cookie: owner })).json()).theme, 'new');
-  const h = await home();
-  assert.match(h, /PAGE\/dashboard/); assert.match(h, /<html lang="en" data-skin="new">/);
-  assert.match(await (await call(env, '/classic')).text(), /CLASSIC-HOME/, 'the classic page stays reachable');
-  assert.match(await (await call(env, '/control', { cookie: owner })).text(), /data-skin="new"/);
-  assert.equal((await call(env, '/api/fleet.json')).status, 403, 'visitors still get no positions');
+  assert.match(await page('/', mine), /PAGE\/dashboard/); assert.match(await page('/', mine), /data-skin="new"/);
+  assert.match(await page('/control', mine), /data-skin="new"/);
+  assert.equal((await (await call(env, '/api/gate/me', { cookie: mine })).json()).theme, 'new');
+  assert.match(await page('/'), /CLASSIC-HOME/, 'a visitor still gets the classic page');
+  assert.match(await page('/', owner), /CLASSIC-HOME/, 'another device of the owner is unaffected');
+  assert.match(await page('/classic', mine), /CLASSIC-HOME/);
+  assert.equal((await call(env, '/api/fleet.json')).status, 403);
 
-  await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'classic' }, cookie: owner });
-  assert.match(await home(), /CLASSIC-HOME/);
+  const back = await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'classic' }, cookie: mine });
+  assert.match(back.headers.get('Set-Cookie') || '', /dcf_theme=classic;.*Max-Age=0/);
+  assert.match(await page('/', owner + '; dcf_theme=classic'), /CLASSIC-HOME/);
 });

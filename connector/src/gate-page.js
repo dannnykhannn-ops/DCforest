@@ -102,7 +102,7 @@ a.mini{text-decoration:none;display:inline-block}
   <section id="vAdmin" class="panel" hidden>
     <a class="go cr" href="dashboard">Open owner dashboard<small>Fleet, staffing and staff directory (owner only)</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
-    <div class="theme"><div><b>Site design</b><small id="themeSub"></small></div>
+    <div class="theme"><div><b>My design</b><small id="themeSub"></small></div>
       <div class="seg" role="group" aria-label="Site design"><button type="button" data-theme="classic">Classic</button><button type="button" data-theme="new">New</button></div></div>
     <h2>Access passes</h2>
     <p class="sub">Each pass lets one person in, once, for <span id="mins">30</span> minutes.</p>
@@ -181,7 +181,7 @@ a.mini{text-decoration:none;display:inline-block}
       return '<li class="used"><div><code>' + esc(fmtCode(p.code)) + '</code><small>Used ' + esc(when(p.usedAt)) + '</small></div></li>';
     }).join('') : '<li><span>None yet.</span></li>';
     document.querySelectorAll('[data-theme]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme') === (s.theme || 'classic')); });
-    $('themeSub').textContent = s.theme === 'new' ? 'Everyone sees the new design.' : 'Everyone sees the classic design.';
+    $('themeSub').textContent = (s.theme === 'new' ? 'New design on this device.' : 'Classic design on this device.') + ' Visitors always see the classic site.';
     $('openLabel').textContent = s.open ? 'Open to everyone' : 'Private';
     $('openSub').textContent = s.open ? 'Anyone with the address can view the site.' : 'A pass is needed to view the site.';
     $('bOpen').textContent = s.open ? 'Make private' : 'Open to everyone';
@@ -217,7 +217,6 @@ a.mini{text-decoration:none;display:inline-block}
   document.querySelector('.theme .seg').onclick = function(e){
     var b = e.target.closest('[data-theme]'); if(!b) return;
     var th = b.getAttribute('data-theme');
-    if(th === 'new' && !confirm('Switch the whole site to the new design? Every visitor will see it.')) return;
     act('theme', {theme: th});
   };
 
