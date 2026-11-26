@@ -149,8 +149,16 @@ async function themed(res, theme) {
   return new Response(html, { status: res.status, headers });
 }
 
+/* The classic page; for the owner, with the owner tools script added (owner bar, alerts, activity, reports). */
+async function classicPage(env, url, owner) {
+  const res = await themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
+  if (!owner || !res.ok) return res;
+  const html = (await res.text()).replace(/<\/body>/i, '<script src="owner-tools.js" defer></script></body>');
+  return new Response(html, { status: res.status, headers: res.headers });
+}
+
 const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$/;
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$|^\/owner-tools\.js$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -204,8 +212,15 @@ export default {
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
       if (url.pathname === '/api/activity.json') return serveActivity(env, url);
       if (url.pathname === '/api/report.json') return serveReport(env, url);
+      if (url.pathname === '/owner-tools.js') {
+        const js = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
+        return new Response(js.body, { status: js.status, headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' } });
+      }
       if (!env.ASSETS) return new Response('Not found', { status: 404 });
-      return themed(await ownerPage(env, url, OWNER_PAGES.exec(url.pathname)[1]), gate.themeFor(request));
+      const name = OWNER_PAGES.exec(url.pathname)[1], theme = gate.themeFor(request);
+      // On the classic design the owner's dashboard is the classic page itself, with the owner tools added.
+      if (name === 'dashboard' && theme === 'classic') return new Response(null, { status: 302, headers: { Location: '/', 'Cache-Control': 'no-store' } });
+      return themed(await ownerPage(env, url, name), theme);
     }
     if (!gate.isPublic(url.pathname)) {
       const denied = await gate.guard(request, env, url.pathname);
@@ -219,10 +234,12 @@ export default {
     }
     if (!env.ASSETS) return new Response('Not found', { status: 404 });
     // The classic page is always reachable at /classic (the new design reads the staff list from it).
-    if (url.pathname === '/classic') return themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
-    // Home page: the classic page, or the new design on a device where the owner picked it.
-    if (url.pathname === '/' || url.pathname === '/index.html') {
-      if (request.method === 'GET' && (gate.themeFor(request)) === 'new') return themed(await ownerPage(env, url, 'dashboard'), 'new');
+    const owner = await gate.isOwner(request, env);
+    if (url.pathname === '/classic') return classicPage(env, url, owner);
+    // Home page: the classic page (plus owner tools for the owner), or the new design on a device where the owner picked it.
+    if ((url.pathname === '/' || url.pathname === '/index.html') && request.method === 'GET') {
+      if (owner && gate.themeFor(request) === 'new') return themed(await ownerPage(env, url, 'dashboard'), 'new');
+      if (owner) return classicPage(env, url, true);
     }
     return env.ASSETS.fetch(request);
   },

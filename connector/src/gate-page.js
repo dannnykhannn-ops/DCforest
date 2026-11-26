@@ -100,7 +100,7 @@ a.mini{text-decoration:none;display:inline-block}
   </section>
 
   <section id="vAdmin" class="panel" hidden>
-    <a class="go cr" href="dashboard">Open owner dashboard<small>Fleet, staffing and staff directory (owner only)</small></a>
+    <a class="go cr" href="./">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
     <div class="theme"><div><b>My design</b><small id="themeSub"></small></div>
       <div class="seg" role="group" aria-label="Site design"><button type="button" data-theme="classic">Classic</button><button type="button" data-theme="new">New</button></div></div>

@@ -453,6 +453,22 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
 [data-dashboard-theme="daylight"] .abtn[href="#staff"] svg{color:#2259ba}
 [data-dashboard-theme="daylight"] .abtn[href="#activity"] svg{color:#7340cb}
 [data-dashboard-theme="daylight"] .abtn[href="#reports"] svg{color:#aa4300}
+
+/* ---- fixes: readable buttons and text in Daylight, no cramped buttons in any theme ---- */
+.abtn{white-space:nowrap;min-width:0}
+.pic img{height:126px;max-height:none;width:auto;max-width:86%}
+@media (max-width:760px){ .pic img{height:80px} }
+@media (max-width:1240px){ html.is-owner .actions{grid-template-columns:repeat(3,minmax(0,1fr))} }
+[data-dashboard-theme="daylight"] .call{background:linear-gradient(135deg,#0f9d6b,#0891b2);border-color:transparent;color:#fff;box-shadow:0 8px 18px -6px #0f9d6b}
+[data-dashboard-theme="daylight"] .bdg-acts a{color:var(--text);border-color:var(--line);background:#fff}
+[data-dashboard-theme="daylight"] :is(.ln,.ln.muted,.nm b,.sec-h h3,.dir-head h2){color:var(--text)}
+[data-dashboard-theme="daylight"] .ln.muted{color:var(--muted)}
+[data-dashboard-theme="daylight"] .ln{border-color:var(--line)}
+[data-dashboard-theme="daylight"] .nm{background:linear-gradient(180deg,#ffffff,#f3f6fb)}
+[data-dashboard-theme="daylight"] .pic{background:radial-gradient(90% 90% at 70% 30%,#e6f4ef,#d7e3f4 75%)}
+[data-dashboard-theme="daylight"] .clip{box-shadow:0 3px 6px rgba(15,23,42,.25),inset 0 1px 0 #fff}
+[data-dashboard-theme="aurora"] .call{background:linear-gradient(135deg,#06b6d4,#10b981);border-color:transparent;color:#fff;box-shadow:0 8px 20px -6px #06b6d4}
+[data-dashboard-theme="aurora"] .bdg-acts a{color:#e8f1ff;border-color:rgba(255,255,255,.25)}
 </style>
 </head>
 <body>
@@ -971,7 +987,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
     A.sort(function(a,b){ return LV[a.lv].o - LV[b.lv].o; });
     var n = A.filter(function(a){ return a.lv !== 'info'; }).length;
     document.querySelectorAll('[data-alert-count]').forEach(function(el){ el.textContent = n; el.hidden = !n; });
-    $('alertSub').textContent = A.length ? n + ' to check, ' + (A.length - n) + ' notes' : '';
+    $('alertSub').textContent = A.length ? n + ' to check, ' + (A.length - n) + (A.length - n === 1 ? ' note' : ' notes') : '';
     $('alertList').innerHTML = A.length ? A.map(function(a){
       var tel = a.tel ? String(a.tel).replace(/[^\d+]/g,'') : '';
       return '<li style="--k:'+LV[a.lv].k+'"><span class="lv">'+LV[a.lv].lb+'</span><div><b>'+esc(a.title)+'</b><small>'+esc(a.detail)+'</small></div><span class="go">'+

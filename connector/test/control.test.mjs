@@ -83,7 +83,9 @@ test('Control Room and its data need the owner, even when the site is open to ev
   }
   for (const path of ['/dashboard', '/dashboard.html']) {
     assert.equal((await call(env, path)).status, 401, path + ' is owner-only');
-    const res = await call(env, path, { cookie: owner });
+    const classic = await call(env, path, { cookie: owner });
+    assert.equal(classic.status, 302, 'on the classic design the dashboard is the classic page'); assert.equal(classic.headers.get('Location'), '/');
+    const res = await call(env, path, { cookie: owner + '; dcf_theme=new' });
     assert.equal(res.status, 200); assert.equal(await res.text(), 'PAGE:/dashboard.html');
   }
   const trail = await (await call(env, '/api/trail.json?date=2026-11-16', { cookie: owner })).json();
@@ -143,6 +145,9 @@ test('design switch changes only the owner device that picked it; visitors alway
 
   const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
   assert.match(await page('/control', owner), /data-skin="classic"/);
+  assert.match(await page('/', owner), /owner-tools\.js/, 'the owner gets the owner tools on the classic page');
+  assert.doesNotMatch(await page('/'), /owner-tools/, 'visitors do not');
+  assert.equal((await call(env, '/owner-tools.js')).status, 403);
   const res = await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' }, cookie: owner });
   assert.equal((await res.json()).theme, 'new');
   const themeCookie = (res.headers.get('Set-Cookie') || '').split(';')[0];
