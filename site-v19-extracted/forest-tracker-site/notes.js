@@ -16,21 +16,24 @@
   /* ---------- styles ---------- */
   var st = document.createElement('style');
   st.textContent = [
-    '.nt-dock{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:'+Z+';display:flex;gap:8px;align-items:center}',
-    '.nt-fab,.nt-pinbtn{display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:99px;border:2px solid #fff;font:800 14px Figtree,system-ui,sans-serif;cursor:pointer!important;box-shadow:0 10px 26px rgba(0,0,0,.35)}',
+    '.nt-dock{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:'+Z+';display:flex;flex-direction:column;gap:6px;align-items:stretch}',
+    '@media (min-width:761px){ .nt-dock{top:68px} }',
+    'body:has(.hdr) .nt-dock{top:calc(70px + env(safe-area-inset-top))}',
+    '.nt-fab,.nt-pinbtn{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border-radius:99px;border:2px solid #fff;font:800 12.5px Figtree,system-ui,sans-serif;cursor:pointer!important;box-shadow:0 6px 16px rgba(0,0,0,.35);white-space:nowrap}',
     '.nt-fab{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff}',
     '.nt-pinbtn{background:#fff;color:#4c1d95}.nt-pinbtn i{font-style:normal;font-size:16px}',
-    '.nt-pinbtn .sw{width:34px;height:20px;border-radius:99px;background:#d1d5db;position:relative;transition:background .2s}',
-    '.nt-pinbtn .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}',
+    '.nt-fab b{min-width:18px;height:18px;font-size:11px}',
+    '.nt-pinbtn .sw{width:30px;height:18px;border-radius:99px;background:#d1d5db;position:relative;transition:background .2s}',
+    '.nt-pinbtn .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}',
     '.nt-pinbtn[aria-pressed="true"]{background:#db2777;color:#fff;animation:ntp 1.6s infinite}',
-    '.nt-pinbtn[aria-pressed="true"] .sw{background:#fff}.nt-pinbtn[aria-pressed="true"] .sw::after{left:16px;background:#db2777}',
+    '.nt-pinbtn[aria-pressed="true"] .sw{background:#fff}.nt-pinbtn[aria-pressed="true"] .sw::after{left:14px;background:#db2777}',
     '@keyframes ntp{50%{box-shadow:0 0 0 8px rgba(219,39,119,.25),0 10px 26px rgba(0,0,0,.35)}}',
     '.nt-frame{position:fixed;inset:0;z-index:'+(Z-3)+';pointer-events:none;box-shadow:inset 0 0 0 4px #db2777,inset 0 0 40px rgba(219,39,119,.35)}',
     '.nt-fab b{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#fff;color:#7c3aed;font-size:12px}',
-    '@media (max-width:760px){ body:has(.dock) .nt-dock, body:has(.wnav) .nt-dock{bottom:calc(84px + env(safe-area-inset-bottom))} }',
-    '.nt-panel{position:fixed;left:14px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:'+Z+';width:min(380px,calc(100vw - 28px));max-height:70vh;display:flex;flex-direction:column;',
+
+    '.nt-panel{position:fixed;right:10px;top:calc(96px + env(safe-area-inset-top));z-index:'+Z+';width:min(380px,calc(100vw - 28px));max-height:70vh;display:flex;flex-direction:column;',
     '  background:#fff;color:#14201a;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.4);font:14px/1.4 Figtree,system-ui,sans-serif;overflow:hidden}',
-    '@media (max-width:760px){ body:has(.dock) .nt-panel, body:has(.wnav) .nt-panel{bottom:calc(140px + env(safe-area-inset-bottom))} }',
+    '@media (min-width:761px){ .nt-panel{top:154px} }', 'body:has(.hdr) .nt-panel{top:calc(156px + env(safe-area-inset-top))}',
     '.nt-panel[hidden],.nt-pop[hidden],.nt-banner[hidden],.nt-frame[hidden]{display:none}',
     '.nt-h{display:flex;align-items:center;gap:8px;padding:12px 14px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff}',
     '.nt-h b{flex:1;font-size:15px}.nt-h small{opacity:.85}',
@@ -54,7 +57,8 @@
     '.nt-pop .acts{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}',
     '.nt-pop .meta{color:#6b7280;font-size:12px;margin-bottom:6px}.nt-pop .ctx{font-size:12px;color:#6b7280;font-style:italic;margin-top:4px}',
     '.nt-pop p{margin:0;white-space:pre-wrap;word-break:break-word}',
-    '.nt-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:'+Z+';background:#7c3aed;color:#fff;padding:10px 16px;border-radius:99px;font:800 14px Figtree,system-ui,sans-serif;box-shadow:0 10px 24px rgba(0,0,0,.35);display:flex;gap:10px;align-items:center}',
+    '.nt-banner{position:fixed;top:calc(10px + env(safe-area-inset-top));left:10px;max-width:calc(100vw - 170px);pointer-events:none;z-index:'+Z+';background:#7c3aed;color:#fff;padding:7px 12px;border-radius:14px;font:800 12.5px/1.3 Figtree,system-ui,sans-serif;box-shadow:0 8px 20px rgba(0,0,0,.35)}',
+    '@media (min-width:761px){ .nt-banner{top:68px;left:auto;right:160px} }', 'body:has(.hdr) .nt-banner{top:calc(70px + env(safe-area-inset-top))}',
     '.nt-banner button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:99px;padding:5px 10px;font:inherit;cursor:pointer}',
     'html.nt-adding, html.nt-adding *{cursor:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2732%27 height=%2740%27 viewBox=%270 0 32 40%27%3E%3Cpath d=%27M16 39s-13-12-13-23a13 13 0 0 1 26 0c0 11-13 23-13 23z%27 fill=%27%23db2777%27 stroke=%27white%27 stroke-width=%272.5%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%275%27 fill=%27white%27/%3E%3C/svg%3E") 16 39, crosshair!important}',
     '.nt-mark{position:fixed;z-index:'+(Z-1)+';width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#db2777;border:3px solid #fff;box-shadow:0 0 0 6px rgba(219,39,119,.3)}',
@@ -64,7 +68,7 @@
 
   /* ---------- UI ---------- */
   function el(html){ var d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
-  var dock = el('<div class="nt-dock"><button class="nt-pinbtn" type="button" aria-pressed="false" title="Turn on, then tap anywhere to pin a note there"><i>📍</i><span class="lb">Pin note: OFF</span><span class="sw"></span></button>'+
+  var dock = el('<div class="nt-dock"><button class="nt-pinbtn" type="button" aria-pressed="false" title="Turn on, then tap anywhere to pin a note there"><i>📍</i><span class="lb">Pin: OFF</span><span class="sw"></span></button>'+
     '<button class="nt-fab" type="button" aria-label="Notes">✎ Notes <b id="ntCount">0</b></button></div>');
   var fab = dock.querySelector('.nt-fab'), pinBtn = dock.querySelector('.nt-pinbtn');
   var frame = el('<div class="nt-frame" hidden></div>');
@@ -72,7 +76,7 @@
     '<div class="nt-tools"><button class="nt-b pri" type="button" id="ntAdd">📍 Turn on Pin note</button><button class="nt-b" type="button" id="ntPins" aria-pressed="true">Pins on page</button><button class="nt-b" type="button" id="ntDone" aria-pressed="false">Show done</button></div>'+
     '<div class="nt-list" id="ntList"></div></section>');
   var pop = el('<div class="nt-pop" hidden></div>');
-  var banner = el('<div class="nt-banner" hidden>📍 Pin note is ON · tap any spot to leave a note there <button type="button">Turn off</button></div>');
+  var banner = el('<div class="nt-banner" hidden>📍 Pin is ON · tap any spot to leave a note</div>');
   var pinLayer = document.createElement('div');
   [pinLayer, frame, dock, panel, pop, banner].forEach(function(n){ document.body.appendChild(n); });
   pinBtn.onclick = function(){ adding ? stopAdd() : startAdd(); };
@@ -82,10 +86,10 @@
   $('ntAdd').onclick = function(){ startAdd(); };
   $('ntPins').onclick = function(){ showPins = !showPins; this.setAttribute('aria-pressed', showPins); placePins(); };
   $('ntDone').onclick = function(){ showDone = !showDone; this.setAttribute('aria-pressed', showDone); draw(); };
-  banner.querySelector('button').onclick = function(e){ e.stopPropagation(); stopAdd(); };
+
 
   /* ---------- where a note points: the nearest element with an id, plus the spot inside it ---------- */
-  function ours(n){ return n && n.closest && n.closest('.nt-dock,.nt-panel,.nt-pop,.nt-banner,.nt-pin'); }
+  function ours(n){ return n && n.closest && n.closest('.nt-dock,.nt-panel,.nt-pop,.nt-pin,.nt-mark'); }
   function anchorFor(target){
     var a = target;
     while(a && a !== document.body && !(a.id && document.querySelectorAll('#' + CSS.escape(a.id)).length === 1)) a = a.parentElement;
@@ -108,12 +112,12 @@
   function startAdd(){
     adding = true; panel.hidden = true; pop.hidden = true; banner.hidden = false; frame.hidden = false;
     document.documentElement.classList.add('nt-adding');
-    pinBtn.setAttribute('aria-pressed', 'true'); pinBtn.querySelector('.lb').textContent = 'Pin note: ON';
+    pinBtn.setAttribute('aria-pressed', 'true'); pinBtn.querySelector('.lb').textContent = 'Pin: ON';
   }
   function stopAdd(){
     adding = false; banner.hidden = true; frame.hidden = true; pop.hidden = true;
     document.documentElement.classList.remove('nt-adding');
-    pinBtn.setAttribute('aria-pressed', 'false'); pinBtn.querySelector('.lb').textContent = 'Pin note: OFF';
+    pinBtn.setAttribute('aria-pressed', 'false'); pinBtn.querySelector('.lb').textContent = 'Pin: OFF';
     if(mark){ mark.remove(); mark = null; }
   }
   function clearDraft(){ pop.hidden = true; if(mark){ mark.remove(); mark = null; } }
