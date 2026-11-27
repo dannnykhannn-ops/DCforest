@@ -17,9 +17,11 @@ function vehicleAt(reg, i, t, dayStart) {
   let lat = home[0], lon = home[1], speed = 0, ign = kind === 'idle' ? 1 : 0;
   if (kind === 'mover') {
     const hd = r() * Math.PI * 2, loop = 90 + r() * 120;   // drives out and back every 1.5-3.5 hours
-    const phase = (mins % loop) / loop, dist = Math.sin(phase * Math.PI) * (0.03 + r() * 0.05);
+    let phase = (mins % loop) / loop; const parked = phase > 0.4 && phase < 0.65;   // parks for a while at the far end of each trip
+    if (parked) phase = 0.4;
+    const dist = Math.sin(phase * Math.PI) * (0.03 + r() * 0.05);
     lat += Math.cos(hd + phase) * dist; lon += Math.sin(hd + phase) * dist;
-    speed = phase > 0.05 && phase < 0.95 ? Math.round(18 + r() * 30) : 0; ign = speed ? 1 : 0;
+    speed = !parked && phase > 0.05 && phase < 0.95 ? Math.round(18 + r() * 30) : 0; ign = speed ? 1 : 0;
   }
   return { imei: 'demo' + i, registration_no: reg,
     data: { lat: +lat.toFixed(6), lon: +lon.toFixed(6), ts: new Date(t - 30000).toISOString(), speed_kph: speed, ignition: ign, gsm_signal: i % 7 === 3 ? 6 : 31 + (i % 30) } };

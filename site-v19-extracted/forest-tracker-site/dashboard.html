@@ -872,6 +872,18 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
   function person(reg){ var r = byReg[reg]; return {name: r && r.name ? short(r.name) : (r && r.status === 'parked' ? 'Pool bike' : r ? 'Unassigned' : 'Not on staff list'),
     post: r ? (r.designation || r.sec.label) : '', sec: r ? r.sec.label : '', r: r}; }
 
+
+  /* street address for stops (owner-only lookup, cached on the server and on this device) */
+  var placeQ = Promise.resolve();
+  function fillPlaces(root){
+    root.querySelectorAll('[data-addr]').forEach(function(el){
+      var k = el.getAttribute('data-addr'), c = null; try{ c = localStorage.getItem('place:' + k); }catch(e){}
+      if(c){ el.textContent = ' · ' + c; return; }
+      var p = k.split(',');
+      placeQ = placeQ.then(function(){ return fetch('api/place.json?lat=' + p[0] + '&lon=' + p[1], {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(j && j.place){ el.textContent = ' · ' + j.place; try{ localStorage.setItem('place:' + k, j.place); }catch(e){} } }).catch(function(){}); });
+    });
+  }
   /* ---------- activity log ---------- */
   var today = pkDay(Date.now()), day = today, act = null, actToday = null, openReg = null;
   $('day').max = today; $('day').min = addDays(today, -30); $('day').value = day;
@@ -906,13 +918,14 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
         '<td class="tlc">'+(s ? timeline(s) : (x.p.r && x.p.r.status !== 'active' && x.p.r.status !== 'parked' ? '<small class="dim">'+esc(DUTY[x.p.r.status]||'')+'</small>' : '<small class="dim">no reports</small>'))+'</td></tr>';
       if(openReg === x.reg && s){
         row += '<tr class="det"><td colspan="9"><div class="stops">'+(s.stops.length ? s.stops.map(function(st){
-          return '<span>Stopped '+esc(pkt(st.from))+' – '+esc(pkt(st.to))+' ('+hm(st.min)+')<a href="https://www.google.com/maps?q='+st.lat+','+st.lon+'" target="_blank" rel="noopener">map</a></span>'; }).join('')
+          return '<span>Stopped '+esc(pkt(st.from))+' – '+esc(pkt(st.to))+' ('+hm(st.min)+')<em data-addr="'+st.lat.toFixed(3)+','+st.lon.toFixed(3)+'" style="font-style:normal"></em><a href="control?reg='+encodeURIComponent(x.reg)+'&date='+day+'&at='+st.from+'">on the map</a></span>'; }).join('')
           : '<span>No stops of 10 minutes or more.</span>')+'</div><small class="dim">First report '+esc(pkt(s.firstReport))+', last report '+esc(pkt(s.lastReport))+', '+s.points+(s.points===1?' report':' reports')+
           (s.noDataMin ? ', '+hm(s.noDataMin)+' with no reports' : '')+(s.maxSpeed != null ? ', top speed '+Math.round(s.maxSpeed)+' km/h' : '')+'.'+
-          (day === today ? ' <a href="control?reg='+encodeURIComponent(x.reg)+'" style="color:var(--gold-light);font-weight:800">Route on the map</a>' : '')+'</small></td></tr>';
+          (true ? ' <a href="control?reg='+encodeURIComponent(x.reg)+'&date='+day+'" style="color:var(--gold-light);font-weight:800">Route on the map</a>' : '')+'</small></td></tr>';
       }
       return row;
     }).join('');
+    fillPlaces($('actRows'));
   }
   $('actRows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(!tr || e.target.closest('a')) return; var r = tr.getAttribute('data-reg'); openReg = openReg === r ? null : r; drawActivity(); });
   function goDay(d){ if(d > today || d < addDays(today, -30)) return; day = d; openReg = null; act = null; $('actRows').innerHTML = '<tr><td colspan="9" class="empty">Loading…</td></tr>'; loadActivity(d).then(drawActivity); }

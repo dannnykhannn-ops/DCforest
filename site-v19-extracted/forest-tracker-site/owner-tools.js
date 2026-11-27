@@ -148,6 +148,18 @@
       : '<li style="--k:#5fd38f"><span class="lv">All clear</span><div><b>Nothing needs attention.</b></div><span></span></li>';
   }
 
+
+  /* street address for stops (owner-only lookup, cached on the server and on this device) */
+  var placeQ = Promise.resolve();
+  function fillPlaces(root){
+    root.querySelectorAll('[data-addr]').forEach(function(el){
+      var k = el.getAttribute('data-addr'), c = null; try{ c = localStorage.getItem('place:' + k); }catch(e){}
+      if(c){ el.textContent = ' · ' + c; return; }
+      var p = k.split(',');
+      placeQ = placeQ.then(function(){ return fetch('api/place.json?lat=' + p[0] + '&lon=' + p[1], {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(j && j.place){ el.textContent = ' · ' + j.place; try{ localStorage.setItem('place:' + k, j.place); }catch(e){} } }).catch(function(){}); });
+    });
+  }
   /* ---------- activity ---------- */
   $('owDay').max = today; $('owDay').min = addDays(today, -30);
   function timeline(s){
@@ -172,10 +184,11 @@
         '<td>'+(s && s.firstMove != null ? esc(pkt(s.firstMove)) : '—')+'</td><td>'+(s && s.lastMove != null ? esc(pkt(s.lastMove)) : '—')+'</td><td>'+(s ? hm(s.movingMin) : '—')+'</td><td>'+(s ? hm(s.stoppedMin) : '—')+'</td>'+
         '<td><b>'+(s ? s.km.toFixed(1) : '—')+'</b></td><td>'+(s ? s.stops.length : '—')+'</td><td class="ow-tlc">'+(s ? timeline(s) : '<small>no reports</small>')+'</td></tr>';
       if(openReg === x.reg && s) row += '<tr class="ow-det"><td colspan="9"><div class="ow-stops">'+(s.stops.length ? s.stops.map(function(st){
-          return '<span>Stopped '+esc(pkt(st.from))+' – '+esc(pkt(st.to))+' ('+hm(st.min)+')<a href="https://www.google.com/maps?q='+st.lat+','+st.lon+'" target="_blank" rel="noopener">map</a></span>'; }).join('') : '<span>No stops of 10 minutes or more.</span>')+
-        '</div><small>'+s.points+(s.points === 1 ? ' report' : ' reports')+(s.maxSpeed != null ? ', top speed '+Math.round(s.maxSpeed)+' km/h' : '')+'.'+(day === today ? ' <a href="control?reg='+encodeURIComponent(x.reg)+'" style="color:var(--gold);font-weight:800">Route on the map</a>' : '')+'</small></td></tr>';
+          return '<span>Stopped '+esc(pkt(st.from))+' – '+esc(pkt(st.to))+' ('+hm(st.min)+')<em data-addr="'+st.lat.toFixed(3)+','+st.lon.toFixed(3)+'" style="font-style:normal"></em><a href="control?reg='+encodeURIComponent(x.reg)+'&date='+day+'&at='+st.from+'">on the map</a></span>'; }).join('') : '<span>No stops of 10 minutes or more.</span>')+
+        '</div><small>'+s.points+(s.points === 1 ? ' report' : ' reports')+(s.maxSpeed != null ? ', top speed '+Math.round(s.maxSpeed)+' km/h' : '')+'.'+(true ? ' <a href="control?reg='+encodeURIComponent(x.reg)+'&date='+day+'" style="color:var(--gold);font-weight:800">Route on the map</a>' : '')+'</small></td></tr>';
       return row;
     }).join('');
+    fillPlaces($('owActR'));
   }
   $('owActR').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(!tr || e.target.closest('a')) return; var r = tr.getAttribute('data-reg'); openReg = openReg === r ? null : r; drawActivity(); });
   function goDay(d){ if(d > today || d < addDays(today, -30)) return; day = d; openReg = null; get('api/activity.json?date='+d).then(function(j){ act = j; drawActivity(); }); }

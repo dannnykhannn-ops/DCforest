@@ -157,8 +157,36 @@ async function classicPage(env, url, owner) {
   return new Response(html, { status: res.status, headers: res.headers });
 }
 
+/* Owner-only: a short street address for a point (stops on the map and in the activity log).
+   Looked up at OpenStreetMap's Nominatim and cached at Cloudflare for 30 days per ~100 m square, which
+   keeps well inside Nominatim's usage policy. Only the rounded point is sent: no names or other details. */
+export function shortAddress(a) {
+  if (!a) return null;
+  const parts = [a.amenity || a.building || a.shop || a.office, a.road, a.neighbourhood || a.quarter || a.suburb, a.city || a.town || a.village || a.county];
+  const out = [];
+  for (const p of parts) if (p && !out.includes(p)) out.push(p);
+  return out.length ? out.join(', ') : null;
+}
+async function servePlace(url) {
+  const lat = Number(url.searchParams.get('lat')), lon = Number(url.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return bad('bad point');
+  const la = lat.toFixed(3), lo = lon.toFixed(3);
+  const key = new Request('https://place-cache.invalid/' + la + ',' + lo);
+  const cache = typeof caches !== 'undefined' ? caches.default : null;
+  if (cache) { const hit = await cache.match(key); if (hit) return new Response(hit.body, { headers: noStore }); }
+  let place = null;
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&accept-language=en&lat=' + la + '&lon=' + lo,
+      { headers: { 'User-Agent': 'dc-forest-tracker/1.0 (fleet dashboard)', 'Accept': 'application/json' } });
+    if (r.ok) { const j = await r.json(); place = shortAddress(j.address) || j.display_name || null; }
+  } catch {}
+  const body = JSON.stringify({ lat: +la, lon: +lo, place });
+  if (cache && place) await cache.put(key, new Response(body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=2592000' } }));
+  return new Response(body, { headers: noStore });
+}
+
 const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$|^\/owner-tools\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place)\.json$|^\/owner-tools\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -212,6 +240,7 @@ export default {
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
       if (url.pathname === '/api/activity.json') return serveActivity(env, url);
       if (url.pathname === '/api/report.json') return serveReport(env, url);
+      if (url.pathname === '/api/place.json') return servePlace(url);
       if (url.pathname.startsWith('/staff/')) {
         const f = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
         const h = new Headers(f.headers); h.set('Cache-Control', 'private, no-store'); h.set('X-Robots-Tag', 'noindex');

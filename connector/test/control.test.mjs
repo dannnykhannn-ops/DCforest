@@ -169,3 +169,14 @@ test('design switch changes only the owner device that picked it; visitors alway
   assert.match(back.headers.get('Set-Cookie') || '', /dcf_theme=classic;.*Max-Age=0/);
   assert.match(await page('/', owner + '; dcf_theme=classic'), /CLASSIC-HOME/);
 });
+
+import { shortAddress } from '../src/worker.js';
+test('short addresses: most specific first, no repeats; the lookup is owner-only', async () => {
+  assert.equal(shortAddress({ road: 'Mall Road', neighbourhood: 'Regal Chowk', suburb: 'Charing Cross', city: 'Lahore' }), 'Mall Road, Regal Chowk, Lahore');
+  assert.equal(shortAddress({ amenity: 'Forest Complex', road: 'Cooper Road', city: 'Lahore' }), 'Forest Complex, Cooper Road, Lahore');
+  assert.equal(shortAddress({}), null);
+  const env = newEnv(true);
+  assert.equal((await call(env, '/api/place.json?lat=31.5&lon=74.3')).status, 403);
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  assert.equal((await call(env, '/api/place.json?lat=x&lon=74.3', { cookie: owner })).status, 400);
+});

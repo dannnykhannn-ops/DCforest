@@ -222,6 +222,22 @@ html[data-control-theme] :is(.seg button,.card .hd){border-color:var(--line)}
 html[data-control-theme] :is(.seg button[aria-pressed="true"],.tbtn[aria-pressed="true"],.wnav [aria-pressed="true"],.card .act.primary){background:var(--gold);color:var(--bg)}
 html[data-control-theme="daylight"] :is(.fresh,.fresh.stale,.fresh.demo){color:var(--text)}
 html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotate(175deg) saturate(1.4)}
+
+/* ---- journey: start, stops and last position, on the map and in the card ---- */
+.jm{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2.5px solid #fff;color:#1a1400;font:900 12px Figtree,sans-serif;box-shadow:0 3px 8px rgba(0,0,0,.45)}
+.jm.s{background:#22c55e;color:#062b12}.jm.p{background:#f5b301}.jm.e{background:#ef4444;color:#fff}
+.jpop b{display:block;font-size:13px;margin-bottom:2px}.jpop span{display:block;font-size:12px}.jpop i{display:block;font-style:normal;font-size:12px;margin-top:4px;opacity:.85}
+.journey{margin-top:14px}
+.journey h3{margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.journey ol{list-style:none;margin:0;padding:0;position:relative}
+.journey ol::before{content:"";position:absolute;left:12px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.journey li{position:relative;display:grid;grid-template-columns:26px 1fr;gap:10px;padding:6px 0;cursor:pointer}
+.journey li:hover .jt b{text-decoration:underline}
+.journey .jt b{display:block;font-size:.88rem}
+.journey .jt small{display:block;color:var(--muted);font-weight:600;font-size:.78rem}
+.journey .jt em{display:block;font-style:normal;font-size:.82rem;margin-top:1px}
+.journey .leg{grid-column:2;font-size:.74rem;color:var(--muted);font-weight:700;padding:0 0 2px}
+.daypill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;background:#7c3aed;color:#fff;font-weight:800;font-size:.78rem;text-decoration:none}
 </style>
 </head>
 <body>
@@ -377,6 +393,69 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
 
   var vehicles = [], markers = {}, selected = null, filter = '', term = '', fitted = false;
   var trailLayer = L.layerGroup().addTo(map), trailData = null, showTrails = false, showLabels = true;
+  /* Which day's routes and stops to show: today, or ?date=YYYY-MM-DD from the activity log. */
+  var todayPk = new Date(Date.now() + 5*3600000).toISOString().slice(0,10);
+  var viewDate = (function(d){ return /^\d{4}-\d{2}-\d{2}$/.test(d || '') && d <= todayPk ? d : todayPk; })(new URLSearchParams(location.search).get('date'));
+  var isToday = viewDate === todayPk, actData = null, jMarkers = [], wantAt = +(new URLSearchParams(location.search).get('at') || 0);
+  if(!isToday){
+    var dp = document.createElement('a'); dp.className = 'daypill'; dp.href = 'control' + (new URLSearchParams(location.search).get('reg') ? '?reg=' + encodeURIComponent(new URLSearchParams(location.search).get('reg')) : '');
+    dp.textContent = 'Showing ' + new Date(viewDate + 'T12:00:00Z').toLocaleDateString('en-GB', {day:'numeric', month:'short'}) + ' · back to today';
+    var fr = document.getElementById('fresh'); fr.parentNode.insertBefore(dp, fr.nextSibling);
+  }
+
+  /* Street address for a point: asked from the server (owner-only, cached), remembered on this device. */
+  var placeMem = {}, placeQ = Promise.resolve();
+  function placeOf(lat, lon){
+    var k = lat.toFixed(3) + ',' + lon.toFixed(3);
+    if(placeMem[k]) return placeMem[k];
+    try{ var c = localStorage.getItem('place:' + k); if(c) return (placeMem[k] = Promise.resolve(c)); }catch(e){}
+    return (placeMem[k] = placeQ = placeQ.then(function(){
+      return fetch('api/place.json?lat=' + lat + '&lon=' + lon, {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ var p = j && j.place; if(p){ try{ localStorage.setItem('place:' + k, p); }catch(e){} } return p || (lat.toFixed(5) + ', ' + lon.toFixed(5)); })
+        .catch(function(){ return lat.toFixed(5) + ', ' + lon.toFixed(5); });
+    }));
+  }
+  function tShort(sec){ return new Date(sec*1000).toLocaleTimeString('en-US', {timeZone:'Asia/Karachi', hour:'numeric', minute:'2-digit'}); }
+  function dur(min){ var h = Math.floor(min/60), m = min % 60; return h ? h + ' h ' + (m ? m + ' m' : '') : m + ' min'; }
+
+  /* The day as a list: where they started, each stop of 10+ minutes, and where they were last. */
+  function journey(reg){
+    var pts = trailData && trailData.vehicles ? (trailData.vehicles[reg] || []) : [], s = actData && actData.vehicles ? actData.vehicles[reg] : null;
+    if(!pts.length) return [];
+    var first = pts[0], last = pts[pts.length-1], items = [], stops = (s && s.stops) || [];
+    if(!stops.length || stops[0].from > first[0]) items.push({kind:'s', lat:first[1], lon:first[2], t:'Started', when:tShort(first[0]) + (s && s.firstMove != null && s.firstMove > first[0] ? ', moving from ' + tShort(s.firstMove) : '')});
+    stops.forEach(function(st, i){
+      var atStart = st.from <= first[0], atEnd = st.to >= last[0];
+      items.push({kind: atStart ? 's' : 'p', lat:st.lat, lon:st.lon, from:st.from, to:st.to,
+        t: atStart ? 'Started here' : 'Stop ' + (items.filter(function(x){ return x.kind === 'p'; }).length + 1),
+        when: atStart ? 'Here until ' + tShort(st.to) + ' (' + dur(st.min) + ')' : tShort(st.from) + ' – ' + (atEnd ? 'still here at ' + tShort(st.to) : tShort(st.to)) + ' (' + dur(st.min) + ')'});
+    });
+    var lastStop = stops[stops.length-1];
+    if(!lastStop || lastStop.to < last[0]) items.push({kind:'e', lat:last[1], lon:last[2], t: isToday ? 'Last position' : 'Day ended here', when:'Last report ' + tShort(last[0])});
+    else items[items.length-1].kind = items[items.length-1].kind === 's' ? 's' : 'e';
+    return items;
+  }
+  function drawJourney(reg){
+    jMarkers = [];
+    var items = journey(reg), n = 0;
+    items.forEach(function(it, i){
+      var label = it.kind === 's' ? 'S' : it.kind === 'e' && !it.from ? '●' : String(++n);
+      if(it.kind === 'e' && it.from) label = String(++n);
+      var m = L.marker([it.lat, it.lon], {icon:L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13], html:'<div class="jm '+(it.kind === 'p' || (it.kind === 'e' && it.from) ? 'p' : it.kind)+'">'+label+'</div>'}), zIndexOffset:2000})
+        .bindPopup('<div class="jpop"><b>'+esc(it.t)+'</b><span>'+esc(it.when)+'</span><i>Finding the address…</i></div>', {className:'jpopw'}).addTo(trailLayer);
+      m.on('popupopen', function(){ placeOf(it.lat, it.lon).then(function(p){ m.setPopupContent('<div class="jpop"><b>'+esc(it.t)+'</b><span>'+esc(it.when)+'</span><i>'+esc(p)+'</i></div>'); }); });
+      it.label = label; jMarkers[i] = m;
+    });
+    return items;
+  }
+  function openStop(i){
+    var m = jMarkers[i]; if(!m) return;
+    var ll = m.getLatLng(); focusOn({lat:ll.lat, lon:ll.lng}, Math.max(map.getZoom(), 16)); setTimeout(function(){ m.openPopup(); }, 650);
+  }
+  function loadActivity(){
+    return fetch('api/activity.json?date=' + viewDate, {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ actData = j; }).catch(function(){});
+  }
 
   function iconFor(v){
     var st = STATES[v.state] || STATES.none, r = roster[v.reg];
@@ -554,12 +633,27 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
         (v.lat !== null ? '<a class="act" href="https://www.google.com/maps/dir/?api=1&destination='+v.lat+','+v.lon+'" target="_blank" rel="noopener">Directions</a>' : '')+
         (v.lat !== null ? '<button class="act" type="button" data-center>Show on map</button>' : '')+
       '</div>'+
+      journeyHtml(v.reg)+
       '<p class="note">'+(v.lat === null ? 'This tracker has not sent a usable location. ' : 'Location is the tracker’s last report. ')+
-        (pts.length > 1 ? 'Today’s route is drawn on the map.' : 'No route for today yet.')+
+        (pts.length > 1 ? (isToday ? 'Today’s' : 'This day’s') + ' route is drawn on the map; tap a numbered stop for its time and address.' : 'No route for ' + (isToday ? 'today' : 'this day') + ' yet.')+
         (v.state === 'moving' && v.reportedAt && Date.now() - Date.parse(v.reportedAt) > 3600000 ? ' Note: the portal still counts this bike as moving, but its last report is old.' : '')+'</p>';
     card.hidden = false;
+    fillJourney(card);
     card.querySelector('.x').onclick = function(){ selected = null; card.hidden = true; drawList(); drawMarkers(); drawTrails(); };
     var c = card.querySelector('[data-center]'); if(c) c.onclick = function(){ focusOn(v, 16); };
+  }
+  function journeyHtml(reg){
+    var items = journey(reg); if(!items.length) return '';
+    var n = 0;
+    return '<div class="journey"><h3>'+(isToday ? 'Today’s stops' : 'Stops on ' + new Date(viewDate + 'T12:00:00Z').toLocaleDateString('en-GB', {day:'numeric', month:'short'}))+'</h3><ol>'+
+      items.map(function(it, i){
+        var lab = it.kind === 's' ? 'S' : it.kind === 'e' && !it.from ? '●' : String(++n), cls = it.kind === 'p' || (it.kind === 'e' && it.from) ? 'p' : it.kind;
+        return '<li data-j="'+i+'"><span class="jm '+cls+'">'+lab+'</span><span class="jt"><b>'+esc(it.t)+'</b><small>'+esc(it.when)+'</small><em data-addr="'+it.lat+','+it.lon+'">…</em></span></li>';
+      }).join('')+'</ol></div>';
+  }
+  function fillJourney(root){
+    root.querySelectorAll('[data-addr]').forEach(function(el){ var p = el.getAttribute('data-addr').split(','); placeOf(+p[0], +p[1]).then(function(a){ el.textContent = a; }); });
+    root.querySelectorAll('[data-j]').forEach(function(li){ li.onclick = function(){ openStop(+li.getAttribute('data-j')); }; });
   }
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !card.hidden){ card.querySelector('.x').click(); } });
 
@@ -570,13 +664,11 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
     Object.keys(trailData.vehicles).forEach(function(reg){
       if(!(showTrails || reg === selected)) return;
       var v = vehicles.find(function(x){ return x.reg === reg; }); if(v && !matches(v) && reg !== selected) return;
-      var pts = trailData.vehicles[reg]; if(!pts || pts.length < 2) return;
+      var pts = trailData.vehicles[reg]; if(!pts || pts.length < 2) return;   // stops are drawn separately by drawJourney
       var st = STATES[(v && v.state) || 'none'], ll = pts.map(function(p){ return [p[1], p[2]]; }), sel = reg === selected;
       L.polyline(ll, {color: sel ? mapTheme.route : st.c, weight: sel ? 5 : 3, opacity: sel ? .95 : .55}).addTo(trailLayer);
-      if(sel){
-        L.circleMarker(ll[0], {radius:6, color:'#fff', weight:2, fillColor:'#1f6b45', fillOpacity:1}).bindTooltip('Start '+clock(new Date(pts[0][0]*1000).toISOString()), {className:'tip'}).addTo(trailLayer);
-      }
     });
+    if(selected) drawJourney(selected);
   }
   document.getElementById('trailsBtn').addEventListener('click', function(){
     showTrails = !showTrails; this.setAttribute('aria-pressed', showTrails); drawTrails();
@@ -606,16 +698,21 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
     }).catch(function(e){ if(e.message !== 'owner-only'){ freshEl.className = 'fresh stale'; freshEl.lastChild.textContent = 'Can’t reach the server'; } });
   }
   function loadTrails(){
-    return fetch('api/trail.json', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(j){ if(j){ trailData = j; drawTrails(); if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); } } }).catch(function(){});
+    return Promise.all([fetch('api/trail.json?date=' + viewDate, {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }), loadActivity()])
+      .then(function(r){ var j = r[0]; if(j){ trailData = j; drawTrails(); if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); } } }).catch(function(){});
   }
 
   loadRoster().then(loadFleet).then(loadTrails).then(function(){
     var want = new URLSearchParams(location.search).get('reg');      // opened from the dashboard: focus that bike
-    if(want && vehicles.some(function(x){ return x.reg === want; })) select(want, true);
+    if(want && vehicles.some(function(x){ return x.reg === want; })){
+      select(want, !wantAt);
+      if(wantAt){ var items = journey(want), idx = -1;     // opened from a stop in the activity log: open that stop
+        items.forEach(function(it, i){ if(it.from === wantAt) idx = i; });
+        if(idx >= 0) setTimeout(function(){ openStop(idx); }, 300); }
+    }
   });
   setInterval(function(){ if(!document.hidden) loadFleet(); }, FLEET_MS);
-  setInterval(function(){ if(!document.hidden) loadTrails(); }, TRAIL_MS);
+  setInterval(function(){ if(!document.hidden && isToday) loadTrails(); }, TRAIL_MS);
   setInterval(paintFresh, 30000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFleet(); loadTrails(); } });
 })();
