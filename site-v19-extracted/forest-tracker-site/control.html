@@ -302,7 +302,10 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
   function waNumber(c){ var d = String(c||'').replace(/\D/g,''); if(/^03\d{9}$/.test(d)) return '92' + d.slice(1); if(/^923\d{9}$/.test(d)) return d; return null; }
 
   /* ---------- roster (from the daily data block in the main page) ---------- */
-  var roster = {};                       // reg -> {name, designation, section, status, contact, area, unit, vehicleType, model}
+  var roster = {}, PHOTOS = {};
+  fetch('staff/photos.json', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : {}; }).then(function(j){ PHOTOS = j || {}; if(vehicles.length){ drawList(); if(selected){ var v = vehicles.find(function(x){ return x.reg === selected; }); if(v) drawCard(v); } } }).catch(function(){});
+  function face(reg, cls){ var r = roster[reg], n = r && r.name ? short(r.name) : null, f = n && PHOTOS[n];
+    return f ? '<img class="'+(cls||'')+'" src="staff/'+esc(f)+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 15%">' : esc(initials(who(reg))); }                       // reg -> {name, designation, section, status, contact, area, unit, vehicleType, model}
   function loadRoster(){
     return fetch('classic', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.text(); }).then(function(html){
       var m = /<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
@@ -456,7 +459,7 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
       var r = roster[v.reg] || {}, st = STATES[v.state] || STATES.none;
       var right = v.state === 'moving' && v.speed !== null ? Math.round(v.speed)+' km/h' : (ago(v.reportedAt) || '');
       return '<button type="button" class="row" role="listitem" data-reg="'+esc(v.reg)+'" aria-current="'+(selected===v.reg)+'" style="--k:'+st.c+'">'+
-        '<span class="av">'+esc(initials(who(v.reg)))+'</span>'+
+        '<span class="av">'+face(v.reg)+'</span>'+
         '<span style="min-width:0"><div class="nm">'+esc(who(v.reg))+'</div><div class="mt">'+esc([r.designation, v.reg].filter(Boolean).join(' · '))+'</div></span>'+
         '<span class="rt"><span class="pill">'+st.lb+'</span><br>'+esc(right)+(v.lat===null?'<br>no location':'')+'</span></button>';
     }).join('') : '<div class="empty">Nobody matches.</div>';
@@ -531,7 +534,7 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
     card.innerHTML =
       '<div class="sel-h">Selected bike<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3C11 3 5 8 5 15c0 1.3.3 2.4.8 3.4M5.8 18.4C8 12 12 9 16 7"/></svg></div>'+
       '<button class="x" type="button" aria-label="Close">×</button>'+
-      '<div class="hd"><span class="av" style="--k:'+st.c+'">'+esc(initials(who(v.reg)))+'</span><div><h2>'+esc(r.name || who(v.reg))+'</h2>'+
+      '<div class="hd"><span class="av" style="--k:'+st.c+'">'+face(v.reg)+'</span><div><h2>'+esc(r.name || who(v.reg))+'</h2>'+
         '<div class="ds">'+esc([r.designation, r.section].filter(Boolean).join(' · ') || 'Not on the staff list')+'</div></div></div>'+
       '<div class="grid">'+
         '<div class="kv"><div class="k">Now</div><div class="v"><span class="pill" style="--k:'+st.c+'">'+st.lb+'</span></div></div>'+

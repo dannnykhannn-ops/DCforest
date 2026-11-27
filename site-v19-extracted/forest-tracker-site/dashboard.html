@@ -458,6 +458,10 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
 .abtn{white-space:nowrap;min-width:0}
 .pic img{height:126px;max-height:none;width:auto;max-width:86%}
 @media (max-width:760px){ .pic img{height:80px} }
+.pic.photo{height:200px;background:#1d3d24}
+.pic.photo::after{display:none}
+.pic.photo img{height:100%;width:100%;max-width:none;object-fit:cover;object-position:50% 12%;filter:none}
+@media (max-width:760px){ .pic.photo{height:150px} .pic.photo img{height:100%} }
 @media (max-width:1240px){ html.is-owner .actions{grid-template-columns:repeat(3,minmax(0,1fr))} }
 [data-dashboard-theme="daylight"] .call{background:linear-gradient(135deg,#0f9d6b,#0891b2);border-color:transparent;color:#fff;box-shadow:0 8px 18px -6px #0f9d6b}
 [data-dashboard-theme="daylight"] .bdg-acts a{color:var(--text);border-color:var(--line);background:#fff}
@@ -652,7 +656,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
   $('today').textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
   /* ---------- data: staff list from the main page's daily data block, fleet from the owner feed ---------- */
-  var DATA = null, rows = [], byReg = {}, fleet = null, live = {}, owner = false;
+  var DATA = null, rows = [], byReg = {}, fleet = null, live = {}, owner = false, PHOTOS = {};
   /* Owner: full feed with positions and report times. Anyone else (the site switched to the new design):
      the public numbers only, and the owner-only parts of the page are hidden. */
   function loadRole(){
@@ -818,7 +822,8 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
     var tel = r.contact ? String(r.contact).replace(/[^\d+]/g,'') : '';
     var wa = /^03\d{9}$/.test(tel) ? '92' + tel.slice(1) : null;
     return '<article class="bdg'+(r.status === 'vacant' ? ' vacant' : '')+'"'+(r.vehicle ? ' data-veh="'+esc(r.vehicle)+'"' : '')+'><span class="clip" aria-hidden="true"></span>'+
-      '<div class="pic"><img src="assets/v2/'+prop(r)+'.webp" alt="" loading="lazy"></div>'+
+      (r.name && PHOTOS[short(r.name)] ? '<div class="pic photo"><img src="staff/'+esc(PHOTOS[short(r.name)])+'" alt="'+esc(short(r.name))+'" loading="lazy"></div>'
+        : '<div class="pic"><img src="assets/v2/'+prop(r)+'.webp" alt="" loading="lazy"></div>')+
       '<div class="nm"><b title="'+esc(r.name || name)+'">'+esc(name)+'</b><small title="'+esc(sub)+'">'+esc(sub)+'</small></div>'+lines+
       (tel ? '<a class="call" href="tel:'+esc(tel)+'">'+PHONE_I+'Call</a>' : '')+
       ((wa || (r.vehicle && owner)) ? '<div class="bdg-acts">'+(wa ? '<a href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>' : '')+(r.vehicle && owner ? '<a href="control?reg='+encodeURIComponent(r.vehicle)+'">On the map</a>' : '')+'</div>' : '')+
@@ -1004,7 +1009,8 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
       .then(function(){ return owner ? Promise.all([loadActivity(today), day !== today && !act ? loadActivity(day) : null]) : null; }).then(drawAll)
       .catch(function(){}).then(function(){ if(btn) btn.classList.remove('spin'); });
   }
-  loadRole().then(loadRoster).then(function(){
+  function loadPhotos(){ return fetch('staff/photos.json',{cache:'no-store',credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }).then(function(j){ PHOTOS = j || {}; }); }
+  loadRole().then(function(){ return Promise.all([loadRoster(), loadPhotos()]); }).then(function(){
     $('foot').textContent = 'Staff details from the Daily Activity Report dated ' + new Date(DATA.date + 'T00:00:00').toLocaleDateString('en-GB') +
       '. Vehicle status from the tracking portal, synced every 5 minutes.' + (owner ? ' Owner view: report times and locations are not shown to visitors.' : '');
     return refresh().then(function(){ if(owner) loadReport(); });
