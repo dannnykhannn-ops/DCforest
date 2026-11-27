@@ -1,6 +1,6 @@
 /* Offline support. The page itself is always fetched fresh when online,
    so each day's new data shows up straight away. Bump VERSION after changing assets. */
-var VERSION = 'tracker-v40';
+var VERSION = 'tracker-v41';
 var SHELL = ['./', 'index.html', 'manifest.webmanifest', 'assets/hero-banner.webp', 'assets/hero-banner-sm.webp',
   'assets/majid-dcf-2026.webp', 'assets/dcf-face.webp', 'assets/splash/splash-poster.jpg', 'assets/admin.webp', 'assets/forest-bg.webp', 'assets/tree-1.webp', 'assets/tree-2.webp', 'assets/tree-3.webp', 'assets/icons/icon-192.png?v=3', 'assets/icons/icon-512.png?v=3'];
 
@@ -18,7 +18,7 @@ self.addEventListener('fetch', function(e){
   if(/\.(mp4|webm)(\?|$)/.test(req.url)) return;   // let the browser stream the intro video itself
   if(/\/api\//.test(req.url)) return;              // live numbers: always from the network, never from this cache
   if(/\/(control|dashboard|gate)(\.html)?\/?$/.test(new URL(req.url).pathname)) return;
-  if(/\/owner-tools\.js$/.test(new URL(req.url).pathname)) return;   // owner-only script: always fresh from the server   // owner pages and sign-in: never cached, never swapped for the main page
+  if(/\/(owner-tools|notes)\.js$/.test(new URL(req.url).pathname)) return;   // owner-only script: always fresh from the server   // owner pages and sign-in: never cached, never swapped for the main page
   var isPage = req.mode === 'navigate' || req.url.endsWith('.html') || req.url.endsWith('.webmanifest');
   if(isPage){
     // network first, skipping the browser cache, so the latest daily data always shows

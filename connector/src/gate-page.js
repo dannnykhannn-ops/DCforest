@@ -65,6 +65,7 @@ li .acts{display:flex;gap:6px;flex-shrink:0}
 li.used code{color:#8fa583;text-decoration:line-through}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:12px;background:rgba(0,0,0,.22);font-size:.88rem}
 .row small{display:block;color:#93a888;font-size:.76rem;margin-top:2px}
+.revf{display:flex;gap:8px;margin:6px 0 10px}.revf input{flex:1;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid rgba(252,222,132,.4);background:rgba(0,0,0,.25);color:#fff;font:inherit}
 .foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
 a.mini{text-decoration:none;display:inline-block}
 </style>
@@ -99,6 +100,16 @@ a.mini{text-decoration:none;display:inline-block}
     <p class="msg" id="mPin" role="alert"></p>
   </section>
 
+  <section id="vReviewer" class="panel" hidden>
+    <h2>Reviewer access</h2>
+    <p class="sub">Signed in as <b id="rvName"></b>. You can see everything the owner sees and leave notes; you cannot change settings.</p>
+    <a class="go cr" href="./">Open the page<small>Tap the Notes button to leave a note on any spot</small></a>
+    <a class="go cr map" href="control">Open Control Room<small>Live map, people, stops</small></a>
+    <div class="theme"><div><b>My design</b><small id="rvThemeSub"></small></div>
+      <div class="seg" id="rvSeg" role="group" aria-label="Design"><button type="button" data-rtheme="classic">Classic</button><button type="button" data-rtheme="new">New</button></div></div>
+    <div class="foot"><button class="mini danger" id="bRvOut" type="button">Sign out on this device</button></div>
+  </section>
+
   <section id="vAdmin" class="panel" hidden>
     <a class="go cr" href="./">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
@@ -115,6 +126,12 @@ a.mini{text-decoration:none;display:inline-block}
     <h3>Already used</h3>
     <ul id="lUsed"></ul>
 
+    <h2 style="margin-top:22px">Reviewers</h2>
+    <p class="sub">A reviewer sees everything you see (Control Room, stops, alerts, reports, photos, the new design) and can leave notes, but cannot change any settings. Their pass works once, then that device stays in for 30 days until you cancel it.</p>
+    <form id="fRev" class="revf" autocomplete="off"><input id="revName" maxlength="40" placeholder="Reviewer's name" required><button class="mini" type="submit">Create reviewer pass</button></form>
+    <div class="new" id="revBox" hidden><span>Give this reviewer pass to <b id="revWho"></b></span><b id="revCode"></b><button class="mini" id="bRevCopy" type="button">Copy</button></div>
+    <ul id="lRev"></ul>
+
     <h3>Site access</h3>
     <div class="row"><div><b id="openLabel"></b><small id="openSub"></small></div><button class="mini" id="bOpen" type="button"></button></div>
 
@@ -128,7 +145,7 @@ a.mini{text-decoration:none;display:inline-block}
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var views = ['vEnter','vPin','vAdmin'];
+  var views = ['vEnter','vPin','vAdmin','vReviewer'];
   function show(v){ views.forEach(function(x){ $(x).hidden = x !== v; }); $('inf').setAttribute('aria-expanded', v !== 'vEnter'); }
   function post(path, body){
     return fetch('/api/gate/' + path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}), credentials:'same-origin'})
@@ -152,7 +169,7 @@ a.mini{text-decoration:none;display:inline-block}
   $('fEnter').addEventListener('submit', function(e){
     e.preventDefault(); var b = this.querySelector('button'); b.disabled = true; $('mEnter').className = 'msg'; $('mEnter').textContent = '';
     post('enter', {code: $('code').value}).then(function(j){
-      if(j.ok){ $('mEnter').className = 'msg ok'; $('mEnter').textContent = 'Welcome. Opening the site…'; location.replace('/'); return; }
+      if(j.ok){ $('mEnter').className = 'msg ok'; $('mEnter').textContent = j.reviewer ? 'Welcome, reviewer. Opening the site…' : 'Welcome. Opening the site…'; location.replace('/'); return; }
       b.disabled = false; $('mEnter').textContent = fail(j, 'That pass is not valid, or has already been used.');
     }).catch(function(){ b.disabled = false; $('mEnter').textContent = 'No connection. Please try again.'; });
   });
@@ -161,6 +178,7 @@ a.mini{text-decoration:none;display:inline-block}
   var isAdmin = false;
   $('inf').addEventListener('click', function(){
     if(isAdmin){ show($('vAdmin').hidden ? 'vAdmin' : 'vEnter'); return; }
+    if(isReviewer){ show($('vReviewer').hidden ? 'vReviewer' : 'vEnter'); return; }
     show($('vPin').hidden ? 'vPin' : 'vEnter'); if(!$('vPin').hidden) $('pin').focus();
   });
   $('fPin').addEventListener('submit', function(e){
@@ -182,6 +200,11 @@ a.mini{text-decoration:none;display:inline-block}
     }).join('') : '<li><span>None yet.</span></li>';
     document.querySelectorAll('[data-theme]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme') === (s.theme || 'classic')); });
     $('themeSub').textContent = (s.theme === 'new' ? 'New design on this device.' : 'Classic design on this device.') + ' Visitors always see the classic site.';
+    var rv = s.reviewers || [];
+    $('lRev').innerHTML = rv.length ? rv.map(function(r){
+      return '<li><div><b>' + esc(r.name) + '</b>' + (r.usedAt ? '<small>Signed in ' + esc(when(r.usedAt)) + '</small>' : '<small>Pass <code style="font-size:.85rem">' + esc(fmtCode(r.code)) + '</code> not used yet</small>') + '</div>' +
+        '<span class="acts">' + (r.usedAt ? '' : '<button class="mini" type="button" data-copy="' + esc(fmtCode(r.code)) + '">Copy</button>') + '<button class="mini danger" type="button" data-rrevoke="' + esc(r.id) + '">Cancel</button></span></li>';
+    }).join('') : '<li><span>No reviewers yet.</span></li>';
     $('openLabel').textContent = s.open ? 'Open to everyone' : 'Private';
     $('openSub').textContent = s.open ? 'Anyone with the address can view the site.' : 'A pass is needed to view the site.';
     $('bOpen').textContent = s.open ? 'Make private' : 'Open to everyone';
@@ -220,9 +243,31 @@ a.mini{text-decoration:none;display:inline-block}
     act('theme', {theme: th});
   };
 
-  /* already signed in as owner? go straight to the panel */
+  $('fRev').addEventListener('submit', function(e){
+    e.preventDefault(); var name = $('revName').value.trim(); if(!name) return;
+    act('reviewer-pass', {name: name}, function(j){ $('revCode').textContent = fmtCode(j.code); $('revWho').textContent = name; $('revBox').hidden = false; $('revName').value = ''; });
+  });
+  $('bRevCopy').addEventListener('click', function(){ copy($('revCode').textContent, this); });
+  $('lRev').addEventListener('click', function(e){
+    var c = e.target.closest('[data-copy]'); if(c){ copy(c.getAttribute('data-copy'), c); return; }
+    var b = e.target.closest('[data-rrevoke]'); if(b && confirm('Cancel access for this reviewer? Their device is signed out at once.')) act('reviewer-revoke', {id: b.getAttribute('data-rrevoke')}, function(){ $('revBox').hidden = true; });
+  });
+
+  /* reviewer */
+  var isReviewer = false;
+  function drawReviewer(s){
+    $('rvName').textContent = s.name || 'Reviewer';
+    document.querySelectorAll('[data-rtheme]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-rtheme') === (s.theme || 'classic')); });
+    $('rvThemeSub').textContent = s.theme === 'new' ? 'New design on this device.' : 'Classic design on this device.';
+  }
+  $('rvSeg').onclick = function(e){ var b = e.target.closest('[data-rtheme]'); if(!b) return;
+    post('theme', {theme: b.getAttribute('data-rtheme')}).then(function(j){ if(j.ok) drawReviewer(j); }); };
+  $('bRvOut').onclick = function(){ post('leave', {}).then(function(){ isReviewer = false; show('vEnter'); }); };
+
+  /* already signed in as owner or reviewer? go straight to the panel */
   fetch('/api/gate/state', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
     if(s && s.passes){ isAdmin = true; draw(s); if(location.pathname === '/gate') show('vAdmin'); }
+    else if(s && s.reviewer){ isReviewer = true; drawReviewer(s); if(location.pathname === '/gate') show('vReviewer'); }
   }).catch(function(){});
 })();
 </script>

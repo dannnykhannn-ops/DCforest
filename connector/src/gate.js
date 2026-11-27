@@ -14,6 +14,7 @@ const MAX_FAILS = 5;                      // wrong tries before a lock
 const LOCK_MS = 30 * 60 * 1000;           // lock length
 const PASS_TTL_MS = 7 * 86400000;         // an unused pass expires after 7 days
 const ADMIN_HOURS = 12;
+const REVIEWER_DAYS = 30;                 // a used reviewer pass keeps that device signed in this long
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no I, L, O, 0, 1: easy to read out
 const PUBLIC = [/^\/assets\//, /^\/manifest\.webmanifest$/, /^\/sw\.js$/];   // images, icons, video only
 
@@ -36,7 +37,7 @@ const configured = (env) => secretOf(env, 'ADMIN_PIN').length >= 4 && secretOf(e
 async function loadCfg(env) {
   const c = (await env.LIVE.get(CFG_KEY, 'json')) || {};
   return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {},
-  };
+    reviewers: Array.isArray(c.reviewers) ? c.reviewers : [] };
 }
 const saveCfg = (env, cfg) => env.LIVE.put(CFG_KEY, JSON.stringify(cfg));
 
@@ -48,8 +49,8 @@ function page(status) {
 }
 
 const guestMinutes = (env) => Number(env.GUEST_SESSION_MINUTES) || 30;
-async function makeCookie(env, role, gen, minutes) {
-  const body = b64u(enc.encode(JSON.stringify({ r: role, g: gen, e: Date.now() + minutes * 60000 })));
+async function makeCookie(env, role, gen, minutes, id) {
+  const body = b64u(enc.encode(JSON.stringify({ r: role, g: gen, e: Date.now() + minutes * 60000, ...(id ? { i: id } : {}) })));
   const sig = await hmac(secretOf(env, 'SESSION_SECRET'), body);
   return `${COOKIE}=${body}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.round(minutes * 60)}`;
 }
@@ -63,7 +64,11 @@ async function readSession(request, env, cfg) {
   if (!body || !sig || !same(sig, await hmac(secretOf(env, 'SESSION_SECRET'), body))) return null;
   try {
     const s = JSON.parse(unb64u(body));
-    return s.g === cfg.gen && s.e > Date.now() && (s.r === 'guest' || s.r === 'admin') ? s : null;
+    if (s.g !== cfg.gen || !(s.e > Date.now())) return null;
+    if (s.r === 'guest' || s.r === 'admin') return s;
+    // A reviewer session ends as soon as the owner cancels that reviewer's pass.
+    if (s.r === 'reviewer') { const rv = cfg.reviewers.find((x) => x.id === s.i); return rv ? { ...s, name: rv.name } : null; }
+    return null;
   } catch { return null; }
 }
 
@@ -83,6 +88,8 @@ function prune(cfg, now) {
   const unused = cfg.passes.filter((p) => !p.usedAt && now - Date.parse(p.createdAt) < PASS_TTL_MS);
   const used = cfg.passes.filter((p) => p.usedAt).slice(-20);
   cfg.passes = [...used, ...unused];
+  // an unused reviewer pass also expires after PASS_TTL_MS; a used one stays until the owner cancels it
+  cfg.reviewers = cfg.reviewers.filter((r) => r.usedAt || now - Date.parse(r.createdAt) < PASS_TTL_MS);
 }
 function newCode() {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
@@ -93,6 +100,7 @@ const publicState = (cfg, env) => ({
   open: cfg.open,
   guestMinutes: guestMinutes(env),
   passes: cfg.passes.map((p) => ({ code: p.code, createdAt: p.createdAt, usedAt: p.usedAt || null })),
+  reviewers: cfg.reviewers.map((r) => ({ id: r.id, name: r.name, code: r.usedAt ? null : r.code, createdAt: r.createdAt, usedAt: r.usedAt || null })),
 });
 
 export const isPublic = (pathname) => PUBLIC.some((re) => re.test(pathname));
@@ -111,6 +119,14 @@ export async function isOwner(request, env) {
   const s = await readSession(request, env, await loadCfg(env));
   return !!(s && s.r === 'admin');
 }
+/** Owner or reviewer: who may open the owner pages and their data (reviewers cannot change settings). */
+export async function viewer(request, env) {
+  const s = await readSession(request, env, await loadCfg(env));
+  if (s && s.r === 'admin') return { role: 'owner', id: 'owner', name: 'Owner' };
+  if (s && s.r === 'reviewer') return { role: 'reviewer', id: s.i, name: s.name };
+  return null;
+}
+export async function canView(request, env) { return !!(await viewer(request, env)); }
 /** Entry page for an owner-only address (the owner signs in with the PIN there). */
 export const ownerPage = () => page(401);
 
@@ -133,10 +149,12 @@ export async function route(request, env, url) {
 
   if (action === 'me' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return json({ role: s ? (s.r === 'admin' ? 'owner' : 'guest') : (cfg.open ? 'visitor' : null), theme: themeFor(request) });
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : s.r === 'reviewer' ? 'reviewer' : 'guest') : (cfg.open ? 'visitor' : null),
+      name: s && s.r === 'reviewer' ? s.name : undefined, theme: themeFor(request) });
   }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
+    if (s && s.r === 'reviewer') return json({ reviewer: true, name: s.name, theme: themeFor(request) });
     return s && s.r === 'admin' ? json({ ...publicState(cfg, env), theme: themeFor(request) }) : json({ error: 'forbidden' }, 403);
   }
   if (request.method !== 'POST') return json({ error: 'method' }, 405);
@@ -151,6 +169,12 @@ export async function route(request, env, url) {
     if (wait) return json({ error: 'locked', minutes: wait }, 429);
     const code = cleanCode(body.code);
     prune(cfg, now);
+    const rv = code.length === 6 ? cfg.reviewers.find((x) => !x.usedAt && x.code && same(x.code, code)) : null;
+    if (rv) {                                     // reviewer pass: this device gets reviewer access for REVIEWER_DAYS
+      rv.usedAt = new Date(now).toISOString(); delete rv.code; delete cfg.fails.code;
+      await saveCfg(env, cfg);
+      return json({ ok: true, reviewer: true }, 200, { 'Set-Cookie': await makeCookie(env, 'reviewer', cfg.gen, REVIEWER_DAYS * 1440, rv.id) });
+    }
     const pass = code.length === 6 ? cfg.passes.find((x) => !x.usedAt && same(x.code, code)) : null;
     if (!pass) { noteFail(cfg, 'code', now); await saveCfg(env, cfg); return json({ error: 'invalid' }, 401); }
     pass.usedAt = new Date(now).toISOString();
@@ -170,8 +194,13 @@ export async function route(request, env, url) {
     return json({ ok: true, ...publicState(cfg, env), theme: themeFor(request) }, 200, { 'Set-Cookie': await makeCookie(env, 'admin', cfg.gen, ADMIN_HOURS * 60) });
   }
 
-  // Everything below needs an owner session.
   const s = await readSession(request, env, cfg);
+  if (action === 'theme' && s && s.r === 'reviewer') {
+    const theme = body.theme === 'new' ? 'new' : 'classic';
+    return json({ ok: true, reviewer: true, name: s.name, theme }, 200, { 'Set-Cookie': themeCookie(theme) });
+  }
+
+  // Everything below needs an owner session.
   if (!s || s.r !== 'admin') return json({ error: 'forbidden' }, 403);
   prune(cfg, now);
 
@@ -181,6 +210,20 @@ export async function route(request, env, url) {
     cfg.passes.push({ code, createdAt: new Date(now).toISOString(), usedAt: null });
     await saveCfg(env, cfg);
     return json({ ok: true, code, ...publicState(cfg, env) });
+  }
+  if (action === 'reviewer-pass') {
+    const name = String(body.name || '').replace(/[<>]/g, '').trim().slice(0, 40);
+    if (!name) return json({ error: 'name' }, 400);
+    if (cfg.reviewers.length >= 20) return json({ error: 'too-many' }, 400);
+    const code = newCode(), id = b64u(crypto.getRandomValues(new Uint8Array(9)));
+    cfg.reviewers.push({ id, name, code, createdAt: new Date(now).toISOString(), usedAt: null });
+    await saveCfg(env, cfg);
+    return json({ ok: true, code, ...publicState(cfg, env) });
+  }
+  if (action === 'reviewer-revoke') {
+    cfg.reviewers = cfg.reviewers.filter((x) => x.id !== String(body.id || ''));
+    await saveCfg(env, cfg);
+    return json({ ok: true, ...publicState(cfg, env) });
   }
   if (action === 'revoke') {
     const code = cleanCode(body.code);

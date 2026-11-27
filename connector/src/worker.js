@@ -153,8 +153,41 @@ async function themed(res, theme) {
 async function classicPage(env, url, owner) {
   const res = await themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
   if (!owner || !res.ok) return res;
-  const html = (await res.text()).replace(/<\/body>/i, '<script src="owner-tools.js" defer></script></body>');
-  return new Response(html, { status: res.status, headers: res.headers });
+  return withScripts(res, ['owner-tools.js', 'notes.js']);
+}
+async function withScripts(res, srcs) {
+  if (!res.ok || !(res.headers.get('Content-Type') || '').includes('text/html')) return res;
+  const tags = srcs.map((s) => '<script src="' + s + '" defer></script>').join('');
+  return new Response((await res.text()).replace(/<\/body>/i, tags + '</body>'), { status: res.status, headers: res.headers });
+}
+
+/* Notes left by the owner and reviewers, pinned to a spot on a page. Owner and reviewers all see every
+   note; the owner can mark notes done or delete any; a reviewer can delete their own. KV key "notes". */
+const NOTES_KEY = 'notes', NOTES_MAX = 500;
+async function serveNotes(request, env, who) {
+  const notes = (await env.LIVE.get(NOTES_KEY, 'json')) || [];
+  const reply = (status = 200) => new Response(JSON.stringify({ me: { role: who.role, id: who.id, name: who.name }, notes }), { status, headers: noStore });
+  if (request.method === 'GET') return reply();
+  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  let b = {}; try { b = await request.json(); } catch {}
+  const str = (v, n) => String(v == null ? '' : v).slice(0, n);
+  const num = (v) => (v !== null && v !== '' && Number.isFinite(+v) ? +(+v).toFixed(4) : null);
+  if (b.action === 'add') {
+    const text = str(b.text, 2000).trim();
+    if (!text) return bad('empty note');
+    if (notes.length >= NOTES_MAX) return bad('too many notes');
+    notes.push({ id: crypto.randomUUID(), page: str(b.page, 80), skin: b.skin === 'new' ? 'new' : 'classic', anchor: str(b.anchor, 80),
+      fx: num(b.fx), fy: num(b.fy), px: num(b.px), py: num(b.py), context: str(b.context, 120), text,
+      by: who.id, byName: who.name, at: new Date().toISOString(), done: false });
+  } else {
+    const n = notes.find((x) => x.id === b.id);
+    if (!n) return bad('no such note');
+    if (b.action === 'done' && who.role === 'owner') n.done = b.done !== false;
+    else if (b.action === 'delete' && (who.role === 'owner' || n.by === who.id)) notes.splice(notes.indexOf(n), 1);
+    else return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: noStore });
+  }
+  await env.LIVE.put(NOTES_KEY, JSON.stringify(notes));
+  return reply();
 }
 
 /* Owner-only: a short street address for a point (stops on the map and in the activity log).
@@ -186,7 +219,7 @@ async function servePlace(url) {
 }
 
 const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place)\.json$|^\/owner-tools\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place|notes)\.json$|^\/(owner-tools|notes)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -230,11 +263,12 @@ export default {
 
     // Control Room: owner session required, even when the main site is open to everyone.
     if (OWNER_PAGES.test(url.pathname) || OWNER_APIS.test(url.pathname)) {
-      if (!(await gate.isOwner(request, env))) {
+      if (!(await gate.canView(request, env))) {
         return OWNER_APIS.test(url.pathname)
           ? new Response(JSON.stringify({ error: 'owner-only' }), { status: 403, headers: noStore })
           : gate.ownerPage();
       }
+      if (url.pathname === '/api/notes.json') return serveNotes(request, env, await gate.viewer(request, env));
       if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
       if (url.pathname === '/api/fleet.json') return serveFleet(env);
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
@@ -246,7 +280,7 @@ export default {
         const h = new Headers(f.headers); h.set('Cache-Control', 'private, no-store'); h.set('X-Robots-Tag', 'noindex');
         return new Response(f.body, { status: f.status, headers: h });
       }
-      if (url.pathname === '/owner-tools.js') {
+      if (url.pathname === '/owner-tools.js' || url.pathname === '/notes.js') {
         const js = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
         return new Response(js.body, { status: js.status, headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' } });
       }
@@ -254,7 +288,7 @@ export default {
       const name = OWNER_PAGES.exec(url.pathname)[1], theme = gate.themeFor(request);
       // On the classic design the owner's dashboard is the classic page itself, with the owner tools added.
       if (name === 'dashboard' && theme === 'classic') return new Response(null, { status: 302, headers: { Location: '/', 'Cache-Control': 'no-store' } });
-      return themed(await ownerPage(env, url, name), theme);
+      return withScripts(await themed(await ownerPage(env, url, name), theme), ['notes.js']);
     }
     if (!gate.isPublic(url.pathname)) {
       const denied = await gate.guard(request, env, url.pathname);
@@ -268,7 +302,7 @@ export default {
     }
     if (!env.ASSETS) return new Response('Not found', { status: 404 });
     // The classic page is always reachable at /classic (the new design reads the staff list from it).
-    const owner = await gate.isOwner(request, env);
+    const owner = await gate.canView(request, env);   // owner or reviewer
     if (url.pathname === '/classic') return classicPage(env, url, owner);
     // Home page: the classic page (plus owner tools for the owner), or the new design on a device where the owner picked it.
     if ((url.pathname === '/' || url.pathname === '/index.html') && request.method === 'GET') {

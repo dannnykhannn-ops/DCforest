@@ -24,7 +24,9 @@ Live address: https://dcforest.vercel.app (Vercel forwards everything to the Clo
 | `/` | Everyone with access (pass, or site opened to everyone). Classic page, or the new design when switched to **New**. |
 | `/classic` | Same people; always the classic page. |
 | `/gate` (the ∞ box) | Entry page; owner panel after the PIN: passes, open/private, **site design Classic / New**, sign everyone out, links to the dashboard and Control Room. |
-| `/dashboard`, `/control` | Owner only (PIN), even when the site is open to everyone. |
+| `/dashboard`, `/control` | Owner (PIN) and reviewers, even when the site is open to everyone. |
+
+**Reviewers:** in the owner panel, *Reviewers → Create reviewer pass* (with their name). The pass works once; that device then has reviewer access for 30 days until you cancel it. Reviewers see everything the owner sees and can pin notes on any screen (Notes button, bottom left), but cannot change settings. Notes are kept in KV (`notes`); the owner can mark them done or delete them.
 | `/api/live.json` | Public numbers (no locations or times). |
 | `/api/fleet.json`, `/api/trail.json`, `/api/activity.json`, `/api/report.json` | Owner only: positions, routes, activity, reports. |
 

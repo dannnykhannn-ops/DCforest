@@ -180,3 +180,44 @@ test('short addresses: most specific first, no repeats; the lookup is owner-only
   const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
   assert.equal((await call(env, '/api/place.json?lat=x&lon=74.3', { cookie: owner })).status, 400);
 });
+
+test('reviewers: see owner pages and data, leave notes, cannot change settings; cancelling ends access', async () => {
+  const env = newEnv(false);
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  assert.equal((await call(env, '/api/gate/reviewer-pass', { method: 'POST', body: { name: '' }, cookie: owner })).status, 400);
+  const made = await (await call(env, '/api/gate/reviewer-pass', { method: 'POST', body: { name: 'Ahmed' }, cookie: owner })).json();
+  assert.equal(made.code.length, 6); assert.equal(made.reviewers[0].name, 'Ahmed');
+  const enter = await call(env, '/api/gate/enter', { method: 'POST', body: { code: made.code } });
+  assert.equal((await enter.json()).reviewer, true);
+  const rv = (enter.headers.get('Set-Cookie') || '').split(';')[0];
+  assert.match(enter.headers.get('Set-Cookie'), /Max-Age=2592000/);
+  assert.equal((await call(env, '/api/gate/enter', { method: 'POST', body: { code: made.code } })).status, 401, 'a reviewer pass works once');
+
+  assert.equal((await (await call(env, '/api/gate/me', { cookie: rv })).json()).role, 'reviewer');
+  assert.equal((await call(env, '/api/fleet.json', { cookie: rv })).status, 200);
+  assert.equal((await call(env, '/control', { cookie: rv })).status, 200);
+  assert.equal((await call(env, '/staff/photos.json', { cookie: rv })).status, 200);
+  for (const a of ['pass', 'open', 'signout', 'reviewer-pass']) assert.equal((await call(env, '/api/gate/' + a, { method: 'POST', body: { open: true, name: 'x' }, cookie: rv })).status, 403, a);
+  assert.equal((await call(env, '/api/gate/state', { cookie: rv })).status, 200);
+  assert.equal((await (await call(env, '/api/gate/state', { cookie: rv })).json()).passes, undefined, 'reviewers do not see passes');
+
+  // notes
+  assert.equal((await call(env, '/api/notes.json')).status, 403);
+  let j = await (await call(env, '/api/notes.json', { method: 'POST', cookie: rv, body: { action: 'add', page: '/control', anchor: 'map', fx: .5, fy: .5, text: 'Make pins bigger' } })).json();
+  assert.equal(j.notes.length, 1); assert.equal(j.notes[0].byName, 'Ahmed');
+  const id = j.notes[0].id;
+  j = await (await call(env, '/api/notes.json', { method: 'POST', cookie: owner, body: { action: 'add', page: '/', text: 'Owner note' } })).json();
+  const ownerNote = j.notes[1].id;
+  assert.equal((await call(env, '/api/notes.json', { method: 'POST', cookie: rv, body: { action: 'done', id } })).status, 403, 'only the owner marks done');
+  assert.equal((await call(env, '/api/notes.json', { method: 'POST', cookie: rv, body: { action: 'delete', id: ownerNote } })).status, 403, "reviewer cannot delete owner's note");
+  j = await (await call(env, '/api/notes.json', { method: 'POST', cookie: owner, body: { action: 'done', id } })).json();
+  assert.equal(j.notes[0].done, true);
+  j = await (await call(env, '/api/notes.json', { method: 'POST', cookie: rv, body: { action: 'delete', id } })).json();
+  assert.equal(j.notes.length, 1);
+  assert.equal((await call(env, '/api/notes.json', { method: 'POST', cookie: rv, body: { action: 'add', text: '  ' } })).status, 400);
+
+  // cancel
+  await call(env, '/api/gate/reviewer-revoke', { method: 'POST', body: { id: made.reviewers[0].id }, cookie: owner });
+  assert.equal((await call(env, '/api/fleet.json', { cookie: rv })).status, 403, 'cancelled reviewer loses access at once');
+  assert.equal((await call(env, '/')).status, 401);
+});
