@@ -16,14 +16,22 @@
   /* ---------- styles ---------- */
   var st = document.createElement('style');
   st.textContent = [
-    '.nt-fab{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:'+Z+';display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:99px;border:2px solid #fff;',
-    '  background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font:800 14px Figtree,system-ui,sans-serif;box-shadow:0 10px 26px rgba(124,58,237,.45);cursor:pointer}',
+    '.nt-dock{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:'+Z+';display:flex;gap:8px;align-items:center}',
+    '.nt-fab,.nt-pinbtn{display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:99px;border:2px solid #fff;font:800 14px Figtree,system-ui,sans-serif;cursor:pointer!important;box-shadow:0 10px 26px rgba(0,0,0,.35)}',
+    '.nt-fab{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff}',
+    '.nt-pinbtn{background:#fff;color:#4c1d95}.nt-pinbtn i{font-style:normal;font-size:16px}',
+    '.nt-pinbtn .sw{width:34px;height:20px;border-radius:99px;background:#d1d5db;position:relative;transition:background .2s}',
+    '.nt-pinbtn .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}',
+    '.nt-pinbtn[aria-pressed="true"]{background:#db2777;color:#fff;animation:ntp 1.6s infinite}',
+    '.nt-pinbtn[aria-pressed="true"] .sw{background:#fff}.nt-pinbtn[aria-pressed="true"] .sw::after{left:16px;background:#db2777}',
+    '@keyframes ntp{50%{box-shadow:0 0 0 8px rgba(219,39,119,.25),0 10px 26px rgba(0,0,0,.35)}}',
+    '.nt-frame{position:fixed;inset:0;z-index:'+(Z-3)+';pointer-events:none;box-shadow:inset 0 0 0 4px #db2777,inset 0 0 40px rgba(219,39,119,.35)}',
     '.nt-fab b{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#fff;color:#7c3aed;font-size:12px}',
-    '@media (max-width:760px){ body:has(.dock) .nt-fab, body:has(.wnav) .nt-fab{bottom:calc(84px + env(safe-area-inset-bottom))} }',
+    '@media (max-width:760px){ body:has(.dock) .nt-dock, body:has(.wnav) .nt-dock{bottom:calc(84px + env(safe-area-inset-bottom))} }',
     '.nt-panel{position:fixed;left:14px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:'+Z+';width:min(380px,calc(100vw - 28px));max-height:70vh;display:flex;flex-direction:column;',
     '  background:#fff;color:#14201a;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.4);font:14px/1.4 Figtree,system-ui,sans-serif;overflow:hidden}',
     '@media (max-width:760px){ body:has(.dock) .nt-panel, body:has(.wnav) .nt-panel{bottom:calc(140px + env(safe-area-inset-bottom))} }',
-    '.nt-panel[hidden],.nt-pop[hidden],.nt-banner[hidden]{display:none}',
+    '.nt-panel[hidden],.nt-pop[hidden],.nt-banner[hidden],.nt-frame[hidden]{display:none}',
     '.nt-h{display:flex;align-items:center;gap:8px;padding:12px 14px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff}',
     '.nt-h b{flex:1;font-size:15px}.nt-h small{opacity:.85}',
     '.nt-x{border:0;background:rgba(255,255,255,.2);color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px}',
@@ -48,22 +56,26 @@
     '.nt-pop p{margin:0;white-space:pre-wrap;word-break:break-word}',
     '.nt-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:'+Z+';background:#7c3aed;color:#fff;padding:10px 16px;border-radius:99px;font:800 14px Figtree,system-ui,sans-serif;box-shadow:0 10px 24px rgba(0,0,0,.35);display:flex;gap:10px;align-items:center}',
     '.nt-banner button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:99px;padding:5px 10px;font:inherit;cursor:pointer}',
-    'html.nt-adding, html.nt-adding *{cursor:crosshair!important}',
+    'html.nt-adding, html.nt-adding *{cursor:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2732%27 height=%2740%27 viewBox=%270 0 32 40%27%3E%3Cpath d=%27M16 39s-13-12-13-23a13 13 0 0 1 26 0c0 11-13 23-13 23z%27 fill=%27%23db2777%27 stroke=%27white%27 stroke-width=%272.5%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%275%27 fill=%27white%27/%3E%3C/svg%3E") 16 39, crosshair!important}',
     '.nt-mark{position:fixed;z-index:'+(Z-1)+';width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#db2777;border:3px solid #fff;box-shadow:0 0 0 6px rgba(219,39,119,.3)}',
-    '@media print{.nt-fab,.nt-panel,.nt-pin,.nt-pop,.nt-banner,.nt-mark{display:none!important}}'
+    '@media print{.nt-dock,.nt-frame,.nt-fab,.nt-panel,.nt-pin,.nt-pop,.nt-banner,.nt-mark{display:none!important}}'
   ].join('\n');
   document.head.appendChild(st);
 
   /* ---------- UI ---------- */
   function el(html){ var d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
-  var fab = el('<button class="nt-fab" type="button" aria-label="Notes">✎ Notes <b id="ntCount">0</b></button>');
+  var dock = el('<div class="nt-dock"><button class="nt-pinbtn" type="button" aria-pressed="false" title="Turn on, then tap anywhere to pin a note there"><i>📍</i><span class="lb">Pin note: OFF</span><span class="sw"></span></button>'+
+    '<button class="nt-fab" type="button" aria-label="Notes">✎ Notes <b id="ntCount">0</b></button></div>');
+  var fab = dock.querySelector('.nt-fab'), pinBtn = dock.querySelector('.nt-pinbtn');
+  var frame = el('<div class="nt-frame" hidden></div>');
   var panel = el('<section class="nt-panel" hidden aria-label="Notes"><div class="nt-h"><b>Notes</b><small id="ntWho"></small><button class="nt-x" type="button" aria-label="Close">×</button></div>'+
-    '<div class="nt-tools"><button class="nt-b pri" type="button" id="ntAdd">+ Add a note here</button><button class="nt-b" type="button" id="ntPins" aria-pressed="true">Pins on page</button><button class="nt-b" type="button" id="ntDone" aria-pressed="false">Show done</button></div>'+
+    '<div class="nt-tools"><button class="nt-b pri" type="button" id="ntAdd">📍 Turn on Pin note</button><button class="nt-b" type="button" id="ntPins" aria-pressed="true">Pins on page</button><button class="nt-b" type="button" id="ntDone" aria-pressed="false">Show done</button></div>'+
     '<div class="nt-list" id="ntList"></div></section>');
   var pop = el('<div class="nt-pop" hidden></div>');
-  var banner = el('<div class="nt-banner" hidden>Tap the spot your note is about <button type="button">Cancel</button></div>');
+  var banner = el('<div class="nt-banner" hidden>📍 Pin note is ON · tap any spot to leave a note there <button type="button">Turn off</button></div>');
   var pinLayer = document.createElement('div');
-  [pinLayer, fab, panel, pop, banner].forEach(function(n){ document.body.appendChild(n); });
+  [pinLayer, frame, dock, panel, pop, banner].forEach(function(n){ document.body.appendChild(n); });
+  pinBtn.onclick = function(){ adding ? stopAdd() : startAdd(); };
   var $ = function(id){ return document.getElementById(id); };
   fab.onclick = function(){ panel.hidden = !panel.hidden; pop.hidden = true; draw(); };
   panel.querySelector('.nt-x').onclick = function(){ panel.hidden = true; };
@@ -73,7 +85,7 @@
   banner.querySelector('button').onclick = function(e){ e.stopPropagation(); stopAdd(); };
 
   /* ---------- where a note points: the nearest element with an id, plus the spot inside it ---------- */
-  function ours(n){ return n && n.closest && n.closest('.nt-fab,.nt-panel,.nt-pop,.nt-banner,.nt-pin'); }
+  function ours(n){ return n && n.closest && n.closest('.nt-dock,.nt-panel,.nt-pop,.nt-banner,.nt-pin'); }
   function anchorFor(target){
     var a = target;
     while(a && a !== document.body && !(a.id && document.querySelectorAll('#' + CSS.escape(a.id)).length === 1)) a = a.parentElement;
@@ -91,43 +103,61 @@
     return {x:n.px * de.scrollWidth - window.scrollX, y:n.py - window.scrollY, ok:false};
   }
 
-  /* ---------- adding ---------- */
-  var mark = null;
+  /* ---------- pin mode: ON until turned off; every tap on the page opens a note box at that spot ---------- */
+  var mark = null, down = null;
   function startAdd(){
-    adding = true; panel.hidden = true; pop.hidden = true; banner.hidden = false; document.documentElement.classList.add('nt-adding');
+    adding = true; panel.hidden = true; pop.hidden = true; banner.hidden = false; frame.hidden = false;
+    document.documentElement.classList.add('nt-adding');
+    pinBtn.setAttribute('aria-pressed', 'true'); pinBtn.querySelector('.lb').textContent = 'Pin note: ON';
   }
   function stopAdd(){
-    adding = false; banner.hidden = true; document.documentElement.classList.remove('nt-adding');
+    adding = false; banner.hidden = true; frame.hidden = true; pop.hidden = true;
+    document.documentElement.classList.remove('nt-adding');
+    pinBtn.setAttribute('aria-pressed', 'false'); pinBtn.querySelector('.lb').textContent = 'Pin note: OFF';
     if(mark){ mark.remove(); mark = null; }
   }
-  function swallow(e){ if(adding && !ours(e.target)){ e.preventDefault(); e.stopPropagation(); } }
-  ['pointerdown','mousedown','touchstart','mouseup','touchend'].forEach(function(t){ document.addEventListener(t, swallow, {capture:true, passive:false}); });
-  document.addEventListener('click', function(e){
+  function clearDraft(){ pop.hidden = true; if(mark){ mark.remove(); mark = null; } }
+  /* While pin mode is on, taps go to the notes tool, not to the page (scrolling still works). */
+  function block(e){ if(adding && !ours(e.target)){ e.preventDefault(); e.stopPropagation(); } }
+  ['mousedown','mouseup','click','dblclick','contextmenu'].forEach(function(t){ document.addEventListener(t, block, true); });
+  document.addEventListener('pointerdown', function(e){
     if(!adding || ours(e.target)) return;
-    e.preventDefault(); e.stopPropagation();
-    var a = anchorFor(e.target), r = a && a.getBoundingClientRect();
+    down = {x:e.clientX, y:e.clientY, id:e.pointerId};
+    if(e.pointerType === 'mouse'){ e.preventDefault(); } e.stopPropagation();
+  }, true);
+  document.addEventListener('pointercancel', function(){ down = null; }, true);
+  document.addEventListener('pointerup', function(e){
+    if(!adding || ours(e.target)) return;
+    e.stopPropagation();
+    if(!down || Math.abs(e.clientX - down.x) > 10 || Math.abs(e.clientY - down.y) > 10){ down = null; return; }   // that was a scroll, not a tap
+    down = null;
+    if(!pop.hidden){ clearDraft(); return; }      // tapping elsewhere closes an unsaved note box
+    pinAt(e.clientX, e.clientY, document.elementFromPoint(e.clientX, e.clientY) || e.target);
+  }, true);
+  function pinAt(cx, cy, target){
+    var a = anchorFor(target), r = a && a.getBoundingClientRect();
     var spot = {
       page: pageKey, skin: skin, anchor: a ? a.id : '',
-      fx: a && r.width ? (e.clientX - r.left) / r.width : null, fy: a && r.height ? (e.clientY - r.top) / r.height : null,
-      px: (e.clientX + window.scrollX) / document.documentElement.scrollWidth, py: e.clientY + window.scrollY,
-      context: contextFor(e.target)
+      fx: a && r.width ? (cx - r.left) / r.width : null, fy: a && r.height ? (cy - r.top) / r.height : null,
+      px: (cx + window.scrollX) / document.documentElement.scrollWidth, py: cy + window.scrollY,
+      context: contextFor(target)
     };
-    banner.hidden = true; document.documentElement.classList.remove('nt-adding');
-    mark = el('<div class="nt-mark"></div>'); mark.style.left = e.clientX + 'px'; mark.style.top = e.clientY + 'px'; document.body.appendChild(mark);
-    showPop(e.clientX, e.clientY,
+    if(mark) mark.remove();
+    mark = el('<div class="nt-mark"></div>'); mark.style.left = cx + 'px'; mark.style.top = cy + 'px'; document.body.appendChild(mark);
+    showPop(cx, cy,
       '<div class="meta">New note' + (spot.context ? ' · on “' + esc(spot.context.slice(0, 50)) + '”' : '') + '</div>'+
       '<textarea placeholder="What should be better here?" maxlength="2000"></textarea>'+
       '<div class="acts"><button class="nt-b" type="button" data-a="cancel">Cancel</button><button class="nt-b pri" type="button" data-a="save">Save note</button></div>');
     var ta = pop.querySelector('textarea'); setTimeout(function(){ ta.focus(); }, 30);
     pop.onclick = function(ev){
       var b = ev.target.closest('[data-a]'); if(!b) return;
-      if(b.getAttribute('data-a') === 'cancel'){ pop.hidden = true; stopAdd(); return; }
+      if(b.getAttribute('data-a') === 'cancel'){ clearDraft(); return; }
       var text = ta.value.trim(); if(!text){ ta.focus(); return; }
       b.disabled = true;
-      send(Object.assign({action:'add', text:text}, spot)).then(function(){ pop.hidden = true; stopAdd(); var last = notes[notes.length - 1]; if(last) flash(last.id); });
+      send(Object.assign({action:'add', text:text}, spot)).then(function(){ clearDraft(); var last = notes[notes.length - 1]; if(last) flash(last.id); });
     };
-  }, true);
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ if(adding) stopAdd(); pop.hidden = true; } });
+  }
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ if(!pop.hidden){ clearDraft(); } else if(adding) stopAdd(); } });
 
   function showPop(x, y, html){
     pop.innerHTML = html; pop.hidden = false;
