@@ -158,7 +158,7 @@ async function classicPage(env, url, owner) {
 }
 
 const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$|^\/owner-tools\.js$/;
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report)\.json$|^\/owner-tools\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -212,6 +212,11 @@ export default {
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);
       if (url.pathname === '/api/activity.json') return serveActivity(env, url);
       if (url.pathname === '/api/report.json') return serveReport(env, url);
+      if (url.pathname.startsWith('/staff/')) {
+        const f = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
+        const h = new Headers(f.headers); h.set('Cache-Control', 'private, no-store'); h.set('X-Robots-Tag', 'noindex');
+        return new Response(f.body, { status: f.status, headers: h });
+      }
       if (url.pathname === '/owner-tools.js') {
         const js = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
         return new Response(js.body, { status: js.status, headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' } });

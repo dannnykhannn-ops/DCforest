@@ -148,6 +148,9 @@ test('design switch changes only the owner device that picked it; visitors alway
   assert.match(await page('/', owner), /owner-tools\.js/, 'the owner gets the owner tools on the classic page');
   assert.doesNotMatch(await page('/'), /owner-tools/, 'visitors do not');
   assert.equal((await call(env, '/owner-tools.js')).status, 403);
+  assert.equal((await call(env, '/staff/photos.json')).status, 403, 'staff photos are owner-only even when the site is open');
+  assert.equal((await call(env, '/staff/khalid-nadeem.webp')).status, 403);
+  assert.equal((await call(env, '/staff/photos.json', { cookie: owner })).status, 200);
   const res = await call(env, '/api/gate/theme', { method: 'POST', body: { theme: 'new' }, cookie: owner });
   assert.equal((await res.json()).theme, 'new');
   const themeCookie = (res.headers.get('Set-Cookie') || '').split(';')[0];
