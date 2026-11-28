@@ -15,7 +15,9 @@ const LOCK_MS = 30 * 60 * 1000;           // lock length
 const PASS_TTL_MS = 7 * 86400000;         // an unused pass expires after 7 days
 const ADMIN_HOURS = 12;
 const REVIEWER_DAYS = 30;
-const STAFF_DAYS = 180;                   // a staff phone stays linked this long (until the owner cancels it)                 // a used reviewer pass keeps that device signed in this long
+const STAFF_DAYS = 180;
+const CHIEF_DAYS = 30;                    // the DCF's device stays signed in this long
+export const CHIEF_NAME = 'Majid Shamrez';                   // a staff phone stays linked this long (until the owner cancels it)                 // a used reviewer pass keeps that device signed in this long
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no I, L, O, 0, 1: easy to read out
 const PUBLIC = [/^\/assets\//, /^\/manifest\.webmanifest$/, /^\/sw\.js$/];   // images, icons, video only
 
@@ -38,7 +40,8 @@ const configured = (env) => secretOf(env, 'ADMIN_PIN').length >= 4 && secretOf(e
 async function loadCfg(env) {
   const c = (await env.LIVE.get(CFG_KEY, 'json')) || {};
   return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {},
-    reviewers: Array.isArray(c.reviewers) ? c.reviewers : [], staffPasses: Array.isArray(c.staffPasses) ? c.staffPasses : [] };
+    reviewers: Array.isArray(c.reviewers) ? c.reviewers : [], staffPasses: Array.isArray(c.staffPasses) ? c.staffPasses : [],
+    chief: c.chief && c.chief.pin ? c.chief : null };
 }
 const saveCfg = (env, cfg) => env.LIVE.put(CFG_KEY, JSON.stringify(cfg));
 
@@ -50,8 +53,8 @@ function page(status) {
 }
 
 const guestMinutes = (env) => Number(env.GUEST_SESSION_MINUTES) || 30;
-async function makeCookie(env, role, gen, minutes, id) {
-  const body = b64u(enc.encode(JSON.stringify({ r: role, g: gen, e: Date.now() + minutes * 60000, ...(id ? { i: id } : {}) })));
+async function makeCookie(env, role, gen, minutes, id, extra) {
+  const body = b64u(enc.encode(JSON.stringify({ r: role, g: gen, e: Date.now() + minutes * 60000, ...(id ? { i: id } : {}), ...(extra || {}) })));
   const sig = await hmac(secretOf(env, 'SESSION_SECRET'), body);
   return `${COOKIE}=${body}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.round(minutes * 60)}`;
 }
@@ -68,6 +71,7 @@ async function readSession(request, env, cfg) {
     if (s.g !== cfg.gen || !(s.e > Date.now())) return null;
     if (s.r === 'guest' || s.r === 'admin') return s;
     // A reviewer session ends as soon as the owner cancels that reviewer's pass.
+    if (s.r === 'chief') return cfg.chief && s.k === cfg.chief.k ? s : null;   // a new chief PIN signs the old devices out
     if (s.r === 'reviewer') { const rv = cfg.reviewers.find((x) => x.id === s.i); return rv ? { ...s, name: rv.name } : null; }
     // A staff phone is linked to one bike; it stops working as soon as the owner cancels that pass.
     if (s.r === 'staff') { const sp = cfg.staffPasses.find((x) => x.id === s.i); return sp ? { ...s, name: sp.name, reg: sp.reg } : null; }
@@ -104,6 +108,7 @@ const publicState = (cfg, env) => ({
   guestMinutes: guestMinutes(env),
   passes: cfg.passes.map((p) => ({ code: p.code, createdAt: p.createdAt, usedAt: p.usedAt || null })),
   reviewers: cfg.reviewers.map((r) => ({ id: r.id, name: r.name, code: r.usedAt ? null : r.code, createdAt: r.createdAt, usedAt: r.usedAt || null })),
+  chiefPinSet: !!cfg.chief,
   staffPasses: cfg.staffPasses.map((r) => ({ id: r.id, name: r.name, reg: r.reg, code: r.usedAt ? null : r.code, createdAt: r.createdAt, usedAt: r.usedAt || null })),
 });
 
@@ -128,6 +133,7 @@ export async function viewer(request, env) {
   const s = await readSession(request, env, await loadCfg(env));
   if (s && s.r === 'admin') return { role: 'owner', id: 'owner', name: 'Owner' };
   if (s && s.r === 'reviewer') return { role: 'reviewer', id: s.i, name: s.name };
+  if (s && s.r === 'chief') return { role: 'chief', id: 'chief', name: CHIEF_NAME };
   return null;
 }
 export async function canView(request, env) { return !!(await viewer(request, env)); }
@@ -160,13 +166,14 @@ export async function route(request, env, url) {
 
   if (action === 'me' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return json({ role: s ? (s.r === 'admin' ? 'owner' : s.r === 'reviewer' ? 'reviewer' : s.r === 'staff' ? 'staff' : 'guest') : (cfg.open ? 'visitor' : null),
-      name: s && (s.r === 'reviewer' || s.r === 'staff') ? s.name : undefined, theme: themeFor(request) });
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : s.r === 'reviewer' ? 'reviewer' : s.r === 'staff' ? 'staff' : s.r === 'chief' ? 'chief' : 'guest') : (cfg.open ? 'visitor' : null),
+      name: s && (s.r === 'reviewer' || s.r === 'staff') ? s.name : s && s.r === 'chief' ? CHIEF_NAME : undefined, theme: themeFor(request) });
   }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
     if (s && s.r === 'reviewer') return json({ reviewer: true, name: s.name, theme: themeFor(request) });
     if (s && s.r === 'staff') return json({ staff: true, name: s.name, reg: s.reg });
+    if (s && s.r === 'chief') return json({ chief: true, name: CHIEF_NAME, theme: themeFor(request) });
     return s && s.r === 'admin' ? json({ ...publicState(cfg, env), theme: themeFor(request) }) : json({ error: 'forbidden' }, 403);
   }
   if (request.method !== 'POST') return json({ error: 'method' }, 405);
@@ -201,6 +208,18 @@ export async function route(request, env, url) {
     return json({ ok: true }, 200, { 'Set-Cookie': await makeCookie(env, 'guest', cfg.gen, guestMinutes(env)) });
   }
 
+  if (action === 'chief') {                      // the DCF signs in with the PIN the owner set for him
+    const wait = lockedFor(cfg, 'chief', now);
+    if (wait) return json({ error: 'locked', minutes: wait }, 429);
+    const pin = String(body.pin || '').trim();
+    if (!cfg.chief || !pin || !same(await hmac(secretOf(env, 'SESSION_SECRET'), 'chief:' + pin), cfg.chief.pin)) {
+      noteFail(cfg, 'chief', now); await saveCfg(env, cfg);
+      return json({ error: cfg.chief ? 'invalid' : 'not-set' }, 401);
+    }
+    if (cfg.fails.chief) { delete cfg.fails.chief; await saveCfg(env, cfg); }
+    return json({ ok: true, chief: true }, 200, { 'Set-Cookie': await makeCookie(env, 'chief', cfg.gen, CHIEF_DAYS * 1440, null, { k: cfg.chief.k }) });
+  }
+
   if (action === 'admin') {
     const wait = lockedFor(cfg, 'pin', now);
     if (wait) return json({ error: 'locked', minutes: wait }, 429);
@@ -213,7 +232,7 @@ export async function route(request, env, url) {
   }
 
   const s = await readSession(request, env, cfg);
-  if (action === 'theme' && s && s.r === 'reviewer') {
+  if (action === 'theme' && s && (s.r === 'reviewer' || s.r === 'chief')) {
     const theme = body.theme === 'new' ? 'new' : 'classic';
     return json({ ok: true, reviewer: true, name: s.name, theme }, 200, { 'Set-Cookie': themeCookie(theme) });
   }
@@ -238,6 +257,15 @@ export async function route(request, env, url) {
     await saveCfg(env, cfg);
     return json({ ok: true, code, ...publicState(cfg, env) });
   }
+  if (action === 'chief-pin') {                  // owner sets or changes the DCF's PIN (stored only as a keyed hash)
+    const pin = String(body.pin || '').trim();
+    if (!/^\d{4,12}$/.test(pin)) return json({ error: 'pin' }, 400);
+    if (same(pin, secretOf(env, 'ADMIN_PIN'))) return json({ error: 'same-as-owner' }, 400);
+    cfg.chief = { pin: await hmac(secretOf(env, 'SESSION_SECRET'), 'chief:' + pin), k: b64u(crypto.getRandomValues(new Uint8Array(6))), setAt: new Date(now).toISOString() };
+    await saveCfg(env, cfg);
+    return json({ ok: true, ...publicState(cfg, env) });
+  }
+  if (action === 'chief-off') { cfg.chief = null; await saveCfg(env, cfg); return json({ ok: true, ...publicState(cfg, env) }); }
   if (action === 'staff-pass') {
     const name = String(body.name || '').replace(/[<>]/g, '').trim().slice(0, 60), reg = String(body.reg || '').trim().slice(0, 20);
     if (!name || !reg) return json({ error: 'name' }, 400);

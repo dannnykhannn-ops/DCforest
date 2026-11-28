@@ -80,7 +80,7 @@
   };
   var main = document.querySelector('main.wrap'); if(!main) return;
   var bar = document.createElement('div'); bar.className = 'ow-bar'; bar.setAttribute('aria-label', 'Owner tools');
-  bar.innerHTML = '<span class="ow-k">Owner</span>'+
+  bar.innerHTML = '<span class="ow-k" id="owK">Developer</span>'+
     '<a class="ow-b" href="today" style="background:linear-gradient(180deg,#5fd38f,#2f9a5a);border-color:#5fd38f;color:#06200d">'+I.act+'Today</a>'+
     '<a class="ow-b" href="control">'+I.map+'Control Room</a>'+
     '<button class="ow-b" type="button" data-p="owAlerts" aria-pressed="false">'+I.bell+'Alerts <span class="ow-n" id="owN" hidden></span></button>'+
@@ -235,6 +235,10 @@
     document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
   };
 
+  fetch('api/gate/me', {credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(m){
+    if(m.role === 'chief'){ $('owK').textContent = '\u265B Command Chief'; var inf = bar.querySelector('a[href="gate"]'); if(inf){ inf.href = 'chief'; inf.innerHTML = 'Command Centre'; inf.style.fontSize = ''; } }
+    else if(m.role === 'reviewer') $('owK').textContent = 'Reviewer';
+  }).catch(function(){});
   loadAll().then(function(){   // opened as /#alerts, /#activity or /#reports: show that panel
     var want = {'#alerts':'owAlerts', '#activity':'owActivity', '#reports':'owReports'}[location.hash];
     if(want){ var b = bar.querySelector('[data-p="'+want+'"]'); if(b) b.click(); }

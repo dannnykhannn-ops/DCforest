@@ -237,3 +237,25 @@ test('Today, person page, staff list and shared script are owner/reviewer-only',
   assert.match(await (await call(env, '/', { cookie: owner })).text(), /introSeen/, 'the owner skips the intro');
   assert.doesNotMatch(await (await call(env, '/')).text(), /introSeen/, 'visitors keep the intro');
 });
+
+test('crown (DCF): PIN set by the owner, sees everything, changes nothing; a new PIN signs old devices out', async () => {
+  const env = newEnv(false);
+  assert.equal((await call(env, '/api/gate/chief', { method: 'POST', body: { pin: '9999' } })).status, 401, 'no PIN set yet');
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  assert.equal((await call(env, '/api/gate/chief-pin', { method: 'POST', cookie: owner, body: { pin: '12' } })).status, 400);
+  assert.equal((await call(env, '/api/gate/chief-pin', { method: 'POST', cookie: owner, body: { pin: '4321' } })).status, 400, 'not the same as the owner PIN');
+  const st = await (await call(env, '/api/gate/chief-pin', { method: 'POST', cookie: owner, body: { pin: '2468' } })).json();
+  assert.equal(st.chiefPinSet, true);
+  assert.equal((await call(env, '/api/gate/chief', { method: 'POST', body: { pin: '1111' } })).status, 401);
+  const r = await call(env, '/api/gate/chief', { method: 'POST', body: { pin: '2468' } });
+  assert.equal(r.status, 200); const chief = (r.headers.get('Set-Cookie') || '').split(';')[0];
+  assert.match(r.headers.get('Set-Cookie'), /Max-Age=2592000/);
+  const me = await (await call(env, '/api/gate/me', { cookie: chief })).json();
+  assert.equal(me.role, 'chief'); assert.equal(me.name, 'Majid Shamrez');
+  for (const p of ['/chief', '/today', '/control', '/api/fleet.json', '/staff/photos.json']) assert.equal((await call(env, p, { cookie: chief })).status, 200, p);
+  for (const a of ['pass', 'open', 'signout', 'reviewer-pass', 'chief-pin', 'staff-pass']) assert.equal((await call(env, '/api/gate/' + a, { method: 'POST', cookie: chief, body: { pin: '5555', name: 'x', reg: 'y' } })).status, 403, a);
+  assert.equal((await call(env, '/api/field/places', { method: 'POST', cookie: chief, body: { places: [] } })).status, 403);
+  assert.equal((await call(env, '/chief')).status, 401, 'visitors cannot open it');
+  await call(env, '/api/gate/chief-pin', { method: 'POST', cookie: owner, body: { pin: '1357' } });
+  assert.equal((await call(env, '/api/fleet.json', { cookie: chief })).status, 403, 'old device signed out by the new PIN');
+});

@@ -234,7 +234,7 @@ async function serveStaff(env, url) {
   return new Response(JSON.stringify({ org: d.org, date: d.date, sections: d.sections, fleet: d.fleet || [] }), { headers: noStore });
 }
 
-const OWNER_PAGES = /^\/(control|dashboard|today|person|places|stops)(\.html)?\/?$/;
+const OWNER_PAGES = /^\/(control|dashboard|today|person|places|stops|chief)(\.html)?\/?$/;
 const OWNER_APIS = /^\/api\/field\/|^\/api\/(fleet|trail|activity|report|place|notes|staff)\.json$|^\/(owner-tools|notes|owner-lib)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });

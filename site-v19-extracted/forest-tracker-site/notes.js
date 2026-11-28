@@ -236,7 +236,7 @@
   }
 
   /* ---------- data ---------- */
-  function apply(j){ if(j && j.notes){ me = j.me; notes = j.notes; draw(); placePins(); } return j; }
+  function apply(j){ if(j && j.notes){ me = j.me; if(me && me.role === 'chief'){ dock.remove(); pinLayer.remove(); return j; } notes = j.notes; draw(); placePins(); } return j; }
   function load(){ return fetch('api/notes.json', {cache:'no-store', credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(apply).catch(function(){}); }
   function send(body){
     return fetch('api/notes.json', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(body)})

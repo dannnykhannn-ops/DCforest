@@ -42,6 +42,10 @@ button{font:inherit;cursor:pointer}
 .go.cr small{display:block;font-weight:600;font-size:.78rem;color:#d5ecd9;margin-top:3px}
 .msg{min-height:1.3em;margin:10px 0 0;font-size:.86rem;font-weight:600;color:#fca5a5}
 .msg.ok{color:#86efac}
+.crown{position:fixed;top:14px;right:70px;width:46px;height:46px;border-radius:13px;border:1px solid #f5d77a;cursor:pointer;display:grid;place-items:center;
+  background:linear-gradient(145deg,#f9e08f,#c8962c);box-shadow:0 6px 18px rgba(200,150,44,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+.crown svg{width:24px;height:24px;fill:#4a2e00;stroke:#4a2e00;stroke-width:1.2;stroke-linejoin:round}
+.crownv h1{background:linear-gradient(90deg,#fde68a,#f5b942,#fde68a);-webkit-background-clip:text;background-clip:text;color:transparent}
 .inf{position:fixed;top:14px;right:14px;width:46px;height:46px;border-radius:13px;border:1px solid rgba(252,222,132,.35);background:rgba(12,38,22,.8);color:#fcde84;
   font-size:1.7rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0 0 3px}
 .inf:hover,.inf[aria-expanded=true]{background:rgba(252,222,132,.16)}
@@ -71,7 +75,8 @@ a.mini{text-decoration:none;display:inline-block}
 </style>
 </head>
 <body>
-<button class="inf" id="inf" type="button" aria-label="Owner access" aria-expanded="false" title="Owner access">&infin;</button>
+<button class="crown" id="crown" type="button" aria-label="DCF Command Centre" title="DCF Command Centre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.6-9.2-4.6 3.9L12 5.5l-2.8 7.2-4.6-3.9z"/><path d="M4 20.5h16"/></svg></button>
+<button class="inf" id="inf" type="button" aria-label="Developer mode" aria-expanded="false" title="Developer mode">&infin;</button>
 
 <main class="card">
   <img class="logo" src="/assets/icons/icon-192.png?v=3" alt="" width="68" height="68">
@@ -89,9 +94,20 @@ a.mini{text-decoration:none;display:inline-block}
     <p class="small">A pass works once and gives 30 minutes of access.</p>
   </section>
 
+  <section id="vChief" class="crownv" hidden>
+    <h1>DCF Command Centre</h1>
+    <div class="org">For Majid Shamrez, Deputy Conservator of Forest</div>
+    <form id="fChief" autocomplete="off">
+      <label for="cpin">Your PIN</label>
+      <input id="cpin" name="cpin" type="password" inputmode="numeric" maxlength="12" placeholder="••••" required>
+      <button class="go" type="submit" style="background:linear-gradient(135deg,#fde68a,#c8962c);color:#3a2400">Enter</button>
+    </form>
+    <p class="msg" id="mChief" role="alert"></p>
+  </section>
+
   <section id="vPin" hidden>
-    <h1>Owner access</h1>
-    <div class="org">Enter your PIN to manage passes</div>
+    <h1>Developer mode</h1>
+    <div class="org">Enter your developer PIN</div>
     <form id="fPin" autocomplete="off">
       <label for="pin">PIN</label>
       <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="12" placeholder="••••" required>
@@ -112,6 +128,7 @@ a.mini{text-decoration:none;display:inline-block}
   </section>
 
   <section id="vAdmin" class="panel" hidden>
+    <h2 style="margin-bottom:10px">Developer mode</h2>
     <a class="go cr" href="today" style="background:linear-gradient(135deg,#1f6b45,#2f9a6a)">Open Today<small>What needs you, who is out, search anyone</small></a>
     <a class="go cr" href="./" style="background:rgba(0,0,0,.25)">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
     <a class="go cr" href="places" style="background:rgba(0,0,0,.25)">Places &amp; staff phones<small>Nurseries, who goes where, staff alert passes, rules</small></a>
@@ -128,6 +145,11 @@ a.mini{text-decoration:none;display:inline-block}
     <ul id="lUnused"></ul>
     <h3>Already used</h3>
     <ul id="lUsed"></ul>
+
+    <h2 style="margin-top:22px">&#9819; Majid Shamrez (crown)</h2>
+    <p class="sub">His own entry, one level below you: the crown button opens the DCF Command Centre. He sees everything but cannot change settings. Setting a new PIN signs his old devices out.</p>
+    <form id="fCpin" class="revf" autocomplete="off"><input id="cpinNew" type="password" inputmode="numeric" maxlength="12" placeholder="New PIN for Majid (4–12 digits)"><button class="mini" type="submit">Set his PIN</button></form>
+    <div class="row"><div><b id="cpinLbl"></b><small id="cpinSub"></small></div><button class="mini danger" id="bCoff" type="button">Remove his access</button></div>
 
     <h2 style="margin-top:22px">Reviewers</h2>
     <p class="sub">A reviewer sees everything you see (Control Room, stops, alerts, reports, photos, the new design) and can leave notes, but cannot change any settings. Their pass works once, then that device stays in for 30 days until you cancel it.</p>
@@ -148,7 +170,7 @@ a.mini{text-decoration:none;display:inline-block}
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var views = ['vEnter','vPin','vAdmin','vReviewer'];
+  var views = ['vEnter','vPin','vAdmin','vReviewer','vChief'];
   function show(v){ views.forEach(function(x){ $(x).hidden = x !== v; }); $('inf').setAttribute('aria-expanded', v !== 'vEnter'); }
   function post(path, body){
     return fetch('/api/gate/' + path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}), credentials:'same-origin'})
@@ -203,6 +225,9 @@ a.mini{text-decoration:none;display:inline-block}
     }).join('') : '<li><span>None yet.</span></li>';
     document.querySelectorAll('[data-theme]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme') === (s.theme || 'classic')); });
     $('themeSub').textContent = (s.theme === 'new' ? 'New design on this device.' : 'Classic design on this device.') + ' Visitors always see the classic site.';
+    $('cpinLbl').textContent = s.chiefPinSet ? 'Crown access is on' : 'No PIN set yet';
+    $('cpinSub').textContent = s.chiefPinSet ? 'Give Majid his PIN; he taps the crown and enters it.' : 'Set a PIN to give him access.';
+    $('bCoff').hidden = !s.chiefPinSet;
     var rv = s.reviewers || [];
     $('lRev').innerHTML = rv.length ? rv.map(function(r){
       return '<li><div><b>' + esc(r.name) + '</b>' + (r.usedAt ? '<small>Signed in ' + esc(when(r.usedAt)) + '</small>' : '<small>Pass <code style="font-size:.85rem">' + esc(fmtCode(r.code)) + '</code> not used yet</small>') + '</div>' +
@@ -246,6 +271,24 @@ a.mini{text-decoration:none;display:inline-block}
     act('theme', {theme: th});
   };
 
+  $('fCpin').addEventListener('submit', function(e){
+    e.preventDefault(); var pin = $('cpinNew').value.trim();
+    if(!/^[0-9]{4,12}$/.test(pin)){ $('mAdmin').textContent = 'His PIN must be 4 to 12 digits.'; return; }
+    act('chief-pin', {pin: pin}, function(){ $('cpinNew').value = ''; $('mAdmin').className = 'msg ok'; $('mAdmin').textContent = 'PIN set for Majid Shamrez.'; });
+  });
+  $('bCoff').onclick = function(){ if(confirm('Remove Majid\u2019s crown access?')) act('chief-off', {}); };
+  /* crown: the DCF's own entry */
+  $('crown').addEventListener('click', function(){ show($('vChief').hidden ? 'vChief' : 'vEnter'); if(!$('vChief').hidden) $('cpin').focus(); });
+  $('fChief').addEventListener('submit', function(e){
+    e.preventDefault(); var b = this.querySelector('button'); b.disabled = true; $('mChief').textContent = '';
+    post('chief', {pin: $('cpin').value}).then(function(j){
+      b.disabled = false; $('cpin').value = '';
+      if(j.ok){ $('mChief').className = 'msg ok'; $('mChief').textContent = 'Welcome, sir.'; location.replace('/chief'); return; }
+      $('mChief').textContent = j.error === 'not-set' ? 'Access has not been set up yet.' : fail(j, 'That PIN is not right.');
+    }).catch(function(){ b.disabled = false; $('mChief').textContent = 'No connection. Please try again.'; });
+  });
+  if(location.hash === '#crown') show('vChief');
+
   $('fRev').addEventListener('submit', function(e){
     e.preventDefault(); var name = $('revName').value.trim(); if(!name) return;
     act('reviewer-pass', {name: name}, function(j){ $('revCode').textContent = fmtCode(j.code); $('revWho').textContent = name; $('revBox').hidden = false; $('revName').value = ''; });
@@ -271,6 +314,7 @@ a.mini{text-decoration:none;display:inline-block}
   fetch('/api/gate/state', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
     if(s && s.passes){ isAdmin = true; draw(s); if(location.pathname === '/gate') show('vAdmin'); }
     else if(s && s.staff){ location.replace('/staff'); }
+    else if(s && s.chief){ if(location.pathname === '/gate') location.replace('/chief'); }
     else if(s && s.reviewer){ isReviewer = true; drawReviewer(s); if(location.pathname === '/gate') show('vReviewer'); }
   }).catch(function(){});
 })();
