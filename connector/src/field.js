@@ -13,6 +13,7 @@
    so nothing personal travels through the push services. */
 
 import { metres, pkDate } from './transform.js';
+import SEED from './field-seed.js';   // starting places and assignments (from the rangers' GPS photos)
 
 const PK = 5 * 3600000;
 export const DEFAULTS = { stopMin: 15, answerMin: 10, buzzMin: 2, dutyDays: [1, 2, 3, 4, 5, 6], dutyStart: '08:00', dutyEnd: '16:00', radius: 150 };
@@ -22,7 +23,8 @@ const j = (env, k) => env.LIVE.get(k, 'json');
 const put = (env, k, v) => env.LIVE.put(k, JSON.stringify(v));
 export async function loadField(env) {
   const [places, assign, cfg] = await Promise.all([j(env, 'field:places'), j(env, 'field:assign'), j(env, 'field:cfg')]);
-  return { places: places || [], assign: assign || {}, cfg: { ...DEFAULTS, ...(cfg || {}) } };
+  // until the owner saves their own, the starting list is used (watching is off for everyone)
+  return { places: places || SEED.places || [], assign: assign || SEED.assign || {}, cfg: { ...DEFAULTS, ...(cfg || {}) } };
 }
 const hhmm = (s) => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 function pkClock(ms) { const d = new Date(ms + PK); return { day: d.getUTCDay(), min: d.getUTCHours() * 60 + d.getUTCMinutes() }; }
@@ -164,7 +166,8 @@ export async function ownerApi(request, env, url, who) {
   if (p === 'places') {
     if (!Array.isArray(b.places)) return bad('places');
     const places = b.places.slice(0, 300).map((x) => ({ id: String(x.id || crypto.randomUUID()).slice(0, 40), name: String(x.name || 'Place').slice(0, 80),
-      lat: +x.lat, lon: +x.lon, radius: Math.max(30, Math.min(2000, Math.round(+x.radius || DEFAULTS.radius))), kind: String(x.kind || 'nursery').slice(0, 20) }))
+      lat: +x.lat, lon: +x.lon, radius: Math.max(30, Math.min(2000, Math.round(+x.radius || DEFAULTS.radius))), kind: String(x.kind || 'nursery').slice(0, 20),
+      photo: /^staff\/places\/[\w-]+\.webp$/.test(x.photo || '') ? x.photo : undefined }))
       .filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lon));
     await put(env, 'field:places', places); return ok({ places });
   }

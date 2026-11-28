@@ -1,6 +1,6 @@
 /* Offline support. The page itself is always fetched fresh when online,
    so each day's new data shows up straight away. Bump VERSION after changing assets. */
-var VERSION = 'tracker-v46';
+var VERSION = 'tracker-v47';
 var SHELL = ['./', 'index.html', 'manifest.webmanifest', 'assets/hero-banner.webp', 'assets/hero-banner-sm.webp',
   'assets/majid-dcf-2026.webp', 'assets/dcf-face.webp', 'assets/splash/splash-poster.jpg', 'assets/admin.webp', 'assets/forest-bg.webp', 'assets/tree-1.webp', 'assets/tree-2.webp', 'assets/tree-3.webp', 'assets/icons/icon-192.png?v=3', 'assets/icons/icon-512.png?v=3'];
 

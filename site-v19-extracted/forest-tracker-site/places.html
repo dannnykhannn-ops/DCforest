@@ -157,7 +157,7 @@ td small{color:var(--muted)}
     });
     $('pCount').textContent = '(' + places.length + ')';
     $('plist').innerHTML = places.length ? places.map(function(p){ var n = Object.keys(assign).filter(function(r){ return (assign[r].places || []).indexOf(p.id) > -1; }).length;
-      return '<div class="pl" data-id="'+esc(p.id)+'" aria-current="'+(editing && editing.id === p.id)+'"><span class="kind" style="background:'+(KC[p.kind]||'#16a34a')+'22;color:'+(KC[p.kind]||'#16a34a')+'">'+esc(p.kind)+'</span><b>'+esc(p.name)+'</b><small>'+p.radius+' m · '+n+' people</small></div>'; }).join('')
+      return '<div class="pl" data-id="'+esc(p.id)+'" aria-current="'+(editing && editing.id === p.id)+'">'+(p.photo ? '<img src="'+esc(p.photo)+'" alt="" style="width:46px;height:46px;border-radius:10px;object-fit:cover;flex:none">' : '')+'<span class="kind" style="background:'+(KC[p.kind]||'#16a34a')+'22;color:'+(KC[p.kind]||'#16a34a')+'">'+esc(p.kind)+'</span><b>'+esc(p.name)+'</b><small>'+p.radius+' m · '+n+' people</small></div>'; }).join('')
       : '<p class="hint">No places yet. Tap "+ Tap the map" and tap your first nursery.</p>';
   }
   $('plist').onclick = function(e){ var it = e.target.closest('[data-id]'); if(!it) return; var p = places.find(function(x){ return x.id === it.getAttribute('data-id'); }); if(p){ edit(p); map.flyTo([p.lat, p.lon], 16); } };
