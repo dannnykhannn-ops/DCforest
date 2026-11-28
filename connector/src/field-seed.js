@@ -8,8 +8,7 @@ export default {
    "lat": 31.5600162,
    "lon": 73.6880182,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/chandar-kot.webp"
+   "kind": "nursery"
   },
   {
    "id": "armory-ravi-road",
@@ -17,8 +16,7 @@ export default {
    "lat": 31.605998,
    "lon": 74.303219,
    "radius": 200,
-   "kind": "office",
-   "photo": "staff/places/armory-ravi-road.webp"
+   "kind": "office"
   },
   {
    "id": "lohianwala",
@@ -26,8 +24,7 @@ export default {
    "lat": 32.215698,
    "lon": 74.172236,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/lohianwala.webp"
+   "kind": "nursery"
   },
   {
    "id": "kasur",
@@ -35,8 +32,7 @@ export default {
    "lat": 31.13687,
    "lon": 74.434649,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/kasur.webp"
+   "kind": "nursery"
   },
   {
    "id": "jagowala-pattoki",
@@ -44,8 +40,7 @@ export default {
    "lat": 31.061513,
    "lon": 73.839079,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/jagowala-pattoki.webp"
+   "kind": "nursery"
   },
   {
    "id": "jamia-abad",
@@ -53,8 +48,7 @@ export default {
    "lat": 31.601688,
    "lon": 72.721723,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/jamia-abad.webp"
+   "kind": "nursery"
   },
   {
    "id": "thq-kharian",
@@ -62,8 +56,7 @@ export default {
    "lat": 32.819091,
    "lon": 73.8565,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/thq-kharian.webp"
+   "kind": "nursery"
   },
   {
    "id": "motra-pull-daska",
@@ -71,8 +64,7 @@ export default {
    "lat": 32.37263,
    "lon": 74.413199,
    "radius": 200,
-   "kind": "nursery",
-   "photo": "staff/places/motra-pull-daska.webp"
+   "kind": "nursery"
   }
  ],
  "assign": {
