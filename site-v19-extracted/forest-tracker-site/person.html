@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Person — DC Forest</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f6b45">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--ink:#14201a;--muted:#5c6b62;--line:#e1e8e2;--brand:#1f6b45;--brand2:#2f9a6a;--soft:#e6f3ea;
+  --moving:#16a34a;--idle:#d97706;--stop:#64748b;--off:#9ca3af;--bad:#dc2626;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--brand2);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 0 max(16px,env(safe-area-inset-right))}
+.hero{background:linear-gradient(135deg,#17573a,#2f9a6a);color:#fff;padding-top:env(safe-area-inset-top)}
+.hbar{display:flex;align-items:center;gap:10px;padding:12px 0 0}
+.back{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.16);text-decoration:none}
+.back svg{width:20px;height:20px}
+.hbar .spacer{flex:1}
+.hbar a.pill{padding:9px 14px;border-radius:99px;background:rgba(255,255,255,.16);font-weight:800;font-size:.86rem;text-decoration:none}
+.id{display:flex;gap:16px;align-items:center;padding:18px 0 22px}
+.id .dcf-av{border:3px solid rgba(255,255,255,.85);background:#e9f5ee}
+.id h1{margin:0;font-size:1.65rem;line-height:1.1;font-weight:900;letter-spacing:-.01em}
+.id .post{opacity:.92;font-weight:600;margin-top:3px}
+.id .now{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:6px 12px;border-radius:99px;background:#fff;color:var(--ink);font-weight:800;font-size:.86rem}
+.id .now i{width:9px;height:9px;border-radius:50%;background:var(--k)}
+.acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:-14px;position:relative}
+.act{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:.84rem;text-decoration:none;box-shadow:0 6px 16px rgba(20,32,26,.08)}
+.act svg{width:22px;height:22px;color:var(--brand)}
+.act.pri{background:var(--brand);color:#fff;border-color:var(--brand)}.act.pri svg{color:#fff}
+.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;margin-top:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0}
+h2{margin:0 0 12px;font-size:1.02rem;font-weight:800;display:flex;align-items:center;gap:8px}
+.daynav{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.86rem;font-weight:700}
+.daynav button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);font:inherit;font-weight:900;cursor:pointer}
+.daynav button:disabled{opacity:.35;cursor:default}
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.sum div{background:var(--bg);border-radius:12px;padding:9px 10px}
+.sum b{display:block;font-size:1.2rem;font-weight:900}
+.sum span{font-size:.78rem;color:var(--muted);font-weight:600}
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:15px;top:16px;bottom:16px;width:2px;background:var(--line)}
+.tl li{position:relative;display:grid;grid-template-columns:32px 1fr;gap:12px;padding:8px 0}
+.mk{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:.82rem;color:#fff;background:var(--k);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.tl b{display:block;font-size:.98rem}
+.tl small{display:block;color:var(--muted);font-size:.86rem}
+.tl em{display:block;font-style:normal;font-size:.9rem;margin-top:2px}
+.tl a{color:var(--brand);font-weight:800;font-size:.84rem;text-decoration:none}
+.empty{padding:16px;color:var(--muted);text-align:center;background:var(--bg);border-radius:12px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:120px;margin-top:4px}
+.week div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.week i{width:100%;border-radius:8px 8px 3px 3px;background:#a7d9bd;min-height:3px}
+.week .today i{background:var(--brand)}
+.week span{font-size:.72rem;color:var(--muted);font-weight:700}
+.week b{font-size:.74rem}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:.92rem}
+.kv dt{color:var(--muted);font-weight:600}.kv dd{margin:0;font-weight:700;min-width:0;overflow-wrap:anywhere}
+@media (max-width:820px){ .grid{grid-template-columns:1fr} }
+@media (max-width:480px){ .acts{grid-template-columns:repeat(2,minmax(0,1fr))} .sum{grid-template-columns:repeat(2,minmax(0,1fr))} .id h1{font-size:1.4rem} }
+</style>
+</head>
+<body>
+<div class="hero"><div class="wrap">
+  <div class="hbar"><a class="back" href="today" aria-label="Back to Today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+    <span class="spacer"></span><span id="nt-slot"></span><a class="pill" href="control" id="mapLink" hidden>Map</a></div>
+  <div class="id" id="id"><span class="dcf-av" style="width:84px;height:84px"></span><div><h1>Loading…</h1></div></div>
+</div></div>
+
+<main class="wrap">
+  <div class="acts" id="acts"></div>
+  <div class="grid">
+    <section class="card" aria-label="Day">
+      <h2><span id="dayTitle">Today</span><span class="daynav"><button type="button" id="prev" aria-label="Previous day">‹</button><span id="dayLbl"></span><button type="button" id="next" aria-label="Next day">›</button></span></h2>
+      <div class="sum" id="sum"></div>
+      <ol class="tl" id="tl"></ol>
+    </section>
+    <div style="display:grid;gap:18px;align-content:start">
+      <section class="card" aria-label="Last 7 days"><h2>Last 7 days · km</h2><div class="week" id="week"></div></section>
+      <section class="card" aria-label="Details"><h2>Details</h2><dl class="kv" id="kv"></dl></section>
+    </div>
+  </div>
+</main>
+
+<script src="owner-lib.js"></script>
+<script>
+(function(){
+  'use strict';
+  var D = window.DCF, $ = function(id){ return document.getElementById(id); }, esc = D.esc;
+  var Q = new URLSearchParams(location.search), reg = Q.get('reg') || '', today = D.pkDay();
+  var day = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('date') || '') && Q.get('date') <= today ? Q.get('date') : today;
+  var v = null;
+  var ICON = {
+    call:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
+    wa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z"/></svg>',
+    map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"/></svg>'
+  };
+
+  function head(){
+    var p = D.person(reg), st = v ? (D.STATES[v.state] || D.STATES.none) : null;
+    document.title = p.name + ' — DC Forest';
+    $('id').innerHTML = D.avatar(p, 84)+'<div><h1>'+esc(p.name)+'</h1><div class="post">'+esc([p.post, p.sec].filter(Boolean).join(' · '))+'</div>'+
+      (st ? '<span class="now" style="--k:'+st.c+'"><i></i>'+st.lb+(v.state === 'moving' && v.speed != null ? ' · '+Math.round(v.speed)+' km/h' : '')+' · '+esc(D.ago(v.reportedAt) || '')+'</span>' : '')+'</div>';
+    var t = D.tel(p.contact), w = D.wa(p.contact);
+    $('acts').innerHTML = (t ? '<a class="act pri" href="tel:'+esc(t)+'">'+ICON.call+'Call</a>' : '<span class="act" style="opacity:.5">'+ICON.call+'No phone</span>')+
+      (w ? '<a class="act" href="https://wa.me/'+w+'" target="_blank" rel="noopener">'+ICON.wa+'WhatsApp</a>' : '<span class="act" style="opacity:.5">'+ICON.wa+'WhatsApp</span>')+
+      '<a class="act" href="control?reg='+encodeURIComponent(reg)+(day !== today ? '&date='+day : '')+'">'+ICON.map+'On the map</a>'+
+      (v && v.lat != null ? '<a class="act" href="https://www.google.com/maps/dir/?api=1&destination='+v.lat+','+v.lon+'" target="_blank" rel="noopener">'+ICON.dir+'Directions</a>' : '<span class="act" style="opacity:.5">'+ICON.dir+'No location</span>');
+    $('mapLink').href = 'control?reg=' + encodeURIComponent(reg);
+    var r = p.r || {};
+    $('kv').innerHTML = '<dt>Bike</dt><dd>'+esc(reg)+(r.vehicleType ? ' · '+esc(r.vehicleType)+(r.model ? ' '+esc(r.model) : '') : '')+'</dd>'+
+      (r.status ? '<dt>Duty today</dt><dd>'+esc(D.DUTY[r.status] || r.status)+'</dd>' : '')+
+      (r.unit || r.area ? '<dt>Posted at</dt><dd>'+esc([r.unit, r.area].filter(Boolean).join(', '))+'</dd>' : '')+
+      (p.contact ? '<dt>Phone</dt><dd>'+esc(p.contact)+'</dd>' : '')+
+      (v && v.signal ? '<dt>Signal</dt><dd>'+esc({strong:'Strong', low:'Low', weak:'Weak', none:'—'}[v.signal] || v.signal)+'</dd>' : '')+
+      (r.remarks ? '<dt>Remarks</dt><dd>'+esc(r.remarks)+'</dd>' : '');
+  }
+
+  function drawDay(trail, act){
+    $('dayTitle').textContent = day === today ? 'Today' : 'Day';
+    $('dayLbl').textContent = new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+    $('next').disabled = day >= today; $('prev').disabled = day <= D.addDays(today, -30);
+    var pts = trail && trail.vehicles ? (trail.vehicles[reg] || []) : [], s = act && act.vehicles ? act.vehicles[reg] : null;
+    $('sum').innerHTML = '<div><b>'+(s ? s.km.toFixed(1) : '—')+'</b><span>km</span></div><div><b>'+(s && s.firstMove != null ? D.pkt(s.firstMove) : '—')+'</b><span>started moving</span></div>'+
+      '<div><b>'+(s ? D.hm(s.movingMin) : '—')+'</b><span>moving</span></div><div><b>'+(s ? s.stops.length : '—')+'</b><span>stops</span></div>';
+    if(!pts.length){ $('tl').innerHTML = '<li style="display:block"><div class="empty">No reports from this bike '+(day === today ? 'yet today' : 'on this day')+'.</div></li>'; return; }
+    var first = pts[0], last = pts[pts.length - 1], stops = (s && s.stops) || [], items = [], n = 0;
+    if(!stops.length || stops[0].from > first[0]) items.push({k:'S', c:'var(--moving)', t:'Started', w:D.pkt(first[0]) + (s && s.firstMove != null && s.firstMove > first[0] + 300 ? ' · moving from ' + D.pkt(s.firstMove) : ''), lat:first[1], lon:first[2]});
+    stops.forEach(function(x){
+      var atStart = x.from <= first[0], atEnd = x.to >= last[0];
+      items.push({k: atStart ? 'S' : String(++n), c: atStart ? 'var(--moving)' : 'var(--idle)', t: atStart ? 'Started here' : 'Stop ' + n,
+        w: (atStart ? 'Until ' + D.pkt(x.to) : D.pkt(x.from) + ' – ' + (atEnd && day === today ? 'still here' : D.pkt(x.to))) + ' · ' + D.hm(x.min), lat:x.lat, lon:x.lon, at:x.from});
+    });
+    var ls = stops[stops.length - 1];
+    if(!ls || ls.to < last[0]) items.push({k:'●', c:'var(--bad)', t: day === today ? 'Last position' : 'Day ended here', w:'Last report ' + D.pkt(last[0]), lat:last[1], lon:last[2]});
+    $('tl').innerHTML = items.map(function(it){
+      return '<li><span class="mk" style="--k:'+it.c+'">'+esc(it.k)+'</span><span><b>'+esc(it.t)+'</b><small>'+esc(it.w)+'</small><em data-place="'+it.lat+','+it.lon+'">…</em>'+
+        '<a href="control?reg='+encodeURIComponent(reg)+'&date='+day+(it.at ? '&at='+it.at : '')+'">Show on map</a></span></li>';
+    }).join('');
+    D.fillPlaces($('tl'));
+  }
+
+  function drawWeek(rep){
+    var days = []; for(var i = 6; i >= 0; i--) days.push(D.addDays(today, -i));
+    var mine = rep && rep.vehicles ? (rep.vehicles[reg] || {}) : {};
+    var max = Math.max(1, Math.max.apply(null, days.map(function(d){ return mine[d] ? mine[d].km : 0; })));
+    $('week').innerHTML = days.map(function(d){ var km = mine[d] ? mine[d].km : 0;
+      return '<div class="'+(d === today ? 'today' : '')+'"><b>'+(km ? Math.round(km) : '')+'</b><i style="height:'+(km / max * 78)+'%"></i><span>'+new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', {weekday:'short'}).slice(0, 2)+'</span></div>'; }).join('');
+  }
+
+  function loadDay(){
+    return Promise.all([D.get('api/trail.json?date=' + day + '&reg=' + encodeURIComponent(reg)).catch(function(){ return null; }),
+                        D.get('api/activity.json?date=' + day).catch(function(){ return null; })]).then(function(r){ drawDay(r[0], r[1]); });
+  }
+  function go(n){ var d = D.addDays(day, n); if(d > today || d < D.addDays(today, -30)) return; day = d;
+    history.replaceState(null, '', 'person?reg=' + encodeURIComponent(reg) + (day !== today ? '&date=' + day : '')); head(); loadDay(); }
+  $('prev').onclick = function(){ go(-1); }; $('next').onclick = function(){ go(1); };
+
+  D.loadStaff().then(function(){
+    return D.get('api/fleet.json').catch(function(){ return null; });
+  }).then(function(f){
+    v = f && f.vehicles ? f.vehicles.find(function(x){ return x.reg === reg; }) || null : null;
+    head(); loadDay();
+    D.get('api/report.json?from=' + D.addDays(today, -6) + '&to=' + today).then(drawWeek).catch(function(){ drawWeek(null); });
+  });
+})();
+</script>
+</body>
+</html>

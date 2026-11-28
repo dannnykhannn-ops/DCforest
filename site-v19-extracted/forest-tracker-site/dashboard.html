@@ -18,14 +18,14 @@
 const dashboardThemes = ['forest', 'aurora', 'daylight'];
 try {
   const savedTheme = localStorage.getItem('dcforest-dashboard-theme');
-  if (dashboardThemes.includes(savedTheme)) document.documentElement.dataset.dashboardTheme = savedTheme;
+  document.documentElement.dataset.dashboardTheme = dashboardThemes.includes(savedTheme) ? savedTheme : 'daylight';   // Daylight is the default look
 } catch {}
 </script>
 <style>
 :root{
   --bg:#06180c; --panel:#0d2a17; --panel2:#123620; --line:#24502f; --text:#eef3e4; --muted:#a9bf9f;
   --gold:#e0bb4b; --gold-light:#fcde84;
-  --moving:#4ade80; --idle:#ff8a3d; --stop:#f05252; --none:#9aa4b2; --weak:#f5c542;
+  --moving:#4ade80; --idle:#ff8a3d; --stop:#64748b; --none:#9aa4b2; --weak:#f5c542;
   --g1:#1f7a3f; --g2:#0f4d26;
   color-scheme:dark;
 }
@@ -486,6 +486,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
       </a>
       <span class="spacer"></span>
       <button class="ibtn" id="refresh" type="button" title="Refresh the numbers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Refresh</span></button>
+      <a class="ibtn owner-only" href="today" title="Today">Today</a>
       <a class="ibtn owner-only bell" href="#alerts" title="Alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="badge" data-alert-count hidden></span></a>
       <a class="ibtn owner-only" href="control" title="Live map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Map</span></a>
       <a class="ibtn" href="gate" title="Owner panel (passes, sign out)" style="font-size:1.3rem">&infin;</a>
@@ -506,7 +507,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
           const themeRoot = document.documentElement;
           const browserThemeColor = document.querySelector('meta[name="theme-color"]');
           const dashboardThemeColors = {forest:'#0b2a16', aurora:'#090d20', daylight:'#f2f5fa'};
-          themePicker.value = themeRoot.dataset.dashboardTheme || 'forest';
+          themePicker.value = themeRoot.dataset.dashboardTheme || 'daylight';
           browserThemeColor.content = dashboardThemeColors[themePicker.value];
           themePicker.addEventListener('change', () => {
             themeRoot.dataset.dashboardTheme = themePicker.value;
@@ -641,7 +642,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
 <script>
 (function(){
   'use strict';
-  var STATES = {moving:{lb:'Moving',c:'#4ade80'}, idle:{lb:'Idle',c:'#ff8a3d'}, stop:{lb:'Stopped',c:'#f05252'}, none:{lb:'Offline',c:'#9aa4b2'}};
+  var STATES = {moving:{lb:'Moving',c:'#4ade80'}, idle:{lb:'Idle',c:'#ff8a3d'}, stop:{lb:'Stopped',c:'#64748b'}, none:{lb:'Offline',c:'#9aa4b2'}};
   var DUTY = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
   var DUTY_C = {active:'#4ade80', field:'#7db9f0', leave:'#f5c542', absent:'#f58c8c', suspended:'#b98cf5', parked:'#f0a35e', inuse:'#f0a35e', vacant:'#9aa4b2'};
   var STALE_MS = 15*60*1000;
@@ -756,7 +757,7 @@ html:not([data-skin="new"]) .dock{background:#071a0d;border-top-color:#e0bb4b}
     if(k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = k === 'time' ? -1 : 1; } drawTable();
   });
   $('fq').addEventListener('input', drawTable);
-  $('rows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(tr && owner) location.href = 'control?reg=' + encodeURIComponent(tr.getAttribute('data-reg')); });
+  $('rows').addEventListener('click', function(e){ var tr = e.target.closest('tr[data-reg]'); if(tr && owner) location.href = 'person?reg=' + encodeURIComponent(tr.getAttribute('data-reg')); });
 
   /* ---------- staffing ---------- */
   function drawStaffing(){

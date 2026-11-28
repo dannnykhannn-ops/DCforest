@@ -153,7 +153,9 @@ async function themed(res, theme) {
 async function classicPage(env, url, owner) {
   const res = await themed(await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' })), 'classic');
   if (!owner || !res.ok) return res;
-  return withScripts(res, ['owner-tools.js', 'notes.js']);
+  // the owner and reviewers skip the intro video and go straight to work
+  const html = (await res.text()).replace(/<head>/i, '<head><script>try{sessionStorage.setItem("introSeen","1")}catch(e){}</script>');
+  return withScripts(new Response(html, { status: res.status, headers: res.headers }), ['owner-tools.js', 'notes.js']);
 }
 async function withScripts(res, srcs) {
   if (!res.ok || !(res.headers.get('Content-Type') || '').includes('text/html')) return res;
@@ -218,8 +220,18 @@ async function servePlace(url) {
   return new Response(body, { headers: noStore });
 }
 
-const OWNER_PAGES = /^\/(control|dashboard)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place|notes)\.json$|^\/(owner-tools|notes)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
+/* Owner-only: the staff list (the DAILY DATA block of the public page) as a small JSON file, so owner
+   screens do not download the whole public page to read it. */
+async function serveStaff(env, url) {
+  const res = await env.ASSETS.fetch(new Request(new URL('/', url), { method: 'GET' }));
+  const m = /<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(await res.text());
+  if (!m) return new Response(JSON.stringify({ error: 'staff list not found' }), { status: 502, headers: noStore });
+  const d = JSON.parse(m[1]);
+  return new Response(JSON.stringify({ org: d.org, date: d.date, sections: d.sections, fleet: d.fleet || [] }), { headers: noStore });
+}
+
+const OWNER_PAGES = /^\/(control|dashboard|today|person)(\.html)?\/?$/;
+const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place|notes|staff)\.json$|^\/(owner-tools|notes|owner-lib)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -280,7 +292,8 @@ export default {
         const h = new Headers(f.headers); h.set('Cache-Control', 'private, no-store'); h.set('X-Robots-Tag', 'noindex');
         return new Response(f.body, { status: f.status, headers: h });
       }
-      if (url.pathname === '/owner-tools.js' || url.pathname === '/notes.js') {
+      if (url.pathname === '/api/staff.json') return serveStaff(env, url);
+      if (url.pathname === '/owner-tools.js' || url.pathname === '/notes.js' || url.pathname === '/owner-lib.js') {
         const js = await env.ASSETS.fetch(new Request(url, { method: 'GET' }));
         return new Response(js.body, { status: js.status, headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' } });
       }

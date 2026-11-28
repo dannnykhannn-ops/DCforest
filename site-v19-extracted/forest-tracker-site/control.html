@@ -238,6 +238,23 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
 .journey .jt em{display:block;font-style:normal;font-size:.82rem;margin-top:1px}
 .journey .leg{grid-column:2;font-size:.74rem;color:var(--muted);font-weight:700;padding:0 0 2px}
 .daypill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;background:#7c3aed;color:#fff;font-weight:800;font-size:.78rem;text-decoration:none}
+
+/* grouped bubbles and photo pins */
+.bub{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#1f6b45;color:#fff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(31,107,69,.25),0 3px 8px rgba(0,0,0,.35);cursor:pointer}
+.bub b{font:900 15px Figtree,sans-serif}
+.bub.has-moving{background:#16a34a;box-shadow:0 0 0 6px rgba(22,163,74,.3),0 3px 8px rgba(0,0,0,.35)}
+.mk.face .dot{width:32px;height:32px;margin:-5px 0 0 -5px;border-width:3px;border-color:var(--k);overflow:hidden;background:#fff}
+.mk.face .dot img{width:100%;height:100%;object-fit:cover;object-position:50% 15%}
+.mk.face .lab{left:32px}
+/* bigger, calmer type on phones */
+@media (max-width:760px){
+  .row .nm{font-size:1rem}.row .mt{font-size:.84rem}.row .rt{font-size:.8rem}.av{width:42px;height:42px}
+  .chip{padding:7px 12px;font-size:.84rem}.search input{font-size:1rem;padding:12px 14px}
+  .card .kv .v{font-size:1.02rem}.card .kv .k{font-size:.72rem}
+  .journey .jt b{font-size:.98rem}.journey .jt small{font-size:.86rem}.journey .jt em{font-size:.9rem}
+  .mk .lab{font-size:12.5px}.mk .lab small{font-size:11.5px}
+}
+.personlink{display:block;margin:12px 16px 0;text-align:center;padding:11px;border-radius:12px;background:var(--gold);color:#1a1400;font-weight:900;text-decoration:none}
 </style>
 </head>
 <body>
@@ -290,13 +307,13 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
   var STATES = {
     moving:{lb:'Moving', k:'var(--moving)', c:'#4ade80'},
     idle:  {lb:'Idle',   k:'var(--idle)',   c:'#ff7a2f'},
-    stop:  {lb:'Stopped',k:'var(--stop)',   c:'#fbbf24'},
-    none:  {lb:'Offline',k:'var(--none)',   c:'#9aa4b2'}
+    stop:  {lb:'Stopped',k:'var(--stop)',   c:'#5b7fb3'},
+    none:  {lb:'Offline',k:'var(--none)',   c:'#b6bdc8'}
   };
   var mapThemes = {
-    forest: {base:'street', colors:['#4ade80','#ff7a2f','#fbbf24','#9aa4b2'], route:'#e0bb4b'},
-    aurora: {base:'dark', colors:['#53efac','#ff9b67','#ffe170','#adb9d3'], route:'#55e7ff'},
-    daylight: {base:'street', colors:['#39be92','#ff9252','#f4c846','#aab5ca'], route:'#075db0'}
+    forest: {base:'street', colors:['#22c55e','#f59e0b','#5b7fb3','#b6bdc8'], route:'#e0bb4b'},
+    aurora: {base:'dark', colors:['#53efac','#ffb15c','#8fb3ff','#8b95a8'], route:'#55e7ff'},
+    daylight: {base:'street', colors:['#16a34a','#d97706','#4f6d9a','#a3aab5'], route:'#075db0'}
   };
   var DUTY = {active:'Active', field:'On field duty', leave:'On leave', absent:'Absent', suspended:'Suspended', parked:'Pool', inuse:'In use', vacant:'Vacant'};
   var BIKE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h5l4.5 7.5M9 9 7.5 6H5"/></svg>';
@@ -347,10 +364,10 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
   var baseChoice = 'match', dashboardTheme = 'forest', activeBase, mapTheme;
   try{
     baseChoice = localStorage.getItem('crBase') || 'match';
-    dashboardTheme = localStorage.getItem('dcforest-dashboard-theme') || 'forest';
+    dashboardTheme = localStorage.getItem('dcforest-dashboard-theme') || 'daylight';
   }catch(e){}
   if(!Object.hasOwn(BASES, baseChoice) && baseChoice !== 'match') baseChoice = 'match';
-  if(!Object.hasOwn(mapThemes, dashboardTheme)) dashboardTheme = 'forest';
+  if(!Object.hasOwn(mapThemes, dashboardTheme)) dashboardTheme = 'daylight';
   var baseButtons = document.querySelectorAll('[data-base]');
   function applyMapStyle(){
     var matchedTheme = baseChoice === 'match' ? dashboardTheme : 'forest';
@@ -379,7 +396,7 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
   });
   window.addEventListener('storage', function(e){
     if(e.key !== 'dcforest-dashboard-theme') return;
-    dashboardTheme = Object.hasOwn(mapThemes, e.newValue) ? e.newValue : 'forest';
+    dashboardTheme = Object.hasOwn(mapThemes, e.newValue) ? e.newValue : 'daylight';
     if(baseChoice === 'match') refreshMapStyle();
   });
   function refreshMapStyle(){
@@ -457,11 +474,12 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
       .then(function(j){ actData = j; }).catch(function(){});
   }
 
+  function photoOf(reg){ var r = roster[reg], n = r && r.name ? short(r.name) : null; return n && PHOTOS[n] ? 'staff/' + PHOTOS[n] : null; }
   function iconFor(v){
     var st = STATES[v.state] || STATES.none, r = roster[v.reg];
     var sub = v.state === 'moving' && v.speed !== null ? Math.round(v.speed) + ' km/h' : st.lb + (v.state === 'none' && v.reportedAt ? ' · ' + ago(v.reportedAt) : '');
     return L.divIcon({className:'', iconSize:[22,22], iconAnchor:[11,11],
-      html:'<div class="mk '+v.state+(selected===v.reg?' sel':'')+(showLabels?'':' hide-lab')+'" style="--k:'+st.c+'"><div class="dot">'+BIKE+'</div>'+
+      html:'<div class="mk '+v.state+(selected===v.reg?' sel':'')+(showLabels?'':' hide-lab')+(photoOf(v.reg)?' face':'')+'" style="--k:'+st.c+'"><div class="dot">'+(photoOf(v.reg) ? '<img src="'+esc(photoOf(v.reg))+'" alt="">' : BIKE)+'</div>'+
         '<div class="lab">'+esc(who(v.reg))+'<small>'+esc(v.reg)+' · '+esc(sub)+'</small></div></div>'});
   }
   function tipFor(v){
@@ -486,12 +504,46 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
       m.getElement() && (m.getElement().style.display = matches(v) ? '' : 'none');
     });
     Object.keys(markers).forEach(function(k){ if(!seen[k]){ map.removeLayer(markers[k]); delete markers[k]; } });
+    cluster();
     declutter();
     if(!fitted){
       var pts = vehicles.filter(function(v){ return v.lat !== null; }).map(function(v){ return [v.lat, v.lon]; });
       if(pts.length){ map.fitBounds(pts, {padding:[40,40], maxZoom:14}); fitted = true; }
     }
   }
+
+  /* Bikes that sit within ~34 px of each other on screen become one bubble ("5 here"). Tapping a bubble
+     zooms in; at street level it lists them. The selected person is never hidden in a bubble. */
+  var bubbles = L.layerGroup().addTo(map), CL_PX = 34;
+  function cluster(){
+    bubbles.clearLayers();
+    var items = vehicles.filter(function(v){ return markers[v.reg] && matches(v); }).map(function(v){
+      var el = markers[v.reg].getElement(); if(el) el.style.visibility = '';
+      return {v:v, p:map.latLngToLayerPoint([v.lat, v.lon])}; });
+    var used = {}, groups = [];
+    items.forEach(function(a){
+      if(used[a.v.reg] || a.v.reg === selected) return;
+      var g = [a]; used[a.v.reg] = 1;
+      items.forEach(function(b){ if(!used[b.v.reg] && b.v.reg !== selected && a.p.distanceTo(b.p) < CL_PX){ g.push(b); used[b.v.reg] = 1; } });
+      if(g.length > 1) groups.push(g);
+    });
+    groups.forEach(function(g){
+      g.forEach(function(x){ var el = markers[x.v.reg].getElement(); if(el) el.style.visibility = 'hidden'; });
+      var lat = 0, lon = 0, mov = 0; g.forEach(function(x){ lat += x.v.lat; lon += x.v.lon; if(x.v.state === 'moving') mov++; }); lat /= g.length; lon /= g.length;
+      var near = g.map(function(x){ return x.v; });
+      var b = L.marker([lat, lon], {zIndexOffset:800, icon:L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20],
+        html:'<div class="bub'+(mov ? ' has-moving' : '')+'"><b>'+g.length+'</b></div>'})}).addTo(bubbles);
+      b.bindTooltip(g.length + ' bikes here' + (mov ? ' · ' + mov + ' moving' : '') + '<br><small>' + near.slice(0, 6).map(function(v){ return esc(who(v.reg)); }).join(', ') + (near.length > 6 ? '…' : '') + '</small>', {className:'tip', direction:'top', offset:[0,-18]});
+      b.on('click', function(){
+        if(map.getZoom() < 17){ map.flyToBounds(L.latLngBounds(near.map(function(v){ return [v.lat, v.lon]; })).pad(0.6), {maxZoom:18, duration:.5}); return; }
+        // street level and still together: show them as a list to pick from
+        L.popup({className:'jpopw', offset:[0,-14]}).setLatLng([lat, lon]).setContent('<div class="jpop"><b>'+g.length+' bikes here</b>'+near.map(function(v){
+          return '<a href="#" data-pick="'+esc(v.reg)+'" style="display:block;padding:4px 0;font-weight:700;text-decoration:none">'+esc(who(v.reg))+' <small style="opacity:.7">'+esc(v.reg)+' · '+(STATES[v.state]||STATES.none).lb+'</small></a>'; }).join('')+'</div>').openOn(map);
+      });
+    });
+  }
+  document.addEventListener('click', function(e){ var a = e.target.closest('[data-pick]'); if(!a) return; e.preventDefault(); map.closePopup(); select(a.getAttribute('data-pick'), true); });
+  map.on('zoomend', function(){ cluster(); declutter(); });
 
   /* Hide labels that would overlap one already shown, so the map stays readable; the selected
      person and moving vehicles get first claim on space. */
@@ -503,7 +555,7 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
     });
     var taken = [];
     order.forEach(function(v){
-      var el = markers[v.reg].getElement(); if(!el) return;
+      var el = markers[v.reg].getElement(); if(!el || el.style.visibility === 'hidden') return;
       var mk = el.querySelector('.mk'); mk.classList.remove('hide-lab');
       var lab = mk.querySelector('.lab'), r = lab.getBoundingClientRect(), dot = mk.querySelector('.dot').getBoundingClientRect();
       var box = {l:Math.min(r.left,dot.left)-2, t:Math.min(r.top,dot.top)-2, r:r.right+2, b:Math.max(r.bottom,dot.bottom)+2};
@@ -633,6 +685,7 @@ html[data-control-theme="aurora"] .leaflet-tile-pane{filter:sepia(.18) hue-rotat
         (v.lat !== null ? '<a class="act" href="https://www.google.com/maps/dir/?api=1&destination='+v.lat+','+v.lon+'" target="_blank" rel="noopener">Directions</a>' : '')+
         (v.lat !== null ? '<button class="act" type="button" data-center>Show on map</button>' : '')+
       '</div>'+
+      '<a class="personlink" href="person?reg='+encodeURIComponent(v.reg)+(isToday ? '' : '&date='+viewDate)+'">Open full profile →</a>'+
       journeyHtml(v.reg)+
       '<p class="note">'+(v.lat === null ? 'This tracker has not sent a usable location. ' : 'Location is the tracker’s last report. ')+
         (pts.length > 1 ? (isToday ? 'Today’s' : 'This day’s') + ' route is drawn on the map; tap a numbered stop for its time and address.' : 'No route for ' + (isToday ? 'today' : 'this day') + ' yet.')+

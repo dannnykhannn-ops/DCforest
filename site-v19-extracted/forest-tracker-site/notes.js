@@ -18,6 +18,8 @@
   st.textContent = [
     '.nt-dock{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:'+Z+';display:flex;flex-direction:column;gap:6px;align-items:stretch}',
     '@media (min-width:761px){ .nt-dock{top:68px} }',
+    '.nt-dock.nt-inline{position:static;flex-direction:row;gap:6px}',
+    '.nt-inline .nt-fab,.nt-inline .nt-pinbtn{border-width:1px;box-shadow:none;padding:7px 10px}',
     'body:has(.hdr) .nt-dock{top:calc(70px + env(safe-area-inset-top))}',
     '.nt-fab,.nt-pinbtn{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border-radius:99px;border:2px solid #fff;font:800 12.5px Figtree,system-ui,sans-serif;cursor:pointer!important;box-shadow:0 6px 16px rgba(0,0,0,.35);white-space:nowrap}',
     '.nt-fab{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff}',
@@ -79,6 +81,8 @@
   var banner = el('<div class="nt-banner" hidden>📍 Pin is ON · tap any spot to leave a note</div>');
   var pinLayer = document.createElement('div');
   [pinLayer, frame, dock, panel, pop, banner].forEach(function(n){ document.body.appendChild(n); });
+  var slot = document.getElementById('nt-slot');   // pages with a place for it in their header get the buttons there
+  if(slot){ dock.classList.add('nt-inline'); slot.appendChild(dock); }
   pinBtn.onclick = function(){ adding ? stopAdd() : startAdd(); };
   var $ = function(id){ return document.getElementById(id); };
   fab.onclick = function(){ panel.hidden = !panel.hidden; pop.hidden = true; draw(); };

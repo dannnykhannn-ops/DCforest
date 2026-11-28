@@ -81,6 +81,7 @@
   var main = document.querySelector('main.wrap'); if(!main) return;
   var bar = document.createElement('div'); bar.className = 'ow-bar'; bar.setAttribute('aria-label', 'Owner tools');
   bar.innerHTML = '<span class="ow-k">Owner</span>'+
+    '<a class="ow-b" href="today" style="background:linear-gradient(180deg,#5fd38f,#2f9a5a);border-color:#5fd38f;color:#06200d">'+I.act+'Today</a>'+
     '<a class="ow-b" href="control">'+I.map+'Control Room</a>'+
     '<button class="ow-b" type="button" data-p="owAlerts" aria-pressed="false">'+I.bell+'Alerts <span class="ow-n" id="owN" hidden></span></button>'+
     '<button class="ow-b" type="button" data-p="owActivity" aria-pressed="false">'+I.act+'Activity Log</button>'+
@@ -144,7 +145,7 @@
     $('owAlSub').textContent = A.length ? n + ' to check, ' + (A.length - n) + (A.length - n === 1 ? ' note' : ' notes') : '';
     $('owAlList').innerHTML = A.length ? A.map(function(a){ var tel = a.tel ? String(a.tel).replace(/[^\d+]/g,'') : '';
       return '<li style="--k:'+LV[a.lv].k+'"><span class="lv">'+LV[a.lv].lb+'</span><div><b>'+esc(a.t)+'</b><small>'+esc(a.d)+'</small></div><span class="ow-a">'+
-        (a.reg ? '<a href="control?reg='+encodeURIComponent(a.reg)+'">Map</a>' : '')+(tel ? '<a href="tel:'+esc(tel)+'">Call</a>' : '')+'</span></li>'; }).join('')
+        (a.reg ? '<a href="person?reg='+encodeURIComponent(a.reg)+'">Open</a><a href="control?reg='+encodeURIComponent(a.reg)+'">Map</a>' : '')+(tel ? '<a href="tel:'+esc(tel)+'">Call</a>' : '')+'</span></li>'; }).join('')
       : '<li style="--k:#5fd38f"><span class="lv">All clear</span><div><b>Nothing needs attention.</b></div><span></span></li>';
   }
 
@@ -180,7 +181,7 @@
     $('owActK').innerHTML = '<div><b>'+moved.length+' / '+list.length+'</b><span>bikes that moved</span></div><div><b>'+km.toFixed(1)+' km</b><span>travelled in total</span></div>'+
       '<div><b>'+(first != null ? esc(pkt(first)) : '—')+'</b><span>earliest start</span></div><div><b>'+(far ? far.s.km.toFixed(1)+' km' : '—')+'</b><span>'+(far ? 'farthest: '+esc(far.p.name) : 'farthest distance')+'</span></div>';
     $('owActR').innerHTML = list.map(function(x){
-      var s = x.s, row = '<tr data-reg="'+esc(x.reg)+'" class="'+(!s || !s.movingMin ? 'ow-none' : '')+'"><td><b>'+esc(x.p.name)+'</b><br><small>'+esc(x.p.post)+'</small></td><td><b>'+esc(x.reg)+'</b></td>'+
+      var s = x.s, row = '<tr data-reg="'+esc(x.reg)+'" class="'+(!s || !s.movingMin ? 'ow-none' : '')+'"><td><a href="person?reg='+encodeURIComponent(x.reg)+'&date='+day+'" style="color:inherit;font-weight:800">'+esc(x.p.name)+'</a><br><small>'+esc(x.p.post)+'</small></td><td><b>'+esc(x.reg)+'</b></td>'+
         '<td>'+(s && s.firstMove != null ? esc(pkt(s.firstMove)) : '—')+'</td><td>'+(s && s.lastMove != null ? esc(pkt(s.lastMove)) : '—')+'</td><td>'+(s ? hm(s.movingMin) : '—')+'</td><td>'+(s ? hm(s.stoppedMin) : '—')+'</td>'+
         '<td><b>'+(s ? s.km.toFixed(1) : '—')+'</b></td><td>'+(s ? s.stops.length : '—')+'</td><td class="ow-tlc">'+(s ? timeline(s) : '<small>no reports</small>')+'</td></tr>';
       if(openReg === x.reg && s) row += '<tr class="ow-det"><td colspan="9"><div class="ow-stops">'+(s.stops.length ? s.stops.map(function(st){
@@ -216,7 +217,7 @@
     var idle = list.filter(function(x){ return x.p.r && !x.p.r.sec.notPosts && x.p.r.status === 'active' && rec && x.moved === 0; }).length;
     $('owRepK').innerHTML = '<div><b>'+tk.toFixed(1)+' km</b><span>travelled in total</span></div><div><b>'+hm(tm)+'</b><span>moving time in total</span></div><div><b>'+rec+' / '+rep.days.length+'</b><span>days with recorded data</span></div><div><b>'+idle+'</b><span>active staff with no movement</span></div>';
     $('owRepR').innerHTML = list.map(function(x){
-      return '<tr><td><b>'+esc(x.p.name)+'</b><br><small>'+esc(x.p.post)+'</small></td><td>'+esc(x.p.sec)+'</td><td><b>'+esc(x.reg)+'</b></td><td>'+x.moved+(rec ? ' / '+rec : '')+'</td><td><b>'+x.km.toFixed(1)+'</b></td>'+
+      return '<tr><td><a href="person?reg='+encodeURIComponent(x.reg)+'" style="color:inherit;font-weight:800">'+esc(x.p.name)+'</a><br><small>'+esc(x.p.post)+'</small></td><td>'+esc(x.p.sec)+'</td><td><b>'+esc(x.reg)+'</b></td><td>'+x.moved+(rec ? ' / '+rec : '')+'</td><td><b>'+x.km.toFixed(1)+'</b></td>'+
         '<td>'+(rec ? (x.km/rec).toFixed(1) : '—')+'</td><td>'+hm(x.mv)+'</td><td>'+clockMin(x.start)+'</td><td>'+(x.top != null ? Math.round(x.top)+' km/h' : '—')+'</td></tr>';
     }).join('');
     $('owRepF').innerHTML = '<tr><td>Total</td><td></td><td></td><td></td><td>'+tk.toFixed(1)+'</td><td></td><td>'+hm(tm)+'</td><td></td><td></td></tr>';

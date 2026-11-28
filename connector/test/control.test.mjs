@@ -221,3 +221,19 @@ test('reviewers: see owner pages and data, leave notes, cannot change settings; 
   assert.equal((await call(env, '/api/fleet.json', { cookie: rv })).status, 403, 'cancelled reviewer loses access at once');
   assert.equal((await call(env, '/')).status, 401);
 });
+
+test('Today, person page, staff list and shared script are owner/reviewer-only', async () => {
+  const env = newEnv(true);
+  env.ASSETS = { fetch: async (r) => { const p = new URL(r.url).pathname;
+    if (p === '/') return new Response('<html><head></head><body><script id="data" type="application/json">{"org":"X","date":"2026-11-28","sections":[{"id":"a","label":"A","rows":[{"name":"Mr. Test","vehicle":"TST-1"}]}],"fleet":["TST-1"]}</script></body></html>', { headers: { 'Content-Type': 'text/html' } });
+    return new Response('PAGE:' + p, { headers: { 'Content-Type': 'text/plain' } }); } };
+  for (const path of ['/today', '/person', '/api/staff.json', '/owner-lib.js']) {
+    const r = await call(env, path); assert.ok(r.status === 401 || r.status === 403, path + ' ' + r.status);
+  }
+  const owner = ((await call(env, '/api/gate/admin', { method: 'POST', body: { pin: '4321' } })).headers.get('Set-Cookie') || '').split(';')[0];
+  const s = await (await call(env, '/api/staff.json', { cookie: owner })).json();
+  assert.equal(s.sections[0].rows[0].vehicle, 'TST-1'); assert.deepEqual(s.fleet, ['TST-1']);
+  assert.equal((await call(env, '/today', { cookie: owner })).status, 200);
+  assert.match(await (await call(env, '/', { cookie: owner })).text(), /introSeen/, 'the owner skips the intro');
+  assert.doesNotMatch(await (await call(env, '/')).text(), /introSeen/, 'visitors keep the intro');
+});

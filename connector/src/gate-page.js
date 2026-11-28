@@ -103,7 +103,8 @@ a.mini{text-decoration:none;display:inline-block}
   <section id="vReviewer" class="panel" hidden>
     <h2>Reviewer access</h2>
     <p class="sub">Signed in as <b id="rvName"></b>. You can see everything the owner sees and leave notes; you cannot change settings.</p>
-    <a class="go cr" href="./">Open the page<small>Tap the Notes button to leave a note on any spot</small></a>
+    <a class="go cr" href="today" style="background:linear-gradient(135deg,#1f6b45,#2f9a6a)">Open Today<small>What needs attention, who is out, search anyone</small></a>
+    <a class="go cr" href="./">Open the page<small>Tap Pin to leave a note on any spot</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, stops</small></a>
     <div class="theme"><div><b>My design</b><small id="rvThemeSub"></small></div>
       <div class="seg" id="rvSeg" role="group" aria-label="Design"><button type="button" data-rtheme="classic">Classic</button><button type="button" data-rtheme="new">New</button></div></div>
@@ -111,7 +112,8 @@ a.mini{text-decoration:none;display:inline-block}
   </section>
 
   <section id="vAdmin" class="panel" hidden>
-    <a class="go cr" href="./">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
+    <a class="go cr" href="today" style="background:linear-gradient(135deg,#1f6b45,#2f9a6a)">Open Today<small>What needs you, who is out, search anyone</small></a>
+    <a class="go cr" href="./" style="background:rgba(0,0,0,.25)">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
     <div class="theme"><div><b>My design</b><small id="themeSub"></small></div>
       <div class="seg" role="group" aria-label="Site design"><button type="button" data-theme="classic">Classic</button><button type="button" data-theme="new">New</button></div></div>
