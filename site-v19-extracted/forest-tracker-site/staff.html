@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DC Forest Staff</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f6b45">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--ink:#14201a;--muted:#5c6b62;--line:#e1e8e2;--brand:#1f6b45;--soft:#e6f3ea;--warn:#d97706;--bad:#dc2626;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.45 Figtree,system-ui,sans-serif;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.wrap{max-width:560px;margin:0 auto}
+header{display:flex;align-items:center;gap:12px;padding:16px 0}
+.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#1f6b45,#2f9a6a);display:grid;place-items:center;flex:none}
+.logo svg{width:26px;height:26px;fill:#fff}
+h1{margin:0;font-size:1.3rem;font-weight:900;line-height:1.15}
+.sub{color:var(--muted);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px}
+.card h2{margin:0 0 8px;font-size:1.05rem}
+.ok{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--brand)}
+.ok i{width:12px;height:12px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 5px rgba(31,107,69,.18)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border-radius:16px;border:0;background:var(--brand);color:#fff;font:800 1.05rem Figtree,sans-serif;cursor:pointer;margin-top:10px}
+.btn.alt{background:var(--soft);color:var(--brand)}
+.hint{font-size:.9rem;color:var(--muted);margin:.5em 0 0}
+.list{display:grid;gap:8px}
+.it{padding:10px 12px;border-radius:14px;background:var(--bg)}
+.it b{display:block}.it small{color:var(--muted)}
+.chipr{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:99px;background:var(--soft);color:var(--brand);font-weight:800;font-size:.8rem}
+/* the alert */
+.alarm{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;background:#b45309;color:#fff;overflow:auto;
+  padding:calc(18px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+.alarm[hidden]{display:none}
+.alarm.esc{background:#b91c1c;animation:flash 1s steps(2) infinite}
+@keyframes flash{50%{background:#7f1d1d}}
+.sign{font-size:clamp(5rem,30vw,9rem);line-height:1;text-align:center;margin:8px 0 0;animation:beat 1s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.12)}}
+.alarm h2{font-size:clamp(1.7rem,8vw,2.6rem);line-height:1.05;margin:10px 0 6px;text-align:center;font-weight:900;text-transform:uppercase;letter-spacing:.01em}
+.alarm .when{text-align:center;font-weight:700;font-size:1.05rem;opacity:.95}
+.alarm .esc-msg{display:none;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.25);text-align:center;font-weight:900;font-size:1.05rem}
+.alarm.esc .esc-msg{display:block}
+.panel{margin-top:16px;background:#fff;color:var(--ink);border-radius:22px;padding:16px}
+.panel h3{margin:0 0 10px;font-size:1.05rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:10px 14px;font:800 .95rem Figtree,sans-serif;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--brand);background:var(--soft);color:var(--brand)}
+.rec{display:flex;align-items:center;gap:14px;margin-top:14px}
+.recbtn{width:84px;height:84px;border-radius:50%;border:0;background:var(--bad);color:#fff;font:900 .85rem Figtree,sans-serif;cursor:pointer;flex:none;box-shadow:0 0 0 8px rgba(220,38,38,.18)}
+.recbtn.on{animation:rp 1.2s infinite}
+@keyframes rp{50%{box-shadow:0 0 0 18px rgba(220,38,38,.12)}}
+.rec .tx b{display:block;font-size:1.05rem}.rec .tx small{color:var(--muted)}
+audio{width:100%;margin-top:10px}
+textarea{width:100%;min-height:70px;margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:10px;font:inherit}
+.send{background:var(--brand)}
+.send:disabled{opacity:.5}
+.err{color:var(--bad);font-weight:700;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 14 16h5l-8 10h6l-9 11h14v8h4v-8h14l-9-11h6l-8-10h5z"/></svg></span>
+    <div><h1 id="who">DC Forest</h1><div class="sub" id="bike"></div></div></header>
+
+  <section class="card" id="setup">
+    <h2>Alerts on this phone</h2>
+    <div id="alertState"></div>
+    <p class="hint" id="installHint" hidden>On iPhone: tap Share → <b>Add to Home Screen</b>, open the app from the home screen, then turn on alerts.</p>
+  </section>
+
+  <section class="card"><h2>How it works</h2>
+    <p class="hint" style="margin:0">If you stop for a long time during duty hours somewhere other than your nursery or office, this phone buzzes. Open it and record a short voice message saying why you stopped. It keeps buzzing until you answer.</p></section>
+
+  <section class="card"><h2>My recent stops</h2><div class="list" id="recent"><div class="it"><small>Nothing yet.</small></div></div></section>
+</div>
+
+<div class="alarm" id="alarm" hidden role="alertdialog" aria-labelledby="alarmTitle">
+  <div class="sign" aria-hidden="true">⚠</div>
+  <h2 id="alarmTitle">Unscheduled stop</h2>
+  <div class="when" id="alarmWhen"></div>
+  <div class="esc-msg">No reason given yet. Your officer has been alerted. Answer now.</div>
+  <div class="panel">
+    <h3>Why did you stop here?</h3>
+    <div class="chips" id="reasons"></div>
+    <div class="rec"><button class="recbtn" id="recBtn" type="button">● REC</button><span class="tx"><b id="recLbl">Tap to record your reason</b><small id="recSub">Up to 2 minutes</small></span></div>
+    <audio id="preview" controls hidden></audio>
+    <textarea id="text" placeholder="Or write it here (if you cannot record)"></textarea>
+    <button class="btn send" id="send" type="button">Send reason</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var REASONS = ['Field visit', 'Official meeting', 'Puncture / repair', 'Fuel', 'Tea / food break', 'Waiting for someone', 'Other'];
+  var state = null, current = null, reason = '', blob = null, mime = '', rec = null, chunks = [], timer = null, t0 = 0, siren = null;
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function tm(sec){ return new Date(sec*1000).toLocaleTimeString('en-US', {timeZone:'Asia/Karachi', hour:'numeric', minute:'2-digit'}); }
+  function b64(u){ var p = '='.repeat((4 - u.length % 4) % 4), s = atob((u + p).replace(/-/g,'+').replace(/_/g,'/')), a = new Uint8Array(s.length); for(var i=0;i<s.length;i++) a[i] = s.charCodeAt(i); return a; }
+
+  /* ---------- alerts on/off ---------- */
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  function drawAlertState(){
+    var el = $('alertState'), perm = 'Notification' in window ? Notification.permission : 'unsupported';
+    $('installHint').hidden = !(ios && !standalone);
+    if(perm === 'granted' && localStorage.getItem('dcfSub') === '1'){ el.innerHTML = '<div class="ok"><i></i>Alerts are on</div><button class="btn alt" type="button" id="testBtn">Check my alerts again</button>'; $('testBtn').onclick = enable; return; }
+    if(perm === 'denied'){ el.innerHTML = '<p class="hint" style="color:var(--bad);font-weight:700">Alerts are blocked. Open your phone Settings → Apps → browser → Notifications, allow them for this site, then come back.</p>'; return; }
+    if(perm === 'unsupported' || !('serviceWorker' in navigator) || !('PushManager' in window)){ el.innerHTML = '<p class="hint">This browser cannot receive alerts. Use Chrome on Android, or on iPhone add this app to the Home Screen first.</p>'; return; }
+    el.innerHTML = '<button class="btn" type="button" id="onBtn">Turn on alerts</button><p class="hint">You must allow notifications. Keep the phone on loud.</p>';
+    $('onBtn').onclick = enable;
+  }
+  function enable(){
+    Notification.requestPermission().then(function(p){
+      if(p !== 'granted'){ drawAlertState(); return; }
+      return navigator.serviceWorker.register('sw.js').then(function(){ return navigator.serviceWorker.ready; }).then(function(reg){
+        return reg.pushManager.getSubscription().then(function(s){ return s || reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64(state.vapid)}); });
+      }).then(function(sub){
+        return fetch('api/me/subscribe', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({sub:sub.toJSON()})});
+      }).then(function(r){ if(r && r.ok){ try{ localStorage.setItem('dcfSub','1'); }catch(e){} } drawAlertState(); });
+    }).catch(function(e){ $('alertState').insertAdjacentHTML('beforeend', '<p class="err">Could not turn on alerts: ' + esc(e.message) + '</p>'); });
+  }
+
+  /* ---------- siren (plays once the phone allows sound) ---------- */
+  function startSiren(){
+    if(siren) return;
+    try{
+      var ac = new (window.AudioContext || window.webkitAudioContext)(), o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'square'; o.connect(g); g.connect(ac.destination); g.gain.value = .15; o.start();
+      var hi = true; var iv = setInterval(function(){ o.frequency.setValueAtTime(hi ? 960 : 620, ac.currentTime); hi = !hi; }, 380);
+      siren = {stop:function(){ clearInterval(iv); try{ o.stop(); ac.close(); }catch(e){} }};
+      if(ac.state === 'suspended') ac.resume();
+    }catch(e){}
+    if(navigator.vibrate) navigator.vibrate([800,200,800,200,800,200,1200]);
+  }
+  function stopSiren(){ if(siren){ siren.stop(); siren = null; } if(navigator.vibrate) navigator.vibrate(0); }
+
+  /* ---------- the alert screen ---------- */
+  function showAlarm(x){
+    current = x; var a = $('alarm');
+    a.hidden = false; a.classList.toggle('esc', !!x.escalated);
+    $('alarmTitle').textContent = x.escalated ? 'Answer now' : 'Unscheduled stop';
+    $('alarmWhen').innerHTML = 'Stopped since ' + esc(tm(x.from)) + ' · <a style="color:#fff" href="https://www.google.com/maps?q=' + x.lat + ',' + x.lon + '" target="_blank" rel="noopener">see where</a>';
+    if(!document.getElementById('recLbl').dataset.busy) startSiren();
+  }
+  function hideAlarm(){ $('alarm').hidden = true; stopSiren(); current = null; reason = ''; blob = null; $('preview').hidden = true; $('text').value = ''; drawReasons(); }
+  function drawReasons(){ $('reasons').innerHTML = REASONS.map(function(r){ return '<button type="button" aria-pressed="'+(reason === r)+'">'+esc(r)+'</button>'; }).join(''); }
+  $('reasons').onclick = function(e){ var b = e.target.closest('button'); if(!b) return; reason = b.textContent; drawReasons(); stopSiren(); };
+  document.addEventListener('pointerdown', function(){ if(current && !siren && !$('recLbl').dataset.busy && !blob) startSiren(); }, {once:true});
+
+  $('recBtn').onclick = function(){
+    stopSiren();
+    if(rec && rec.state === 'recording'){ rec.stop(); return; }
+    if(!navigator.mediaDevices || !window.MediaRecorder){ $('err').textContent = 'This phone cannot record here. Write the reason instead.'; return; }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      chunks = []; mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+      rec = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined); mime = rec.mimeType || mime || 'audio/webm';
+      rec.ondataavailable = function(e){ if(e.data.size) chunks.push(e.data); };
+      rec.onstop = function(){ stream.getTracks().forEach(function(t){ t.stop(); }); clearInterval(timer); $('recBtn').classList.remove('on'); $('recBtn').textContent = '● REC'; delete $('recLbl').dataset.busy;
+        blob = new Blob(chunks, {type:mime.split(';')[0]}); $('preview').src = URL.createObjectURL(blob); $('preview').hidden = false;
+        $('recLbl').textContent = 'Recorded ' + Math.round((Date.now() - t0) / 1000) + ' s'; $('recSub').textContent = 'Tap REC to record again'; };
+      rec.start(); t0 = Date.now(); $('recBtn').classList.add('on'); $('recBtn').textContent = '■ STOP'; $('recLbl').dataset.busy = '1';
+      timer = setInterval(function(){ var s = Math.round((Date.now() - t0) / 1000); $('recLbl').textContent = 'Recording… ' + s + ' s'; if(s >= 120) rec.stop(); }, 500);
+    }).catch(function(){ $('err').textContent = 'Microphone not allowed. Allow it in the phone settings, or write the reason.'; });
+  };
+  $('send').onclick = function(){
+    if(!current) return; $('err').textContent = '';
+    var text = $('text').value.trim();
+    if(!blob && !text){ $('err').textContent = 'Record a voice note or write the reason first.'; return; }
+    var q = '?reason=' + encodeURIComponent(reason || '') + '&text=' + encodeURIComponent(text);
+    $('send').disabled = true; $('send').textContent = 'Sending…';
+    fetch('api/me/answer/' + current.id + q, blob ? {method:'POST', credentials:'same-origin', headers:{'Content-Type':blob.type || 'audio/webm'}, body:blob}
+      : {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reason:reason, text:text})})
+      .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || 'Could not send'); return j; }); })
+      .then(function(){ hideAlarm(); load(); })
+      .catch(function(e){ $('err').textContent = e.message + '. Try again.'; })
+      .then(function(){ $('send').disabled = false; $('send').textContent = 'Send reason'; });
+  };
+
+  /* ---------- data ---------- */
+  function load(){
+    return fetch('api/me/state', {cache:'no-store', credentials:'same-origin'}).then(function(r){ if(r.status === 403){ location.href = 'gate'; throw new Error('x'); } return r.json(); }).then(function(s){
+      state = s; $('who').textContent = s.me.name; $('bike').textContent = 'Bike ' + s.me.reg; drawAlertState();
+      var open = s.open[0];
+      if(open && (!current || current.id !== open.id || current.escalated !== open.escalated)) showAlarm(open);
+      if(!open && current) hideAlarm();
+      $('recent').innerHTML = s.recent.length ? s.recent.map(function(x){ return '<div class="it"><b>' + esc(tm(x.from)) + ' · ' + new Date(x.detectedAt).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) + '</b>' +
+        (x.answer ? '<small>' + esc(x.answer.text || (x.answer.audio ? 'Voice note sent' : '')) + '</small><br><span class="chipr">' + esc(x.answer.reason || 'Answered') + '</span>' : '<small>No reason given</small>') + '</div>'; }).join('') : '<div class="it"><small>Nothing yet.</small></div>';
+    }).catch(function(){});
+  }
+  drawReasons(); load();
+  setInterval(function(){ if(!document.hidden) load(); }, 15000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+})();
+</script>
+</body>
+</html>

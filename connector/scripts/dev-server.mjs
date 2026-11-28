@@ -13,6 +13,8 @@ import worker, { sync } from '../src/worker.js';
 import { randomBytes } from 'node:crypto';
 import { memoryKV, readToken } from './env.mjs';
 import { seedDemo } from './demo-data.mjs';
+import * as field from '../src/field.js';
+import { pkDate } from '../src/transform.js';
 
 const args = process.argv.slice(2);
 const seedFile = args.includes('--seed') ? args[args.indexOf('--seed') + 1] : null;
@@ -30,7 +32,13 @@ if (demo) {
   const html = readFileSync(join(SITE, 'index.html'), 'utf8');
   const data = JSON.parse(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/.exec(html)[1]);
   const regs = data.fleet || [];
-  const reseed = () => seedDemo(env, regs).then(() => console.log(new Date().toLocaleTimeString(), 'demo data refreshed'));
+  const reseed = () => seedDemo(env, regs).then(async () => {
+    // apply the field rules to the demo riders, as the 5-minute sync does on the real site
+    const now = Date.now(), trail = await env.LIVE.get('trail:' + pkDate(now), 'json');
+    const opened = await field.detect(env, trail, now); if (opened.length) await field.buzzTick(env, now);
+    console.log(new Date().toLocaleTimeString(), 'demo data refreshed', opened.length ? '· ' + opened.length + ' unscheduled stop(s)' : '');
+  });
+  setInterval(() => field.buzzTick(env, Date.now()), 60 * 1000);
   await reseed();
   setInterval(reseed, 60 * 1000);
 } else if (seedFile) {

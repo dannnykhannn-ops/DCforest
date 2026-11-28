@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stops &amp; reasons — DC Forest</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7f4;--card:#fff;--ink:#14201a;--muted:#5c6b62;--line:#e1e8e2;--brand:#1f6b45;--soft:#e6f3ea;--warn:#d97706;--bad:#dc2626;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 Figtree,system-ui,sans-serif;padding-bottom:40px}
+a{color:inherit}
+button,select{font:inherit;color:inherit}
+.wrap{max-width:1000px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 0 max(16px,env(safe-area-inset-right))}
+header{position:sticky;top:0;z-index:20;background:rgba(244,247,244,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.top{display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap}
+.back{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-decoration:none}
+h1{margin:0;font-size:1.35rem;font-weight:900}
+.spacer{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 13px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:800;cursor:pointer;text-decoration:none}
+.btn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.ok[aria-pressed="true"]{background:var(--brand);border-color:var(--brand)}
+.btn.fu[aria-pressed="true"]{background:var(--warn);border-color:var(--warn)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:12px}
+.filters select{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:700}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:10px;margin:14px 0}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.sum b{display:block;font-size:1.7rem;font-weight:900;line-height:1.05;color:var(--k,var(--ink))}
+.sum span{font-size:.84rem;color:var(--muted);font-weight:600}
+.why{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.why h2{margin:0 0 10px;font-size:1rem}
+.bar{display:grid;grid-template-columns:150px 1fr 34px;gap:10px;align-items:center;font-size:.9rem;font-weight:700;margin:6px 0}
+.bar i{display:block;height:10px;border-radius:9px;background:var(--brand)}
+.list{display:grid;gap:10px}
+.st{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--k);border-radius:16px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:12px}
+.st .t{min-width:0}
+.st b{font-size:1.02rem}
+.st .meta{color:var(--muted);font-size:.88rem}
+.st .place{font-size:.92rem;margin-top:2px}
+.ans{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--bg)}
+.ans .rs{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--soft);color:var(--brand);font-weight:800;font-size:.8rem;margin-right:6px}
+.late{display:inline-block;padding:3px 10px;border-radius:99px;background:#fde2e1;color:var(--bad);font-weight:800;font-size:.8rem}
+audio{width:100%;margin-top:8px;height:40px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.empty{padding:22px;text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:16px}
+@media (max-width:520px){ .bar{grid-template-columns:110px 1fr 30px} }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="top"><a class="back" href="today" aria-label="Back to Today">‹</a><h1>Stops &amp; reasons</h1><span class="spacer"></span><span id="nt-slot" style="display:flex"></span><a class="btn" href="places">Places &amp; schedules</a></div>
+  <div class="filters">
+    <select id="fDays" aria-label="Period"><option value="0">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+    <select id="fWho" aria-label="Person"><option value="">Everyone</option></select>
+    <select id="fState" aria-label="Status"><option value="">All</option><option value="open">Waiting for a reason</option><option value="answered">Answered</option><option value="late">Answered late</option><option value="none">No reason given</option><option value="follow-up">Marked follow up</option><option value="accepted">Accepted</option></select>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <div class="sum" id="sum"></div>
+  <section class="why" id="why"></section>
+  <div class="list" id="list"></div>
+</main>
+
+<script src="owner-lib.js"></script>
+<script>
+(function(){
+  'use strict';
+  var D = window.DCF, esc = D.esc, $ = function(id){ return document.getElementById(id); };
+  var all = [], isOwner = false;
+  function kind(x){ return x.status === 'open' ? 'open' : x.answer ? (x.answer.late ? 'late' : 'answered') : 'none'; }
+  var KC = {open:'#d97706', answered:'#16a34a', late:'#dc2626', none:'#dc2626'};
+  function draw(){
+    var days = +$('fDays').value, who = $('fWho').value, st = $('fState').value, from = D.addDays(D.pkDay(), -Math.max(0, days - 1));
+    var list = all.filter(function(x){ return D.pkDay(Date.parse(x.detectedAt)) >= (days ? from : D.pkDay()) && (!who || x.reg === who) &&
+      (!st || (st === 'accepted' || st === 'follow-up' ? x.review === st : st === 'late' ? kind(x) === 'late' : kind(x) === st)); });
+    var n = function(k){ return list.filter(function(x){ return kind(x) === k; }).length; };
+    $('sum').innerHTML = '<div><b>'+list.length+'</b><span>unscheduled stops</span></div><div style="--k:#16a34a"><b>'+(n('answered') + n('late'))+'</b><span>reasons given</span></div>'+
+      '<div style="--k:#dc2626"><b>'+n('late')+'</b><span>answered late</span></div><div style="--k:#d97706"><b>'+n('open')+'</b><span>waiting now</span></div>';
+    var by = {}; list.forEach(function(x){ var r = x.answer ? (x.answer.reason || 'Not chosen') : (x.status === 'open' ? 'Waiting' : 'No reason given'); by[r] = (by[r] || 0) + 1; });
+    var keys = Object.keys(by).sort(function(a,b){ return by[b] - by[a]; }), max = Math.max.apply(null, keys.map(function(k){ return by[k]; }).concat(1));
+    $('why').innerHTML = '<h2>Reasons given</h2>' + (keys.length ? keys.map(function(k){ return '<div class="bar"><span>'+esc(k)+'</span><span><i style="width:'+(by[k] / max * 100)+'%"></i></span><span>'+by[k]+'</span></div>'; }).join('') : '<p class="meta" style="margin:0">None in this period.</p>');
+    $('list').innerHTML = list.length ? list.map(function(x){
+      var p = D.person(x.reg), k = kind(x);
+      return '<article class="st" style="--k:'+KC[k]+'">'+D.avatar(p, 48)+'<div class="t"><b><a href="person?reg='+encodeURIComponent(x.reg)+'" style="text-decoration:none">'+esc(p.name)+'</a></b> <span class="meta">· '+esc(x.reg)+'</span>'+
+        '<div class="meta">'+new Date(x.detectedAt).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Karachi'})+' · stopped from '+esc(D.pkt(x.from))+' · buzzed '+x.buzzes+'×</div>'+
+        '<div class="place"><span data-place="'+x.lat+','+x.lon+'">…</span> · <a href="control?reg='+encodeURIComponent(x.reg)+'&date='+D.pkDay(Date.parse(x.detectedAt))+'">map</a></div>'+
+        (x.answer ? '<div class="ans">'+(x.answer.reason ? '<span class="rs">'+esc(x.answer.reason)+'</span>' : '')+(x.answer.late ? '<span class="late">Late</span> ' : '')+
+          '<span class="meta">answered '+esc(new Date(x.answer.at).toLocaleTimeString('en-US', {timeZone:'Asia/Karachi', hour:'numeric', minute:'2-digit'}))+'</span>'+
+          (x.answer.text ? '<div style="margin-top:6px">'+esc(x.answer.text)+'</div>' : '')+(x.answer.audio ? '<audio controls preload="none" src="api/field/rec/'+esc(x.id)+'"></audio>' : '')+'</div>'
+          : '<div class="ans"><span class="late">'+(x.status === 'open' ? 'Waiting for a reason' : 'No reason given')+'</span>'+(x.escalated ? ' <span class="meta">you were alerted</span>' : '')+'</div>')+
+        (isOwner ? '<div class="acts"><button class="btn ok" type="button" data-r="accepted" data-id="'+esc(x.id)+'" aria-pressed="'+(x.review === 'accepted')+'">Accept</button>'+
+          '<button class="btn fu" type="button" data-r="follow-up" data-id="'+esc(x.id)+'" aria-pressed="'+(x.review === 'follow-up')+'">Follow up</button>'+
+          (p.contact ? '<a class="btn" href="tel:'+esc(D.tel(p.contact))+'">Call</a>' : '')+'</div>' : '')+'</div></article>';
+    }).join('') : '<div class="empty">No unscheduled stops in this period. Add places and schedules to start watching.</div>';
+    D.fillPlaces($('list'));
+  }
+  $('list').onclick = function(e){
+    var b = e.target.closest('[data-r]'); if(!b) return;
+    var x = all.find(function(i){ return i.id === b.getAttribute('data-id'); }), r = b.getAttribute('data-r');
+    fetch('api/field/review', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:x.id, review:x.review === r ? null : r})})
+      .then(function(res){ return res.json(); }).then(function(j){ if(j.incident){ Object.assign(x, j.incident); draw(); } });
+  };
+  ['fDays','fWho','fState'].forEach(function(id){ $(id).onchange = draw; });
+  function load(){ return D.get('api/field/incidents').then(function(j){ all = j.incidents || []; draw(); }); }
+  Promise.all([D.loadStaff(), fetch('api/gate/me', {credentials:'same-origin'}).then(function(r){ return r.json(); })]).then(function(r){
+    isOwner = r[1].role === 'owner';
+    var q = new URLSearchParams(location.search).get('reg');
+    $('fWho').innerHTML = '<option value="">Everyone</option>' + D.staff().rows.filter(function(x){ return x.vehicle && x.name; }).map(function(x){ return '<option value="'+esc(x.vehicle)+'"'+(q === x.vehicle ? ' selected' : '')+'>'+esc(x.short)+'</option>'; }).join('');
+    return load();
+  });
+  setInterval(function(){ if(!document.hidden) load(); }, 60000);
+})();
+</script>
+</body>
+</html>

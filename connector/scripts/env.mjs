@@ -12,9 +12,10 @@ export function readToken() {
 }
 
 export function memoryKV(initial = {}) {
-  const store = new Map(Object.entries(initial));
+  const store = new Map(Object.entries(initial)), meta = new Map();
   return {
     async get(key, type) { const v = store.get(key); return v === undefined ? null : type === 'json' ? JSON.parse(v) : v; },
-    async put(key, value) { store.set(key, String(value)); },
+    async put(key, value, opts) { store.set(key, value instanceof ArrayBuffer ? value : String(value)); meta.set(key, opts && opts.metadata); },
+    async getWithMetadata(key) { return { value: store.has(key) ? store.get(key) : null, metadata: meta.get(key) || null }; },
   };
 }

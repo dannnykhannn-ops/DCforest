@@ -10,6 +10,7 @@
 import { fetchFleetSnapshot, tokenInfo } from './portal.js';
 import { buildSnapshot, validateSnapshot, buildPositions, appendTrail, pkDate, trailKm, summarizeDay, dateRange } from './transform.js';
 import * as gate from './gate.js';
+import * as field from './field.js';
 
 const KEY_LATEST = 'live:latest';   // last SUCCESSFUL snapshot; only ever overwritten by another success
 const KEY_STATUS = 'live:status';   // last failed attempt; written only on failure
@@ -37,7 +38,8 @@ export async function sync(env, now = Date.now()) {
     snapshot.positions = buildPositions(items, now);      // owner-only; stripped from /api/live.json
 
     await env.LIVE.put(KEY_LATEST, JSON.stringify(snapshot));
-    await recordTrail(env, snapshot.positions, now);
+    const trail = await recordTrail(env, snapshot.positions, now);
+    try { const opened = await field.detect(env, trail, now); if (opened.length) await field.buzzTick(env, now); } catch (e) { console.error('field rules failed:', e && e.message); }
     console.log('sync ok', JSON.stringify(snapshot.summary));
     return { ok: true, summary: snapshot.summary };
   } catch (err) {
@@ -55,8 +57,10 @@ async function recordTrail(env, positions, now) {
     const date = pkDate(now);
     const trail = appendTrail(await env.LIVE.get(trailKey(date), 'json'), positions, date);
     await env.LIVE.put(trailKey(date), JSON.stringify(trail), { expirationTtl: TRAIL_DAYS * 86400 });
+    return trail;
   } catch (err) {
     console.error('trail write failed:', err && err.message);
+    return null;
   }
 }
 
@@ -230,8 +234,8 @@ async function serveStaff(env, url) {
   return new Response(JSON.stringify({ org: d.org, date: d.date, sections: d.sections, fleet: d.fleet || [] }), { headers: noStore });
 }
 
-const OWNER_PAGES = /^\/(control|dashboard|today|person)(\.html)?\/?$/;
-const OWNER_APIS = /^\/api\/(fleet|trail|activity|report|place|notes|staff)\.json$|^\/(owner-tools|notes|owner-lib)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
+const OWNER_PAGES = /^\/(control|dashboard|today|person|places|stops)(\.html)?\/?$/;
+const OWNER_APIS = /^\/api\/field\/|^\/api\/(fleet|trail|activity|report|place|notes|staff)\.json$|^\/(owner-tools|notes|owner-lib)\.js$|^\/staff\//;   // staff/: staff photos, shown only on owner pages
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const bad = (msg) => new Response(JSON.stringify({ error: msg }), { status: 400, headers: noStore });
 
@@ -264,7 +268,9 @@ async function serveReport(env, url) {
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sync(env));
+    // every minute: keep buzzing unanswered stops; every 5 minutes: sync with the portal
+    if (event && event.cron === '* * * * *') ctx.waitUntil(field.buzzTick(env, Date.now()));
+    else ctx.waitUntil(sync(env));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -272,6 +278,18 @@ export default {
     // Access gate: the entry page and its API first, then everything except images/icons needs a session.
     const gateResponse = await gate.route(request, env, url);
     if (gateResponse) return gateResponse;
+
+    // Staff phones: their own page and API, nothing else of the owner area.
+    if (url.pathname === '/staff' || url.pathname === '/staff.html' || url.pathname.startsWith('/api/me/')) {
+      const me = await gate.staffOf(request, env);
+      if (!me) return url.pathname.startsWith('/api/') ? new Response(JSON.stringify({ error: 'staff-only' }), { status: 403, headers: noStore }) : gate.ownerPage();
+      if (url.pathname.startsWith('/api/me/')) return field.staffApi(request, env, url, me);
+      return themed(await ownerPage(env, url, 'staff'), 'classic');
+    }
+    if (url.pathname === '/api/push/what') {
+      const [who, me] = await Promise.all([gate.viewer(request, env), gate.staffOf(request, env)]);
+      return field.pushWhat(env, !!who, me);
+    }
 
     // Control Room: owner session required, even when the main site is open to everyone.
     if (OWNER_PAGES.test(url.pathname) || OWNER_APIS.test(url.pathname)) {
@@ -281,6 +299,7 @@ export default {
           : gate.ownerPage();
       }
       if (url.pathname === '/api/notes.json') return serveNotes(request, env, await gate.viewer(request, env));
+      if (url.pathname.startsWith('/api/field/')) return field.ownerApi(request, env, url, await gate.viewer(request, env));
       if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
       if (url.pathname === '/api/fleet.json') return serveFleet(env);
       if (url.pathname === '/api/trail.json') return serveTrail(env, url);

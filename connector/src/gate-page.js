@@ -114,6 +114,7 @@ a.mini{text-decoration:none;display:inline-block}
   <section id="vAdmin" class="panel" hidden>
     <a class="go cr" href="today" style="background:linear-gradient(135deg,#1f6b45,#2f9a6a)">Open Today<small>What needs you, who is out, search anyone</small></a>
     <a class="go cr" href="./" style="background:rgba(0,0,0,.25)">Open my page<small>Your page with the owner tools: alerts, activity log, reports</small></a>
+    <a class="go cr" href="places" style="background:rgba(0,0,0,.25)">Places &amp; staff phones<small>Nurseries, who goes where, staff alert passes, rules</small></a>
     <a class="go cr map" href="control">Open Control Room<small>Live map, people, routes (owner only)</small></a>
     <div class="theme"><div><b>My design</b><small id="themeSub"></small></div>
       <div class="seg" role="group" aria-label="Site design"><button type="button" data-theme="classic">Classic</button><button type="button" data-theme="new">New</button></div></div>
@@ -171,7 +172,7 @@ a.mini{text-decoration:none;display:inline-block}
   $('fEnter').addEventListener('submit', function(e){
     e.preventDefault(); var b = this.querySelector('button'); b.disabled = true; $('mEnter').className = 'msg'; $('mEnter').textContent = '';
     post('enter', {code: $('code').value}).then(function(j){
-      if(j.ok){ $('mEnter').className = 'msg ok'; $('mEnter').textContent = j.reviewer ? 'Welcome, reviewer. Opening the site…' : 'Welcome. Opening the site…'; location.replace('/'); return; }
+      if(j.ok){ $('mEnter').className = 'msg ok'; $('mEnter').textContent = j.reviewer ? 'Welcome, reviewer. Opening the site…' : 'Welcome. Opening the site…'; location.replace(j.staff ? '/staff' : '/'); return; }
       b.disabled = false; $('mEnter').textContent = fail(j, 'That pass is not valid, or has already been used.');
     }).catch(function(){ b.disabled = false; $('mEnter').textContent = 'No connection. Please try again.'; });
   });
@@ -269,6 +270,7 @@ a.mini{text-decoration:none;display:inline-block}
   /* already signed in as owner or reviewer? go straight to the panel */
   fetch('/api/gate/state', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
     if(s && s.passes){ isAdmin = true; draw(s); if(location.pathname === '/gate') show('vAdmin'); }
+    else if(s && s.staff){ location.replace('/staff'); }
     else if(s && s.reviewer){ isReviewer = true; drawReviewer(s); if(location.pathname === '/gate') show('vReviewer'); }
   }).catch(function(){});
 })();

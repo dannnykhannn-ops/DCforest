@@ -86,7 +86,7 @@ section{min-width:0}
     <div><h1 id="title">Today</h1><div class="sub" id="date"></div></div>
     <span class="spacer"></span>
     <span class="live" id="live"><i></i><span>Loading</span></span>
-    <span id="nt-slot"></span><span class="hlinks"><a class="hl" href="classic">Main page</a><a class="hl" href="gate" title="Owner panel">&infin;</a></span>
+    <span id="nt-slot"></span><span class="hlinks"><a class="hl" href="stops">Stops &amp; reasons</a><a class="hl" href="places">Places</a><a class="hl" href="classic">Main page</a><a class="hl" href="gate" title="Owner panel">&infin;</a></span>
   </div>
 </div></header>
 
@@ -126,7 +126,7 @@ section{min-width:0}
 (function(){
   'use strict';
   var D = window.DCF, $ = function(id){ return document.getElementById(id); }, esc = D.esc;
-  var fleet = null, act = null, view = 'today', filter = 'all';
+  var fleet = null, act = null, view = 'today', filter = 'all', inc = [];
   $('date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Karachi'});
 
   function tagOf(state){ var s = D.STATES[state] || D.STATES.none; return '<span class="tag" style="--k:'+s.c+'">'+s.lb+'</span>'; }
@@ -145,12 +145,19 @@ section{min-width:0}
     var V = fleet.vehicles, S = act && act.vehicles ? act.vehicles : {};
 
     /* alerts */
-    var A = D.alerts(fleet, act), urgent = A.filter(function(a){ return a.lv !== 'info'; });
+    var A = D.alerts(fleet, act);
+    /* wrong stops waiting for a reason, and today's answers */
+    inc.filter(function(x){ return x.status === 'open'; }).forEach(function(x){
+      A.unshift({lv: x.escalated ? 'high' : 'med', t: (x.escalated ? 'No reason given: ' : 'Waiting for a reason: ') + D.person(x.reg).name, d: x.reg + ' · stopped outside assigned places since ' + D.pkt(x.from) + ' · buzzed ' + x.buzzes + '×', reg: x.reg, tel: D.tel(D.person(x.reg).contact)}); });
+    var answered = inc.filter(function(x){ return x.answer; }).length;
+    if(answered) A.push({lv:'info', t: answered + ' stop reason' + (answered === 1 ? '' : 's') + ' recorded today', d: 'Listen in Stops & reasons', reg: null});
+    A.sort(function(a,b){ return D.ALERT[a.lv].o - D.ALERT[b.lv].o; });
+    var urgent = A.filter(function(a){ return a.lv !== 'info'; });
     $('alN').textContent = urgent.length;
     var showAll = $('alerts').getAttribute('data-all') === '1', list = showAll ? A : urgent.slice(0, 4);
     $('alerts').innerHTML = (list.length ? list.map(function(a){ var k = D.ALERT[a.lv];
       return '<div class="al" style="--k:'+k.c+'"><div><span class="lv">'+k.lb+'</span><b>'+esc(a.t)+'</b><small>'+esc(a.d)+'</small></div><span class="go">'+
-        (a.reg ? '<a class="btn" href="person?reg='+encodeURIComponent(a.reg)+'">Open</a>' : '')+(a.tel ? '<a class="btn pri" href="tel:'+esc(a.tel)+'">Call</a>' : '')+'</span></div>'; }).join('')
+        (a.reg ? '<a class="btn" href="person?reg='+encodeURIComponent(a.reg)+'">Open</a>' : /reason/.test(a.t) ? '<a class="btn" href="stops">Listen</a>' : '')+(a.tel ? '<a class="btn pri" href="tel:'+esc(a.tel)+'">Call</a>' : '')+'</span></div>'; }).join('')
       : '<div class="clear">All clear. Nothing needs you right now.</div>')+
       (A.length > list.length ? '<button class="btn more" type="button" id="alMore">Show all '+A.length+'</button>' : (showAll && A.length > 4 ? '<button class="btn more" type="button" id="alMore">Show fewer</button>' : ''));
     var mb = $('alMore'); if(mb) mb.onclick = function(){ $('alerts').setAttribute('data-all', showAll ? '0' : '1'); draw(); };
@@ -225,8 +232,9 @@ section{min-width:0}
   addEventListener('hashchange', route); route();
 
   function load(){
-    return Promise.all([D.get('api/fleet.json').catch(function(){ return null; }), D.get('api/activity.json?date=' + D.pkDay()).catch(function(){ return null; })])
-      .then(function(r){ fleet = r[0] && r[0].available ? r[0] : null; act = r[1]; draw(); });
+    return Promise.all([D.get('api/fleet.json').catch(function(){ return null; }), D.get('api/activity.json?date=' + D.pkDay()).catch(function(){ return null; }),
+                        D.get('api/field/incidents?from=' + D.pkDay()).catch(function(){ return null; })])
+      .then(function(r){ fleet = r[0] && r[0].available ? r[0] : null; act = r[1]; inc = (r[2] && r[2].incidents) || []; draw(); });
   }
   D.loadStaff().then(load);
   setInterval(function(){ if(!document.hidden) load(); }, 60000);

@@ -14,7 +14,8 @@ const MAX_FAILS = 5;                      // wrong tries before a lock
 const LOCK_MS = 30 * 60 * 1000;           // lock length
 const PASS_TTL_MS = 7 * 86400000;         // an unused pass expires after 7 days
 const ADMIN_HOURS = 12;
-const REVIEWER_DAYS = 30;                 // a used reviewer pass keeps that device signed in this long
+const REVIEWER_DAYS = 30;
+const STAFF_DAYS = 180;                   // a staff phone stays linked this long (until the owner cancels it)                 // a used reviewer pass keeps that device signed in this long
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no I, L, O, 0, 1: easy to read out
 const PUBLIC = [/^\/assets\//, /^\/manifest\.webmanifest$/, /^\/sw\.js$/];   // images, icons, video only
 
@@ -37,7 +38,7 @@ const configured = (env) => secretOf(env, 'ADMIN_PIN').length >= 4 && secretOf(e
 async function loadCfg(env) {
   const c = (await env.LIVE.get(CFG_KEY, 'json')) || {};
   return { open: c.open === true, gen: c.gen || 1, passes: Array.isArray(c.passes) ? c.passes : [], fails: c.fails || {},
-    reviewers: Array.isArray(c.reviewers) ? c.reviewers : [] };
+    reviewers: Array.isArray(c.reviewers) ? c.reviewers : [], staffPasses: Array.isArray(c.staffPasses) ? c.staffPasses : [] };
 }
 const saveCfg = (env, cfg) => env.LIVE.put(CFG_KEY, JSON.stringify(cfg));
 
@@ -68,6 +69,8 @@ async function readSession(request, env, cfg) {
     if (s.r === 'guest' || s.r === 'admin') return s;
     // A reviewer session ends as soon as the owner cancels that reviewer's pass.
     if (s.r === 'reviewer') { const rv = cfg.reviewers.find((x) => x.id === s.i); return rv ? { ...s, name: rv.name } : null; }
+    // A staff phone is linked to one bike; it stops working as soon as the owner cancels that pass.
+    if (s.r === 'staff') { const sp = cfg.staffPasses.find((x) => x.id === s.i); return sp ? { ...s, name: sp.name, reg: sp.reg } : null; }
     return null;
   } catch { return null; }
 }
@@ -101,6 +104,7 @@ const publicState = (cfg, env) => ({
   guestMinutes: guestMinutes(env),
   passes: cfg.passes.map((p) => ({ code: p.code, createdAt: p.createdAt, usedAt: p.usedAt || null })),
   reviewers: cfg.reviewers.map((r) => ({ id: r.id, name: r.name, code: r.usedAt ? null : r.code, createdAt: r.createdAt, usedAt: r.usedAt || null })),
+  staffPasses: cfg.staffPasses.map((r) => ({ id: r.id, name: r.name, reg: r.reg, code: r.usedAt ? null : r.code, createdAt: r.createdAt, usedAt: r.usedAt || null })),
 });
 
 export const isPublic = (pathname) => PUBLIC.some((re) => re.test(pathname));
@@ -127,6 +131,13 @@ export async function viewer(request, env) {
   return null;
 }
 export async function canView(request, env) { return !!(await viewer(request, env)); }
+/** A staff member's phone: { id, reg, name } or null. */
+export async function staffOf(request, env) {
+  const s = await readSession(request, env, await loadCfg(env));
+  return s && s.r === 'staff' ? { id: s.i, reg: s.reg, name: s.name } : null;
+}
+/** Staff passes (for naming people in the field alerts). */
+export async function staffPasses(env) { return (await loadCfg(env)).staffPasses; }
 /** Entry page for an owner-only address (the owner signs in with the PIN there). */
 export const ownerPage = () => page(401);
 
@@ -149,12 +160,13 @@ export async function route(request, env, url) {
 
   if (action === 'me' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
-    return json({ role: s ? (s.r === 'admin' ? 'owner' : s.r === 'reviewer' ? 'reviewer' : 'guest') : (cfg.open ? 'visitor' : null),
-      name: s && s.r === 'reviewer' ? s.name : undefined, theme: themeFor(request) });
+    return json({ role: s ? (s.r === 'admin' ? 'owner' : s.r === 'reviewer' ? 'reviewer' : s.r === 'staff' ? 'staff' : 'guest') : (cfg.open ? 'visitor' : null),
+      name: s && (s.r === 'reviewer' || s.r === 'staff') ? s.name : undefined, theme: themeFor(request) });
   }
   if (action === 'state' && request.method === 'GET') {
     const s = await readSession(request, env, cfg);
     if (s && s.r === 'reviewer') return json({ reviewer: true, name: s.name, theme: themeFor(request) });
+    if (s && s.r === 'staff') return json({ staff: true, name: s.name, reg: s.reg });
     return s && s.r === 'admin' ? json({ ...publicState(cfg, env), theme: themeFor(request) }) : json({ error: 'forbidden' }, 403);
   }
   if (request.method !== 'POST') return json({ error: 'method' }, 405);
@@ -170,6 +182,12 @@ export async function route(request, env, url) {
     const code = cleanCode(body.code);
     prune(cfg, now);
     const rv = code.length === 6 ? cfg.reviewers.find((x) => !x.usedAt && x.code && same(x.code, code)) : null;
+    const sp = code.length === 6 ? cfg.staffPasses.find((x) => !x.usedAt && x.code && same(x.code, code)) : null;
+    if (sp) {                                     // staff pass: links this phone to that person's bike
+      sp.usedAt = new Date(now).toISOString(); delete sp.code; delete cfg.fails.code;
+      await saveCfg(env, cfg);
+      return json({ ok: true, staff: true }, 200, { 'Set-Cookie': await makeCookie(env, 'staff', cfg.gen, STAFF_DAYS * 1440, sp.id) });
+    }
     if (rv) {                                     // reviewer pass: this device gets reviewer access for REVIEWER_DAYS
       rv.usedAt = new Date(now).toISOString(); delete rv.code; delete cfg.fails.code;
       await saveCfg(env, cfg);
@@ -219,6 +237,21 @@ export async function route(request, env, url) {
     cfg.reviewers.push({ id, name, code, createdAt: new Date(now).toISOString(), usedAt: null });
     await saveCfg(env, cfg);
     return json({ ok: true, code, ...publicState(cfg, env) });
+  }
+  if (action === 'staff-pass') {
+    const name = String(body.name || '').replace(/[<>]/g, '').trim().slice(0, 60), reg = String(body.reg || '').trim().slice(0, 20);
+    if (!name || !reg) return json({ error: 'name' }, 400);
+    if (cfg.staffPasses.length >= 120) return json({ error: 'too-many' }, 400);
+    cfg.staffPasses = cfg.staffPasses.filter((x) => !(x.reg === reg && !x.usedAt));   // one waiting pass per bike
+    const code = newCode(), id = b64u(crypto.getRandomValues(new Uint8Array(9)));
+    cfg.staffPasses.push({ id, name, reg, code, createdAt: new Date(now).toISOString(), usedAt: null });
+    await saveCfg(env, cfg);
+    return json({ ok: true, code, ...publicState(cfg, env) });
+  }
+  if (action === 'staff-revoke') {
+    cfg.staffPasses = cfg.staffPasses.filter((x) => x.id !== String(body.id || ''));
+    await saveCfg(env, cfg);
+    return json({ ok: true, ...publicState(cfg, env) });
   }
   if (action === 'reviewer-revoke') {
     cfg.reviewers = cfg.reviewers.filter((x) => x.id !== String(body.id || ''));
